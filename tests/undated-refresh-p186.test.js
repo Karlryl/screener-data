@@ -174,7 +174,8 @@ test('a successful but GP-empty reply cannot erase the undated GP history being 
 
 test('10 October PGHL values are withheld in both export shapes without changing score, rank or inputs', () => {
   const s = pghl(), before = JSON.stringify(s), r = board(), original = JSON.stringify(r);
-  assert.equal(Math.round(overviewMetric(s).value * 1000) / 1000, 0.282);
+  // Period gate round 2 (30.10.2026): the undated pair behind the former 28.2 % is empty at the source as well.
+  assert.equal(overviewMetric(s).value, null);
   const writer = writerFor(s), b = writer.mapBoardRow(r, 30);
   const o = writer.mapOverviewRow({ ...r, overviewKind: 'gp', overviewValue: 0.282, overviewCompanion: 43 }, 30);
   assert.equal(b.overview.value, null); assert.equal(o.overviewValue, null);

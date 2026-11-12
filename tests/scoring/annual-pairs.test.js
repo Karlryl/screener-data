@@ -94,12 +94,13 @@ check('distance boundaries, 52/53-week distance and prior-period boundaries', ()
   assert.equal(P.checkAnnualPair(pairSnapshot(-1), 'annualRev', 0, 1).code, 'short-period');
 });
 
-check('undated, invalid ISO days and misaligned arrays pass with identical values', () => {
+check('undated, invalid ISO days and misaligned arrays: no value, identical under every switch setting', () => {
   for (const dates of [undefined, [], ['2025-12-31'], [null, null, null],
     ['2025-02-30', '2024-02-29', '2023-02-28'], [ends[0], 'bad', ends[2]], [123, ends[1], ends[2]]]) {
     const s = snap(); s.annual.annualRevEnds = dates; s.annual.annualGPEnds = dates;
     assert.equal(P.checkAnnualPair(s, 'annualRev', 0, 1).code, 'undated');
     assert.deepEqual(P.withAnnualPairRule(all, () => outputs(s)), outputs(s));
+    assert.equal(A.revGrowthLevel(s), null); assert.equal(A.gpGrowth(s), null); assert.equal(A.revAcceleration(s), null);
   }
   const s = snap(); s.annual.annualRevEnds[2] = '2023-02-30';
   assert.deepEqual(P.checkAnnualPair(s, 'annualRev', 0, 1), { code: 'adjacent', distanceDays: 365, priorLengthDays: null });
@@ -138,7 +139,9 @@ check('newer-year record uses its own ends and stored prior length, without repl
   const s = snap();
   s.meta.annualRevNewerYear = { end: '2027-12-31', priorEnd: '2025-12-31', revenue: 360, priorRevenue: 180, priorStored: 180 };
   const record = A.annualLegNewerYear(s);
-  assert.equal(revGrowthLeg(s).basis, 'yearNewerRecord');
+  // Period gate (24.10.2026): the 730-day record is empty in production too, not only under the P115 switch.
+  assert.equal(revGrowthLeg(s).basis, 'none');
+  assert.equal(revGrowthLeg(s).pct, null);
   assert.equal(P.annualPairsShadow(s).growth.code, 'missing-year');
   P.withAnnualPairRule({ growth: true }, () => {
     assert.equal(A.annualLegNewerYear(s), record, 'the validity check itself is unchanged');
@@ -154,7 +157,9 @@ check('newer-year record uses its own ends and stored prior length, without repl
   assert.equal(P.checkNewerAnnualPair(s, record).priorLengthDays, null, 'no invented index for an absent prior end');
   record.priorEnd = '2025-02-30';
   assert.equal(P.annualPairsShadow(s).growth.code, 'undated');
-  assert.equal(P.withAnnualPairRule(all, () => revGrowthLeg(s).pct), 100);
+  // Period gate round 2 (30.10.2026): an undated record is empty under every switch setting.
+  assert.equal(P.withAnnualPairRule(all, () => revGrowthLeg(s).pct), null);
+  assert.equal(revGrowthLeg(s).pct, null);
 });
 
 check('gross profit judges its own pair only, not the margin trajectory', () => {
@@ -167,10 +172,12 @@ check('gross profit judges its own pair only, not the margin trajectory', () => 
 });
 
 check('parts a and b are independent, rawAxisValue uses null without score plumbing', () => {
-  const s = pairSnapshot(731); s.annual.annualGPEnds = s.annual.annualRevEnds;
+  // A 365-day pair with a 150-day prior year: only P115's prior-length check rejects it. The former 731-day pair is
+  // emptied by the always-on period gate (24.10.2026) under every switch setting and could no longer show independence.
+  const s = pairSnapshot(365, 150); s.annual.annualGPEnds = s.annual.annualRevEnds;
   P.withAnnualPairRule({ growth: true }, () => {
     assert.equal(A.revGrowthLevel(s), null); assert.equal(A.gpGrowth(s), null);
-    assert.equal(A.revAcceleration(s), 0.30000000000000004);
+    assert.equal(A.revAcceleration(s), null, 'its older pair is 150 days apart by its own ends');
     assert.equal(rawAxisValue(s, 'gpGrowth', {}, 'profitable'), null);
   });
   P.withAnnualPairRule({ acceleration: true }, () => {
@@ -183,7 +190,7 @@ check('parts a and b are independent, rawAxisValue uses null without score plumb
 check('ASTS-like zero year is reported data, negative year likewise, never a gap', () => {
   for (const zero of [0, -1]) {
     const s = snap([70918000, 4418000, zero, 13825000]);
-    assert.ok(Number.isFinite(A.revAcceleration(s)));
+    assert.equal(A.revAcceleration(s), null, 'period gate: a pair over a reported zero year is no year');
     const result = P.annualPairsShadow(s).acceleration;
     assert.equal(result.code, 'zero-year'); assert.equal(result.shadow, null);
     assert.match(result.reason, new RegExp('Umsatz 2023 war ' + zero));
@@ -214,6 +221,7 @@ check('acceleration uses first three positive values and first failure in pair o
 check('quarterly display and quarterly acceleration remain unchanged; bonus annual leg is judged', () => {
   const s = pairSnapshot(731);
   s.timeseries.revenueQ = [60, 50, 40, 35, 30, 25]; // two quarterly YoY pairs
+  s.timeseries.revenueQEnds = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31']; // period gate: a quarter pair needs its ends
   const before = A.revAcceleration(s, [-0.5, 0.8]);
   const sh = P.annualPairsShadow(s, [-0.5, 0.8]);
   assert.equal(sh.growth.code, 'missing-year');
@@ -250,7 +258,8 @@ check('all verdicts carry German reasons, raw values, dates and no fake zero', (
 });
 
 check('restore after throw, nested overrides, thenable and throwing then getter', () => {
-  const s = pairSnapshot(731), before = JSON.stringify(s);
+  // Rejected only by P115's prior-length check, so the switch state stays observable under the period gate (24.10.2026).
+  const s = pairSnapshot(365, 150), before = JSON.stringify(s);
   assert.throws(() => P.withAnnualPairRule(all, () => { throw new Error('probe'); }), /probe/);
   assert.equal(P.annualPairRuleEnabled('growth'), false);
   P.withAnnualPairRule({ growth: true }, () => {
@@ -258,7 +267,7 @@ check('restore after throw, nested overrides, thenable and throwing then getter'
     P.withAnnualPairRule({ growth: false, acceleration: true }, () => {
       assert.equal(A.revGrowthLevel(s), 50); assert.equal(A.revAcceleration(s), null);
     });
-    assert.equal(A.revGrowthLevel(s), null); assert.ok(Number.isFinite(A.revAcceleration(s)));
+    assert.equal(A.revGrowthLevel(s), null); assert.equal(A.revAcceleration(s), null, 'its older pair is 150 days apart by its own ends');
     const shadow = P.annualPairsShadow(s);
     assert.equal(shadow.growth.today, 50); assert.equal(shadow.growth.shadow, null);
     assert.equal(P.annualPairRuleEnabled('growth'), true);

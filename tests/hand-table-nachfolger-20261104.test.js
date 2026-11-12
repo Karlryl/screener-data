@@ -4,7 +4,7 @@
 // (issuerDedupComparator). A test of the held ticker alone cannot see whether that next listing is right: at Aroundtown the
 // stale Milan line 1AT1.MI took over 10.3 % high, at Deutz 1DEZ.MI 16.9 % high. The replay also found home lines with an old
 // Yahoo share count (Cipher Digital -8.9 %, Geekplus +4.4 % with its own shares counted) and a wrong checked value in a reason
-// (JX Advanced Metals, the tender offer of July missed); rows of 04.11. repair those.
+// (JX Advanced Metals, the tender offer settled in July missed); rows of 04.11. repair those.
 // This test replays the choice for every firm a row of 01.11. or 04.11. touches, on the stored snapshots of 31.10.2026
 // (run 41184535364), through the REAL lib/market-cap-guard.js and the REAL issuerDedupComparator, and holds the shown value
 // against the checked value of the firm:
@@ -29,20 +29,11 @@ const beforeHashes = liveHashes();
 const TOLERANCE = 0.03;
 
 // Firm -> pinned deviation of the shown line from the checked value on 31.10., and why it is not repaired by a row.
-const CLASSES = 'A and H (or A and B) shares: the shown line values every share at its own price; the class sum needs the price of each class (draft per-class row, Codex P1)';
+// The eight A and H (or A and B) firms of Codex P1 left this list on 07.11.2026: the class sum brings them within 3 %. Pinfra stays:
+// its series L line has no closes in the price store, so it is not a class-sum issuer yet.
 const KNOWN = {
-  'Jiangling Motors Corporation, Ltd.': { dev: 0.251, why: CLASSES },
-  'Shanghai Pharmaceuticals Holding Co., Ltd': { dev: 0.120, why: CLASSES },
-  'China Railway Signal & Communication Corporation Limited': { dev: 0.101, why: CLASSES },
-  'Haier Smart Home Co., Ltd.': { dev: 0.080, why: CLASSES },
-  'ZTE Corporation': { dev: 0.075, why: CLASSES },
-  'Anhui Expressway Company Limited': { dev: 0.071, why: CLASSES },
-  'Qingdao Port International Co., Ltd.': { dev: 0.060, why: CLASSES },
-  'PetroChina Company Limited': { dev: 0.041, why: CLASSES },
-  // PR 89 (fixed home listing): CNOOC shows its home line 0883.HK, which Yahoo values at the Hong Kong price for every share;
-  // no share-count row fits (4.4 % between the wrong and the right count, the table needs more than 6 %).
-  'CNOOC Limited': { dev: -0.043, why: CLASSES },
   'Promotora y Operadora de Infraestructura, S. A. B. de C. V.': { dev: 0.039, why: 'series * and L priced at the * line; class sum needs both prices (Codex P1)' },
+  'Shandong Gold Mining Co., Ltd.': { dev: 0.030, why: 'replay artifact: the fixture has no price store, and 600547.SS carries its quote of 29.10. while the checked value uses the closes of 30.10.; the merge job takes one common close day' },
   'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares against 2,825.9 M at 31.10. (cause not proven); 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
 };
 // Firms with no eligible listing on 31.10. already, before any deadline (every line held or excluded).
@@ -50,10 +41,8 @@ const KNOWN = {
 const NO_LINE_NOW = ['Caisse Régionale de Crédit Agricole Mutuel Alpes Provence Société coopérative', 'Eutelsat Communications S.A.', 'Galaxy Digital Inc.'];
 // Firms of this fixture that lose their last listing when the rows of 31.12.2026 run out (data day 01.01.2027). Only firms a row of
 // 01.11. or 04.11. touches are in the fixture: Tokyo Electron (8035.T, row of Tag 1526) falls too and is not in this list.
-const EXPIRY_LOST = ['Beijing Geekplus Technology Co., Ltd.', 'CRRC Corporation Limited', 'CSSC Offshore & Marine Engineering (Group) Company Limited',
-  'CanSino Biologics Inc.', 'Cipher Digital Inc.', 'China Longyuan Power Group Corporation Limited', 'China Suntien Green Energy Corporation Limited', 'Galaxy Digital',
-  'Kioxia Holdings Corporation', 'Semiconductor Manufacturing International Corporation', 'Shandong Gold Mining Co., Ltd.', 'Shanghai Fudan Microelectronics Group Company Limited', 'Sinopec Oilfield Service Corporation',
-  'Sinopec Shanghai Petrochemical Company Limited', 'Swire Pacific Limited', 'Yankuang Energy Group Company Limited'];
+// Since 07.11.2026 the A and H firms whose share-count rows ran out on 31.12.2026 carry the class sum, which has no such deadline.
+const EXPIRY_LOST = ['Beijing Geekplus Technology Co., Ltd.', 'Cipher Digital Inc.', 'Galaxy Digital', 'Kioxia Holdings Corporation'];
 
 const packet = (t, l, day) => {
   const s = { identifier: { primary: 'ISIN', value: 'TICKER:' + t }, timeseries: {}, annual: {}, meta: structuredClone(l.meta),
@@ -63,9 +52,30 @@ const packet = (t, l, day) => {
 };
 // The guard warns once per row past reviewBy; the expiry replay would print about 120 such lines.
 const quiet = fn => { const w = console.warn; console.warn = () => {}; try { return fn(); } finally { console.warn = w; } };
-/** The listing the scoring would show for one firm, after the guard, on the stored data day or on `day`. */
+// 07.11.2026 (P1): firms with two listed classes take the class sum of the merge job (lib/mcap-class-sum.js). The fixture has
+// no price store, so each class closes at its own stored quote (USD price / applied trading FX) on the replayed day.
+const classSum = require('../lib/mcap-class-sum.js');
+const classEntries = classSum.loadClassSumEntries();
+function withClassSum(lines, day) {
+  const entry = classEntries.find(e => e.classes.some(c => lines.some(l => l.ticker === c.ticker)));
+  if (!entry) return lines;
+  // Market data shaped like lib/mcap-class-sum.js fetchMarket: one finished close per class and per FX pair on the replayed day.
+  const market = {}, currencies = {}, date = (day || '2026-10-30').slice(0, 10);
+  for (const { ticker, snapshot: s } of lines) {
+    const cur = s.meta.tradingCurrencyOriginal || s.meta.tradingCurrency, rate = guard.tradingRate(s.meta);
+    if (!cur || !(rate > 0) || !(s.price?.regularMarketPrice > 0)) continue;
+    currencies[ticker] = cur;
+    market[ticker] = { currency: cur, closes: [{ date, close: s.price.regularMarketPrice / rate }], error: null };
+    market[classSum.fxSymbol(cur)] ??= { currency: 'USD', closes: [{ date, close: rate }], error: null };
+  }
+  const result = classSum.computeClassSum(entry, market, currencies, (day || '2026-10-31').slice(0, 10));
+  const copies = lines.map(l => ({ ...l, snapshot: structuredClone(l.snapshot) }));
+  classSum.writeFirm(Object.fromEntries(copies.map(l => [l.ticker, l.snapshot])), entry, result, null);
+  return copies;
+}
+/** The listing the scoring would show for one firm, after the guard and the class sum, on the stored data day or on `day`. */
 function shown(f, day) {
-  const lines = Object.entries(f.lines).map(([t, l]) => ({ ticker: t, ok: l.eligibleWithValue, snapshot: quiet(() => guard.prepareMarketCap(packet(t, l, day))) }));
+  const lines = withClassSum(Object.entries(f.lines).map(([t, l]) => ({ ticker: t, ok: l.eligibleWithValue, snapshot: quiet(() => guard.prepareMarketCap(packet(t, l, day))) })), day);
   const eligible = lines.filter(e => e.ok && Number.isFinite(e.snapshot.marketCap.value) && e.snapshot.marketCap.value > 0).sort(issuerDedupComparator);
   return eligible[0] ? { ticker: eligible[0].ticker, usd: eligible[0].snapshot.marketCap.value } : null;
 }

@@ -987,6 +987,7 @@ function parseTopNArg(argv) {
 }
 
 if (require.main === module) {
+  require('../../lib/annual-pairs.js').requireDataDay(); // Codex R31: first act, also with an empty snapshots folder
   const parsed = parseTopNArg(process.argv);
   if (!parsed.ok) {
     console.error(`[run-screener] ${parsed.message}`);

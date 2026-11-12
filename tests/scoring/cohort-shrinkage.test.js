@@ -10,7 +10,8 @@
  * Usage:  node tests/scoring/cohort-shrinkage.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { scoreUniverse, rankBy, shrinkToNeutral, SHRINK_K, MIN_COHORT_N } = require('../../src/scoring/score.js');
+const { datedApi } = require('../helpers/dated-series.js');
+const { scoreUniverse, rankBy, shrinkToNeutral, SHRINK_K, MIN_COHORT_N } = datedApi(require('../../src/scoring/score.js'));
 const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0;

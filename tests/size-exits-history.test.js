@@ -41,6 +41,9 @@ function check(libSource, mergeSource) {
   assert.throws(() => h.sizeExitsHistoryPath(['--size-exits-history', '--ziel']), /path/);
   assert.equal(h.sizeExitRunDay({ RUN_DATE_UTC: '2026-10-07' }, () => now), '2026-10-07');
   assert.equal(h.sizeExitRunDay({ RUN_DATE_UTC: 'yesterday' }, () => now), '2026-10-08');
+  // The right shape is not enough: an impossible day has no age, and a stale-price hold would be released by it.
+  assert.equal(h.sizeExitRunDay({ RUN_DATE_UTC: '2026-13-45' }, () => now), '2026-10-08');
+  assert.equal(h.sizeExitRunDay({ RUN_DATE_UTC: '31.10.2026' }, () => now), '2026-10-08');
   assert.equal(h.sizeExitRunDay({}, () => Date.parse('2026-10-09T00:00:00Z')), '2026-10-09');
   assert.deepEqual(plain(h.readSizeExitHistory(historyPath)), { exits: [], raw: null });
   readError = Object.assign(new Error('denied'), { code: 'EACCES' });

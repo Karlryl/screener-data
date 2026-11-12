@@ -29,7 +29,7 @@ const ctxOf = (store = F.store, baseline = F.baseline) => ({
   stores: { cn: store.cn, tw: store.tw, warnings: [] },
   baseline: { date: baseline.date, rows: new Map(Object.entries(baseline.rows)), warnings: [] } });
 const CTX = ctxOf();
-const snap = t => clone(F.snapshots[t]);
+const snap = t => require('./helpers/dated-series.js').withEnds(clone(F.snapshots[t]));
 const run = (s, mode = 'shadow', ctx = CTX) => X.applyExchangeCheck(s, { mode, context: ctx });
 const res = (s, ctx) => run(s, 'shadow', ctx).result;
 const ytd = (store, t, p) => store.cn.companies[t].ytd[p].at(-1);
@@ -85,12 +85,13 @@ test('all 21 known wrong rows are checked and withheld (none unchecked); the wit
   // G31 switch (P268, 18.10.2026): 000599.SZ's unrestated Q2 2025 is held by the hand table, the same treatment.
   // 301297.SZ (ranks 11 to 25 of 30.10.2026) likewise. The other 17 stay withheld; the level examples below use 000564.SZ, the same kind of level mismatch.
   // Board-top check of 30.10.2026: 600292.SS's pre-merger Q2 2025 is corrected by the hand table, the same treatment.
-  for (const t of ['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ']) {
+  // Hand table of 07.11.2026 (sd-hand-4): 601211.SS's quarters and fiscal years are corrected to the filed CAS values, the same treatment.
+  for (const t of ['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ', '601211.SS']) {
     const handOwned = res(snap(t));
     assert.equal(handOwned.category, 'unchecked', t);
     assert.equal(handOwned.why, 'hand-table', t);
   }
-  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ'].includes(t))) {
+  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ', '601211.SS'].includes(t))) {
     const s = snap(t), r = res(s);
     assert.ok(['would-withhold', 'would-withhold-growth'].includes(r.category), t + ' ' + r.category + ' ' + r.why);
     const lvl = r.withhold.find(w => w.level);
@@ -122,8 +123,8 @@ test('securities firms are their own stratum: ratio consistency, not the level r
   assert.equal(g.category, 'agree'); assert.equal(g.withhold.length, 0);
   // ... but it is one for a general company.
   assert.ok(res(gap(snap('000006.SZ'))).withhold.length > 0);
-  // A securities firm is never filled.
-  assert.equal(res(snap('6023.TWO')).stratum, 'broker');
+  // 6023.TWO (the Taiwanese broker example) is hand-owned since 07.11.2026 (sd-hand-4): the exchange check leaves it alone.
+  assert.deepEqual([res(snap('6023.TWO')).category, res(snap('6023.TWO')).why], ['unchecked', 'hand-table']);
 });
 
 test('reason text: level pair says the annual figure is shown; a non-level pair gets the acceleration text', () => {
@@ -337,10 +338,10 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
   // Growth already on the annual leg before (level partner empty): withheld, but no annual check and no growth withhold.
   const y = clone(s); y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
-  assert.equal(revGrowthLeg(y).basis, 'year');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(y)).basis, 'year');
   const ry = res(y);
   assert.equal(ry.category, 'would-withhold'); assert.equal(ry.growth, null);
-  assert.equal(revGrowthLeg(run(clone(y), 'active').snapshot).pct, revGrowthLeg(y).pct, 'growth figure unchanged');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(run(clone(y), 'active').snapshot).pct), withoutOlderPair(() => revGrowthLeg(y).pct), 'annual growth figure unchanged');
   // A broker's level gap is definition, never a fill-period mismatch.
   const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
   assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));
@@ -555,7 +556,7 @@ test('mode switch: active -> off restores every cell; active twice = active once
     assert.equal(serial(run(a, 'active', ctx).snapshot), serial(a), 'idempotent: ' + s.meta.ticker);
     const sh = run(s, 'shadow', ctx); assert.equal(sh.snapshot, s); assert.equal(serial(s), before);
   }
-  assert.ok(changed >= 23, 'active changed ' + changed); // 301297.SZ is hand-owned since 30.10.2026
+  assert.ok(changed >= 21, 'active changed ' + changed); // 301297.SZ is hand-owned since 30.10.2026; 601211.SS and 6023.TWO since 07.11.2026 (measured 21)
 });
 
 // ── Break-once (memory-only module copies, whole-line anchors) ───────────────

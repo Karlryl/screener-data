@@ -309,6 +309,8 @@ async function run({ exportBase, erwartungen, datum: override, tabelle }) {
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
     ...(heldRaw === null ? ['Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt; das ist keine Entwarnung.'] : []),
+    // Codex R09: a filled list from a partial run names only the shards that arrived; never read like a complete list.
+    ...(held.length && index.coverage?.manifest_partial === true ? ['Hinweis: Ein Teil des Datenlaufs fehlte oder brach ab; weitere Firmen mit unbestätigter Berichtswährung können unbekannt sein, auch überfällige. Das ist keine Entwarnung.'] : []),
   ];
   // Report only, never the exit code: deadlines of the share-count hand table and dividend yields that differ between
   // listings of one firm. A missing filter feed or table says so; it is no all-clear.
@@ -322,6 +324,8 @@ async function run({ exportBase, erwartungen, datum: override, tabelle }) {
       reports.fristen = fristen({ tabelle: tabelle ?? JSON.parse(fs.readFileSync(SHARES_TABLE, 'utf8')), universum, datum });
       lines.push(...reports.fristen.zeilen);
     } catch (err) { notice('Die Fristen der Handtabelle der Aktienzahlen sind', err); }
+    try { lines.push(...require('../lib/mcap-class-sum.js').reviewLines(datum)); } // P1: deadlines of the class-sum share counts
+    catch (err) { notice('Die Fristen der Klassensumme sind', err); }
     try {
       reports.dividenden = dividendenZwillinge({ universum });
       lines.push(...reports.dividenden.zeilen);
@@ -339,6 +343,7 @@ async function run({ exportBase, erwartungen, datum: override, tabelle }) {
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
     berichtswaehrungGehalten: heldRaw ?? null,
+    berichtswaehrungTeillauf: typeof index.coverage?.manifest_partial === 'boolean' ? index.coverage.manifest_partial : null,
     dividendenZwillinge: reports.dividenden && { firmen: reports.dividenden.firmen, mitBoard: reports.dividenden.mitBoard },
     handtabellenFristen: fristReport && { faellt: fristReport.faellt.map(f => ({ ticker: f.ticker, reviewBy: f.reviewBy })), leerVorFrist: fristReport.leerVorFrist, ungueltig: fristReport.ungueltig },
   };

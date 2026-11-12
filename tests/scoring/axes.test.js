@@ -8,7 +8,8 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const ax = require('../../src/scoring/axes.js');
+const { datedApi } = require('../helpers/dated-series.js');
+const ax = datedApi(require('../../src/scoring/axes.js'));
 
 let pass = 0, fail = 0;
 function test(name, fn) {

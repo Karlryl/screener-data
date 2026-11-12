@@ -7,7 +7,8 @@
 // - GGP.L: annual revenue 1,191.2 and 461.4 against filed 2,259 and 957 M AUD (shown +158.2 %, filed +136 %).
 // - 5871.TW, 9941.TW: lenders; the vendor strips interest income, so a firm with +27.2 bn TWD operating income showed a loss
 //   on the unprofitable board. Held as packets with the reason, like 402340.KS, so they cannot land on the survival list.
-// - 2590.HK, SOFF.OL: market cap from a share count no filing supports. 688428.SS, 003535.KS: all share classes at one price.
+// - 2590.HK, SOFF.OL: market cap from a share count no filing supports. 688428.SS, 003535.KS: all share classes at one price
+//   (688428.SS left the share-count table on 07.11.2026 for the class sum, configs/mcap-class-sum.json).
 // Every red probe changes an in-memory copy only; live files are hashed before and after.
 // Break-once on test data: `node tests/hand-table-zahlenjagd-r25-20261030.test.js --prove-red` must exit 1.
 const test = require('node:test'), assert = require('node:assert/strict');
@@ -118,13 +119,12 @@ test('a changed vendor value is never replaced by the old correction', () => {
 
 const CAP = {
   '2590.HK': { shares: 1281656998, usd: 993e6 },
-  '688428.SS': { shares: 860109566, usd: 3146e6 },
   'SOFF.OL': { shares: 82346796, usd: 629e6 },
   '003535.KS': { shares: 223091000, usd: 963e6 },
 };
 const withImplied = (t, shares) => { const s = snap(t); s.marketCap.value = s.price.regularMarketPrice * shares; return s; };
 
-test('market cap: the four rows land on price x issuer count with reason, derived ratios blanked; Solstad falls below the floor', () => {
+test('market cap: the three rows land on price x issuer count with reason, derived ratios blanked; Solstad falls below the floor', () => {
   for (const [t, w] of Object.entries(CAP)) {
     const out = guard.prepareMarketCap(snap(t));
     assert.equal(out.marketCap.source, 'hand-table:shares', t);
@@ -134,7 +134,7 @@ test('market cap: the four rows land on price x issuer count with reason, derive
     for (const f of ['priceSales', 'enterpriseValue', 'enterpriseToRevenue', 'enterpriseToEbitda']) assert.equal(out.metrics[f] ?? null, null, `${t}: ${f}`);
   }
   assert.equal(guard.correctedBelowFloor(guard.prepareMarketCap(snap('SOFF.OL'))), true);
-  for (const t of ['2590.HK', '688428.SS', '003535.KS']) assert.equal(guard.correctedBelowFloor(guard.prepareMarketCap(snap(t))), false, t);
+  for (const t of ['2590.HK', '003535.KS']) assert.equal(guard.correctedBelowFloor(guard.prepareMarketCap(snap(t))), false, t);
 });
 
 test('market cap: a fixed vendor count is confirmed, an unknown count is withheld with reason', () => {
@@ -144,6 +144,12 @@ test('market cap: a fixed vendor count is confirmed, an unknown count is withhel
     assert.equal(out.marketCap.value, null, t);
     assert.match(out.meta.marketCapReason, /^Börsenwert nicht verlässlich:/, t);
   }
+});
+
+test('InnoCare 688428.SS has no share-count row any more and is a class-sum issuer', () => {
+  assert.equal(guard.table['688428.SS'], undefined);
+  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'configs/mcap-class-sum.json'), 'utf8'));
+  assert.deepEqual(cfg['row:688428.SS'].classes.map(c => [c.ticker, c.shares]), [['688428.SS', 273403904], ['9969.HK', 1496284235]]);
 });
 
 test('live files are unchanged by this test', () => {

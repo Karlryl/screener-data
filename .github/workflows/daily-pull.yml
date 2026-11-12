@@ -587,6 +587,8 @@ jobs:
     needs: prep
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       # T569-F7 (Review Tag 569): `cancelled` und `skipped` fielen bis Tag 571 in denselben
@@ -1169,6 +1171,14 @@ jobs:
 
       - name: Preis-Shards zusammenfuehren
         run: node scripts/merge-price-shards.js --prices prices --date "$RUN_DATE_UTC" --expected-shards 4
+
+      # P1 (Codex, 04.11.2026): firms with A and H (or A and B) shares get the sum over their classes, each class at
+      # its own unadjusted close of one common finished trading day and the FX close of that day (Yahoo daily chart,
+      # about 50 calls), instead of Yahoo's value that prices every share at one line. Here, on the merged generation,
+      # because the shards never see both classes together; before the snapshots artifact, so scoring, exports and
+      # monthly-sec-xbrl all read the same value.
+      - name: Klassensumme der Boersenwerte (P1)
+        run: node scripts/apply-mcap-class-sum.js --snapshots snapshots --date "$RUN_DATE_UTC"
 
       # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
       # args.out untouched on failure" fallback (BH-138) can only protect a
@@ -1773,6 +1783,8 @@ jobs:
     needs: [prep, merge]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       - name: Earnings-Transport pruefen (KV571-1)
@@ -1838,9 +1850,11 @@ jobs:
   # tests/weg-e-waechter-verdrahtung.test.js fest.
   # ============================================================================
   jahres-ausreisser-waechter:
-    needs: merge
+    needs: [prep, merge]
     if: ${{ always() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -1901,6 +1915,12 @@ jobs:
     needs: [prep, pull, prices, merge]
     if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    # P286, P287: this run day is also the data day of the age rule in lib/annual-pairs.js.
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+    # Relayed for the jobs behind scoring, so they read the same frozen day without a second edge to prep.
+    outputs:
+      run_date: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -2428,8 +2448,8 @@ jobs:
           # audit BH-156: `date -u +%F` unmittelbar vor dem Aufruf gestempelt — deckt
           # sich mit write-board-history.js' eigenem isoDay(Date.now()) (kein --date
           # uebergeben, das Skript nutzt also dieselbe Wanduhr). Als Output verfuegbar
-          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC,
-          # das dieser Job gar nicht sieht).
+          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC
+          # dieses Jobs).
           echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
           set +e
           node scripts/write-board-history.js
@@ -2781,6 +2801,8 @@ jobs:
     needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2866,6 +2888,8 @@ jobs:
     needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2896,6 +2920,8 @@ jobs:
     needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard, feed-fill-waechter]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout

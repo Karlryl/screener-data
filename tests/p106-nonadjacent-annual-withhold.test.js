@@ -6,6 +6,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const { applyFinancialCases, table, validateTable } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
+const { g31Shadow } = require('../lib/g31-recency.js');
 const value = row => (row && typeof row === 'object') ? row.value : row;
 
 const snap = (ticker, ccy, fx, ends, stored) => ({
@@ -37,9 +38,12 @@ test('the table carries exactly the three non-adjacent-year holds plus the laten
 for (const [ticker, ccy, fx, ends, stored, shown] of CASES) {
   test(ticker + ': two-year growth is shown without the table and withheld with its reason with it', () => {
     const raw = snap(ticker, ccy, fx, ends, stored);
-    // Precondition: the vendor pair really spans two fiscal years and gives the wrong figure.
+    // Precondition: the vendor pair really spans two fiscal years and gives the wrong figure. Since the period gate
+    // (24.10.2026) the unguarded leg is already empty with the gate reason; the hand table keeps its own reason.
+    assert.equal(Math.round((stored[0] / stored[1] - 1) * 100 * 10) / 10, shown);
     const before = revGrowthLeg(raw);
-    assert.equal(before.basis, 'year'); assert.equal(Math.round(before.pct * 10) / 10, shown);
+    assert.equal(before.basis, 'none'); assert.equal(before.pct, null);
+    assert.match(g31Shadow(raw).v1.reason, /^Perioden \d\d\.\d\d\.\d{4} und \d\d\.\d\d\.\d{4} liegen \d+ Tage auseinander, kein Jahrespaar/);
     const { snapshot: out, events } = applyFinancialCases(raw);
     assert.equal(value(out.annual.annualRev[0]), stored[0], 'newest year stays');
     for (const i of [1, 2, 3]) {

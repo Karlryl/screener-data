@@ -74,27 +74,27 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
+    "src/scoring/axes.js": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
     "src/scoring/score.js": "b8b30f01b726724053d93693f0124f40f37b8f96cc2cfb4c8c981bb437fe1fb6",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
-    "src/scoring/run-screener.js": "ee9c2bcb4d2186e31ce35cdd7565a013851162e92cef4ba132b501ea84975901",
-    "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
+    "src/scoring/run-screener.js": "db5df2dcafc0afca48a42037768c5487d48d3411b39cdfe31dd58574e522c2a2",
+    "src/scoring/overview.js": "bb025e2562ab28868d7b5ed0f107f354cc5c38bdca7f063249f720fed93a65f7",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "4b056d5b20124ba3ee675bfb1f32689ab13fe31f6ba9ee6471062c28f08bd206",
     "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
-    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow). G31 switch 2026-10-18: production runs the v1 arm of lib/g31-recency.js (newest labelled quarter or validated fiscal year); the pre-G31 code is the legacy arm for the comparison export (see g31Switch).",
+    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow). G31 switch 2026-10-18: production runs the v1 arm of lib/g31-recency.js (newest labelled quarter or validated fiscal year); the pre-G31 code is the legacy arm for the comparison export (see g31Switch). Period gate 2026-10-24 (formula draft): gpGrowth drops a gross-profit pair whose dated ends are not 334..397 days apart (see periodGate). Staleness rule review fix 2026-11-04 (formula draft, Codex R16): revAcceleration judges the newest quarter pair it uses for age (365 days); a stale one leaves the quarterly branch to the annual fallback (see staleSeriesP286P287.reviewFix20261104). Sourced annual year 2026-11-04 (formula draft): only gpGrowth and the annual revAcceleration fallback read verified FY2025 outside all positional arrays; see sourcedAnnualYear20261104.",
     "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair. P290 2026-11-01: issuerDedupComparator prefers the newest shown growth period, then the evidenced home listing, then the old market-cap order; issuerDedupComparatorOld keeps the old rule as the visible comparison for at most four weeks. See p290HomeListing.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
-    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment. PR #81 2026-10-31: the small-cap pass reads coverage floor and score calibration from the versioned configs/smallcap-reference.json through the existing refCalibration (see smallcapFixedReference); no main or quality pass change. PR #81 2026-11-01: its renewal notice watches the bases the score reads, including the union of a thin cohort; report only, no score change.",
-    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
+    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment. PR #81 2026-10-31: the small-cap pass reads coverage floor and score calibration from the versioned configs/smallcap-reference.json through the existing refCalibration (see smallcapFixedReference); no main or quality pass change. PR #81 2026-11-01: its renewal notice watches the bases the score reads, including the union of a thin cohort; report only, no score change. Codex R31 2026-11-05 (PR #88): the direct entry checks the data day first (reviewFix20261105).",
+    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch). PR108 review fix 2026-11-07: GP display follows the sourced annual axis pair and its period (sourcedAnnualYear20261104.reviewFix20261107); legacy comparison and unconfigured rows unchanged.",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
     "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak. F-02 2026-11-01: a gap in the SEC series is never reported as a loss year; display only. See f02ProfitStreakGap.",
     "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change.",
@@ -249,6 +249,21 @@
     "rollback": "Revert the P184 source changes and only the P184 pending hash registration together in a reviewed new commit."
   },
   "goldenTraces": {
+    "GQS00-001": "88a4ce58712e75398e0fa0d45e1509f64ed423daa5778a45505b04354ff71c48",
+    "GQS00-004": "ae7203b27f9cf0da452b7e27ace204c5f878c1a090b57f5b00ff7d68cc213a31",
+    "GQS00-005": "fa9708fc68aea72361d1d246315c6281fcca7c3d80e1899b36af11e85723e7a5",
+    "GQS00-006": "1adfa511dc4920fc9f6200530de7fb3e12f09f64c102fcd4c937677a4e333274",
+    "GQS00-007": "f222895e1d8849f086d491cb497909a35fb4c5c49a9053cf1b0e83b5a8785eae",
+    "GQS00-008": "86e895e6aeadb7971c5202651002a56349e01fb2b903909b92f87ea084745af0",
+    "GQS00-009": "39551bc5181fa48275aebc103937d853faab86a998c2278191ed136b8cab53d0",
+    "GQS00-011": "60e82aa919923d535b85f03a5af68fafdd7ff205b9f0c7a42982e9988bc1df13",
+    "GQS00-013": "90b52fed84ed533b2b3dda0b54c6460e29acccd7a83e7dfcd50bbd52a1b226ee",
+    "GQS00-014": "3391b5c47c9ac54549d6ac21de1a0a51e05ad3d344d34c1ec1a79f1a0470aa31",
+    "GQS00-015": "4c3ab1e4559c59ca58fa22534d158df8c29b518f0c07fa9de80cf6aae41a391c",
+    "GQS00-016": "ba14b7945e56f59628eaf34a4e9b3836d53a725ec54aa4b88bd9ed5318cee816",
+    "GQS00-017": "db2171d872eedd3fa640e9d274834f3d54114ab3dcf62a03a63390b182e601ea",
+    "GQS00-018": "f1502453a17cfae8e299a8c76b12f926bae5901d5b4813283ed2ba28905d3111",
+    "GQS00-020": "e49629097f5e7f57f655b94bc487db9a071c177f7d9c9d35ebfa34c3fec06597",
     "GQS00-023": "6de36e780a8b76de4bb3dc2b5d2a8b1e05145003409fc3a2e6d59fcd52a42f7f",
     "GQS00-024": "53305a4e7264c0ce5afe730780e0ce2be11dbb3967820edb46da187f09cec4cc"
   },
@@ -329,6 +344,81 @@
     "review": "Blind Sonnet review MERGE 90 % (blindpruefung-pr29-2026-10-23.md); this registration added by the master after the seal test turned PR Check red.",
     "rollback": "Revert the country.js change and only this regionTableCountries registration."
   },
+  "periodGate": {
+    "date": "2026-10-24",
+    "authority": "Daylauf 7 lane sd-periodentor master brief of 24.10.2026 (formula DRAFT): two visible growth values were formed from pairs that are not one year apart (395400.KS +26.5 % from period ends 91 days apart; MIN.AX 22.9 % from 06/2024 against 06/2026, held by hand table in PR #32). Regelblatt v4 G2 (a wrong number is never shown) and T2 (presence marker, no replacement). Formula path: before/after on the same data day, reviewed by the other AI (Codex) before merge; no court verdict, Karl release or ratification is claimed.",
+    "scope": "lib/annual-pairs.js gains periodGateReason(basis, end, priorEnd): annual pairs (year, yearNewerRecord) must end 334..397 days apart (the P115 constants), quarter, half-year and four-quarter pairs 350..380 days (snapshot.js JAHR_TAGE +- JAHRESVERGLEICH_TOLERANZ_TAGE); otherwise a German reason naming both ends and the distance. lib/g31-recency.js candidate() applies it to every G31 growth pair (revenue year, recorded newer year, quarter, half year, v2 TTM; the gross-profit quarter of the overview), so revGrowthLevel, revYoYComponents (growth bonus), ruleOfX, the displayed revGrowthYoYPct with its period label and the revenue badge read the gated candidate. src/scoring/axes.js gpGrowth drops a dated gross-profit pair outside 334..397 days (ends only through annualPeriodEnds(): A10 substrate guard). Undated pairs are not judged. Hand-table holds keep precedence (a held cell keeps its own reason). No other year is substituted; a gated year leaves the valid year-over-year quarter as the newest valid candidate (G31 rule). No weight, threshold, calibration policy, P115 switch default, acceleration path or legacy arm changes.",
+    "file": "src/scoring/axes.js",
+    "sourceSha256LF": "ca5100d6f98dd23096c215450e724aa63fe6dfbd41821cfba2c4021199f1b1e9",
+    "previousPendingSha256LF": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
+    "dependencyFiles": {
+      "lib/g31-recency.js": "18ba3e5a9a245b25e8c502c8f5f0d3efb032aee3512eefb30578e50dc0a31fda",
+      "lib/annual-pairs.js": "53a83cf210277bfc7fbc6e76d58ee97f49978764f436a7756bd5552ebc6105b7"
+    },
+    "previousDependencyFiles": {
+      "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
+      "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "definitionAmendmentAt120Seal": {
+      "axes": "revGrowthLevel, gpGrowth (and through revGrowthLevel ruleOfX and the growth bonus)",
+      "rule": "A growth pair whose two period ends are both dated counts only when they lie 334..397 days apart (annual) or 350..380 days apart (quarter, half year, four quarters); otherwise the leg is null (axis drops, renorm-on-drop) and the shown value is empty with the reason 'Perioden <Ende 1> und <Ende 2> liegen <n> Tage auseinander, kein Jahrespaar; Wachstum nicht gezeigt.'"
+    },
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged: no golden fixture carries annual period ends (all 50 annual revenue and gross-profit pairs are undated), and dated quarter pairs already lie in 350..380 days.",
+    "evidence": "tests/period-gate.test.js (fixtures 91, 365, 730, 371 days, missing end, newer-year record, hand-table hold; break-once on all three gate lines), tests/scoring/gqs00-freeze.test.js and scripts/gqs00-freeze.js --verify (red after the source edit before this entry, green afterwards). Before/after on the 16,042 snapshots of data day 23.10.2026 with frozen calibration: revGrowthYoYPct empties on 7 board rows (5 firms: 395400.KS, ROB.WA, NTDU.SI, 6383.T, BXB.AX), the gross-profit axis drops for 19 firms, 32 board rows of 21 firms change score (5 of these firms leave the capped quality overview, 5 ungated firms with unchanged scores move up into it), 1,921 rows shift rank only (at most 5 places); no score of an ungated firm changes. Live calibration: additionally 1,604 ungated rows move, 1,580 by 0.1, the largest by 1.1.",
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert the three source changes and only this periodGate registration with its pending hashes together in a reviewed new commit."
+  },
+  "periodGateRound2": {
+    "date": "2026-10-30",
+    "authority": "Daylauf 10 master brief of 30.10.2026 (formula DRAFT), after Codex's verdict NOT RELEASED on #40: a blocked two-year pair still gave 18.89 points of acceleration and undated pairs still gave 30 % growth. Regelblatt v4 G2 and T2. Formula path: before/after on the same data day, reviewed by the other AI before merge; no court verdict, Karl release or ratification is claimed.",
+    "scope": "lib/annual-pairs.js periodGateReason: a missing period end now gives a German reason (the growth pair is empty). The gate reads only the pair's own ends and stored durations; the distance to a third stored end decides nothing (Codex on #72: it measures the history, not the period). New annualPairGateReason, axisPairBlocked, annualAccelerationGatePasses, sealedEraSnapshot. src/scoring/axes.js: revAcceleration annual fallback (both pairs on their own ends, no reported zero year skipped), its quarterly branch (no undated partner by position, no unequal stored durations), gpGrowth and capitalEfficiency (a blocked revenue pair drops the axis, no penalty of 0) all use the same test. An undated pair is excused on these score axes only on a snapshot whose own meta.fetchedAt is a real date before 2026-08-20: the sealed golden fixtures were fetched up to 2026-08-16 and verify() requires one score above 100 (278470.KS). Every live snapshot of 30.10.2026 was fetched on or after 2026-10-14; scripts/write-findash-export.js warns [period-gate-undated] when acceleration or gross profit uses the exception. The growth figure has no such exception. src/scoring/overview.js: the annual and TTM verdicts carry the gate including missing ends (G31 arms; the legacy comparison arm is unchanged), an empty value is marked valuePresent false with the gate reason. Outside the seal: lib/g31-recency.js candidate empties undated growth pairs (revGrowthLevel, ruleOfX, growth bonus, shown value), scripts/write-filter-universe.js growth3 requires ends three years apart within 30 days, configs/financial-known-cases.json holds the true short or long years the own-ends test cannot see (ZEG.L, NESTLEIND.BO, EQB.TO).",
+    "sourceSha256LF": {
+      "src/scoring/axes.js": "4174532772c6e26a1bd2cd210e44e6d1ef870497642c6cc851aa8a3a470acbce",
+      "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051"
+    },
+    "previousPendingSha256LF": {
+      "src/scoring/axes.js": "ca5100d6f98dd23096c215450e724aa63fe6dfbd41821cfba2c4021199f1b1e9",
+      "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a"
+    },
+    "dependencyFiles": {
+      "lib/g31-recency.js": "73151b63babf52df306739bf0e9843a228cde582d04b73fff9fcfea0327638d7",
+      "lib/annual-pairs.js": "6812d696b08a5af098ee45dff47bbad122fa68b6ff0433ad50a08097c2f2b156"
+    },
+    "previousDependencyFiles": {
+      "lib/g31-recency.js": "18ba3e5a9a245b25e8c502c8f5f0d3efb032aee3512eefb30578e50dc0a31fda",
+      "lib/annual-pairs.js": "53a83cf210277bfc7fbc6e76d58ee97f49978764f436a7756bd5552ebc6105b7"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "definitionAmendmentAt120Seal": {
+      "axes": "revGrowthLevel (with ruleOfX and the growth bonus), revAcceleration, gpGrowth, capitalEfficiency",
+      "rule": "A growth or derived pair counts only when both of its own ends are dated and lie 334..397 days apart (annual) or 350..380 days apart (quarter, half year, four quarters), and, for quarters, its stored durations agree. Otherwise the leg is null (axis drops, renorm-on-drop) and the shown value is empty with a German reason naming the period. On a snapshot fetched before 2026-08-20 an undated pair stays on revAcceleration, gpGrowth and capitalEfficiency."
+    },
+    "goldenImpact": {
+      "movedCases": [
+        "GQS00-001 ALNY: unroundedFinal 97.76371040457097 -> 97.7778116176684",
+        "GQS00-004 GRGD.TO: unroundedFinal 96.65780376027406 -> 96.66696129734278",
+        "GQS00-005 ATHERENERG.NS: unroundedFinal 85.77533078523157 -> 86.0430997679118",
+        "GQS00-006 278470.KS: unroundedFinal 100.9676119995497 -> 100.98736116571101",
+        "GQS00-007 CHENNPETRO.NS: unroundedFinal 95.8763787878537 -> 96.39257781854049",
+        "GQS00-008 VNOM: unroundedFinal 73.9659862248346 -> 74.2184298638272",
+        "GQS00-009 GDG.AX: unroundedFinal 68.43847589053581 -> 60.09391475340137",
+        "GQS00-011 8996.TW: unroundedFinal 98.15534957418845 -> 98.19536194598938",
+        "GQS00-013 3317.HK: unroundedFinal 88.83282714469648 -> 69.37805895010756",
+        "GQS00-014 AUGO: unroundedFinal 94.84238470289058 -> 94.96230990482985",
+        "GQS00-015 2548.TW: unroundedFinal 97.2877192778358 -> 97.35136842358513",
+        "GQS00-016 688256.SS: unroundedFinal 96.92877867355537 -> 96.80188778345745",
+        "GQS00-017 688110.SS: unroundedFinal 94.25743328422838 -> 94.86790888840085",
+        "GQS00-018 DAVE: unroundedFinal 98.0783312848482 -> 97.94815526683647",
+        "GQS00-020 002151.SZ: unroundedFinal 81.18392845362443 -> 81.55992503465241",
+        "GQS00-023 000002.SZ: unroundedFinal 27.11143027806941 -> 27.853410053450364",
+        "GQS00-024 000006.SZ: unroundedFinal 14.176033921533993 -> 14.176033921533993"
+      ],
+      "reason": "All golden fixtures carry undated annual lists and were fetched up to 16.08.2026, so their annual revenue growth leg and annual growth-bonus component are empty now; the gross-profit, acceleration and capital-efficiency axes stay through the sealed-era rule. The sealed traces stay in place; each moved case has exactly one registered second trace."
+    },
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert this round and only this periodGateRound2 registration with its pending hashes and golden traces together in a reviewed new commit."
+  },
   "g31OlderQuarterPair": {
     "date": "2026-10-29",
     "authority": "Karl's decision G31 of 11.10.2026 (Regelblatt v4: the boards show per firm the newest reported numbers, labelled with their period; recency goes before one uniform period; implemented via the formula path with Vorher/Nachher). Daylauf 9 build brief sd-p2 of 29.10.2026 after the read-only repro of the 28.10./29.10. basis switch (324 rows from the quarter to 30.06.2026 to fiscal year 2025). A formula change with visible board numbers: draft PR, no merge before the independent Codex review.",
@@ -393,6 +483,93 @@
       "review": "Builder evidence only; one blind Opus review, then the Codex review decide."
     }
   },
+  "periodGateRound3OnPr75": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): the period gate rebased on PR #75, with the two findings of Codex's verdict on eccc09b32c that blocked it.",
+    "scope": "lib/annual-pairs.js: sealedEraSnapshot excuses an undated pair only on the 25 sealed golden fixtures, identified by ticker and fetch time to the millisecond; the date rule is gone, an old snapshot that is no fixture gets no exception. lib/g31-recency.js: quarterCandidate takes the position argument of #75 and the duration test of this gate together; older pairs from #75 pass the same gate. scripts/write-findash-export.js: the watcher [period-gate-undated] counts a fixture on a board, whichever axis it reaches, capital efficiency included. No golden trace moves.",
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "dba91800159d571012f9bd42c41fab0aba9cc257bc21f019cdc017a22da6a57e",
+      "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
+    },
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "73151b63babf52df306739bf0e9843a228cde582d04b73fff9fcfea0327638d7",
+      "lib/annual-pairs.js": "6812d696b08a5af098ee45dff47bbad122fa68b6ff0433ad50a08097c2f2b156"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "evidence": "tests/period-gate.test.js (an invented ticker fetched 19.08.2026 and a fixture ticker at another time get no exception; every fixture of the file passes, list size 25), tests/period-gate-undated-watcher.test.js, tests/hand-table-prn-20261101.test.js, scripts/gqs00-freeze.js --verify.",
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge.",
+    "rollback": "Revert this round and only this registration with its dependency hashes together in a reviewed new commit.",
+    "reviewFix20261104": {
+      "scope": "Codex verdict on 63dee7195e (NOT APPROVED, finding 1): ticker and fetch time do not prove an unchanged fixture. sealedEraSnapshot now also requires annual and timeseries to deep-equal the sealed rawSnapshot of protocol/gqs-00/1.1.0/golden-fixtures.json, read on the first matching name only. A fixture name over one changed cell, other series or invented numbers gets no exemption. The [period-gate-undated] warning no longer claims an empty growth figure.",
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "0ea305055c9ce8d0e447481109d443fe35627d88789c28b32ba264234f51f661"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
+      },
+      "evidence": "tests/period-gate.test.js (3317.HK as filed keeps acceleration 0.8414 and the GP axis 0.4708; one cell 1 % off, other series, invented numbers under a fixture name drop both; break-once on the name and the content line), tests/period-gate-undated-watcher.test.js (real ALNY and BMI packets counted, STB.OL name over invented numbers not), tests/annual-financial-replacements.test.js (the hole-lock break probe hides the hole from the gate with dated ends instead of borrowing a fixture name); red on 63dee7195e, green here; verify() rebuilds the 25 traces unchanged and the content check answered true on all 156 fixture calls.",
+      "review": "Builder evidence only; blind Opus review of this delta and the Codex re-check remain pending."
+    },
+    "comparisonUntil20261204": {
+      "comparison": "until 04.12.2026 (Karl's rule: the old formula stays visible as a comparison for at most four weeks)",
+      "scope": "lib/annual-pairs.js withoutPeriodGate(fn) switches the date windows of periodGateReason off for one synchronous calculation (a pair without an end stays empty); scripts/write-findash-export.js adds periodGateShadow {growth, basis, periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis} (the zero-year rule of the acceleration gate is off with the gate; the hand-table holds of #72 stay on; capital efficiency is computed without the SEC and regional annual series the score attaches, so it differs from the score for those firms) to every full-board, top-board and overview row that carries annualPairsShadow (not the Rule-40 rows), computed from the same snapshot with the gate off. No score, no rank, no findash reader. The undated-quarter and duration filters of src/scoring/axes.js stay on. Remove the switch, the field and this note together by 04.12.2026.",
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "06296357bcc98231c881aba2054fe7afeb5921b4948c6351c10863a0380caaee"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "0ea305055c9ce8d0e447481109d443fe35627d88789c28b32ba264234f51f661"
+      },
+      "evidence": "tests/period-gate.test.js (a 730-day pair: empty with the gate, 30 % growth and GP axis 0.3 without it, gate restored also after a throw; periodGateShadowForSnapshot keys and values; break-once on the switch line); tests/druckenmiller/fixtures/v1-row-keys.snapshot.json lists periodGateShadow, gpAxis, accelerationAxis.",
+      "review": "Builder evidence only; narrow blind Opus review pending."
+    }
+  },
+  "staleSeriesP286P287": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): packages P286 and P287, verdict ergebnisse/P286/urteil.md and Claude's positions p286 and p287; the before and after with scores and ranks that the verdict could not measure.",
+    "scope": "lib/annual-pairs.js: a dated quarterly series whose newest value lies more than 365 days before the data day counts as not present (maskStaleQuarterSeries, called last in prepareSnapshot, never at the pull); each series on its own ends, an undated series has an unknown age and stays. A growth pair ends after 365 days (quarter, half year, four quarters) or 550 days (year), measured on its younger end (staleReason, in the candidate funnel of lib/g31-recency.js, so an older pair of PR #75 cannot reopen it). An annual anchor more than 730 days back drops gross profit, annual acceleration and the capital-efficiency penalty pair through axisPairBlocked, longer than the 550 days of the shown figure while the vendor lacks FY2025 for about 87 board rows (gap fill #57); the year-ago partner and the older pair of the acceleration are never judged for age. The data day is RUN_DATE_UTC, set on the scoring job; without it (tests, tools, the sealed proof) no age rule applies, and a sealed fixture is exempt. scripts/write-findash-export.js: a row with no quarter point shows no quarter span. Blind review of 01.11.2026: without any annual revenue the stale revenue series stays, because the sealed router reads empty revenue as a firm without revenue (EYDAP.AT, OBX); the annual pair of the overview and the three-year rate of the filter feed take the 550 days; acceleration judges the age at the first used year, also below a vendor zero or a gap (AGTF.TO); the plausibility watcher skips cells marked series-stale; the reload planner reads the unmasked view; netIncomeQ left the list, no series carries its own ends. A sealed fixture is exempt from the mask, the axes and the overview pair, not from the growth funnel, which sees no snapshot; the test gate runs without a data day. Hub Group is held by a quarantine row: the firm withdrew its 2024 and 2023 statements and the rule would lift it 512 places.",
+    "definitionAmendmentAt120Seal": {
+      "axes": "revGrowthLevel (with ruleOfX and the growth bonus), revAcceleration, gpGrowth, capitalEfficiency, marginTrajectory through the masked quarters",
+      "rule": "A value older than the limit before the data day is no current figure: the leg is null (axis drops, renorm-on-drop), the raw row stays in the marker, nothing is replaced by 0."
+    },
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
+      "lib/annual-pairs.js": "a2cd6c664992c6b4606d25ba71e5dca39c8c7a23dfe467579d415b02801046f8"
+    },
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
+      "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "None: verify() runs without RUN_DATE_UTC, and sealed fixtures are exempt by identity.",
+    "evidence": "tests/stale-series-p286.test.js with in-memory break-once; before and after on the data day 31.10.2026 in the PR text.",
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge.",
+    "rollback": "Revert this round and only this registration with its dependency hashes together in a reviewed new commit.",
+    "reviewFix20261104": {
+      "scope": "Codex verdict R16 on 0281b1cdb2 (NOT APPROVED) and Claude's decision of 04.11.2026: the annual axis anchor (gross profit, acceleration, capital penalty) ends after 550 days like the shown annual figure, not 730; revAcceleration in src/scoring/axes.js judges the newest quarter pair it actually uses for age, so old quarters kept as proof of revenue or behind a fresh unpaired quarter no longer carry the axis; requireDataDay in lib/annual-pairs.js makes a started board-writing script (run-screener, write-findash-export, write-excluded-list, write-rule40-export, write-filter-universe, write-bewertung-export, write-board-history) fail loudly without a valid RUN_DATE_UTC unless AGE_RULE_OFF=1.",
+      "file": "src/scoring/axes.js",
+      "sourceSha256LF": "994a1dd18f54d198e9854987a8fc7cc5661b114f2c1a2ba5ee02db705e5f9d47",
+      "previousPendingSha256LF": "4174532772c6e26a1bd2cd210e44e6d1ef870497642c6cc851aa8a3a470acbce",
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "879c583dd3eb1a8d7800f735645bac795d8b0accf0bc1530ada9c72550adfb9d"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "aed59aa55aa3e0405f503a602f3f47a645ad91d98cf8815dbb907ceb3dba853c"
+      },
+      "goldenImpact": "None: verify() runs without RUN_DATE_UTC from a non-writer entry, so no age rule applies; sealed fixtures are also exempt by identity and content.",
+      "evidence": "tests/stale-series-p286.test.js: 550 and 551 days on the GP anchor, the Pop Mart pattern (FY2024, 669 days) drops both axes, both of Codex's acceleration paths (no annual revenue; fresh unpaired quarter with valid annual revenue, which now gives the annual fallback 0.0889), the data-day requirement by entry and AGE_RULE_OFF; in-memory break-once on the acceleration check and the requirement. Codex R22 follow-up: requireDataDay reads process.argv[1] and every writer calls it first, outside every catch (spawn test of the six writers); the export counts no quarter points for revenue quarters kept only as proof; exchange-check-shadow.yml sets AGE_RULE_OFF=1.",
+      "review": "Builder evidence only; blind Opus review and the Codex re-check remain pending."
+    },
+    "reviewFix20261105": {
+      "scope": "Codex verdict R31 on 7741127c87, finding 2: the direct entry of src/scoring/run-screener.js calls requireDataDay first, before run(), so a start without RUN_DATE_UTC also stops with an empty snapshots folder (it wrote empty outputs with exit 0). One line; no formula, weight, threshold or library entry changes.",
+      "file": "src/scoring/run-screener.js",
+      "sourceSha256LF": "db5df2dcafc0afca48a42037768c5487d48d3411b39cdfe31dd58574e522c2a2",
+      "previousPendingSha256LF": "ee9c2bcb4d2186e31ce35cdd7565a013851162e92cef4ba132b501ea84975901",
+      "mergedWith": "PR #81 (Tag 1534, smallcapFixedReference) on 05.11.2026: the hash covers both changes; before that merge the R31 line alone gave 42e4babbe70323f55c427dfe19299f4ad473a14b8f8ce3b1eea8a9fd63a95c2b on 93c4b4de47f4.",
+      "goldenImpact": "None: the line runs only when run-screener.js is the started script.",
+      "evidence": "tests/stale-series-p286.test.js spawns run-screener.js without RUN_DATE_UTC (exit 1, age-rule message) next to the six export writers.",
+      "review": "Builder evidence only; blind Opus review and the Codex re-check remain pending."
+    }
+  },
   "smallcapFixedReference": {
     "date": "2026-10-31",
     "authority": "Codex verdict P317 on PR #81 (NOT APPROVED 98 %, finding 1, pick 94 %) and the master's order of 31.10.2026 under Karl's rule that no automation may change right rows. A method change on the formula path: it stays a draft until the independent Codex review.",
@@ -409,8 +586,74 @@
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
     "lib/home-listing.js": "4a834a29722ab66cafa69f20c2a621502f6f1718c54bf39a2d1146c38c1de000",
-    "lib/g31-recency.js": "84cb9574a91e3c4685f1abc8032243638a436d05d782217e2256c505232e6aea",
-    "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
+    "lib/g31-recency.js": "761bd3657e48eed5dfebca99140e6ad7bd46537e94618af27a8b188f27b5dcf8",
+    "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
+    "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+    "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
+    "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8"
+  },
+  "sourcedAnnualYear20261104": {
+    "date": "2026-11-04",
+    "scope": "Read-time sourced FY2025 for gross profit growth and annual acceleration only. Native currency, both prior fingerprints, same snapshot FX, adjacent periods, source publication date, 550-day anchor, review deadline, vendor catch-up retires the record. Positional series and all other raw axes unchanged. The annual-pair explanation labels the same sourced year and follows the acceleration branch callback; no display is mislabelled as FY2024.",
+    "file": "src/scoring/axes.js",
+    "sourceSha256LF": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+    "previousPendingSha256LF": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
+    "dependencySha256LF": {
+      "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+      "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
+      "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
+      "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269"
+    },
+    "goldenImpact": "No configured ticker is a sealed fixture. All 25 sealed traces must rebuild unchanged.",
+    "evidence": "tests/sourced-annual-years.test.js; tests/sourced-annual-years-review.test.js; scripts/sourced-annual-years-replay.js. Current evidence: docs/sourced-annual-years-review-2026-11-07.md, second-round addendum against 4c5620ce99. The preserved first-round section measures against final PR88; docs/sourced-annual-years-2026-11-04.md is historical evidence only.",
+    "review": "Builder registration only. Claude blind review required; no merge or publication.",
+    "rollback": "Revert this draft and this named pending registration together in a reviewed new commit; restore the previous axes and dependency hashes.",
+    "previousDependencySha256LF": {
+      "lib/annual-pairs.js": "1a5388b0cd8ba9fca45c9172fb568d05d0c2a1d96a607890661a5a218a3eab97"
+    },
+    "reviewFix20261107": {
+      "date": "2026-11-07",
+      "baseHead": "9a28b62cb2",
+      "scope": "M2: restated prior blocks only sourced annual acceleration with a visible hint. M3: GP overview uses the filed pair of its axis. M4: existing deadline report warns 30 days ahead. L5: publication day excluded. L6: GP prior length uses GP ends. M1: replay baseline parameter defaults to final PR88.",
+      "previousSourceSha256LF": {
+        "src/scoring/axes.js": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
+        "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051"
+      },
+      "sourceSha256LF": {
+        "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+        "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "53a0886d52338fd1081cd5cbff729aa93c15b67a0fb2414b029984ffb36dd973",
+        "lib/sourced-annual-years.js": "946a82221263a2419990632283045ea800be2f6fbc0cc7ba264fd8d8cc65a613",
+        "configs/sourced-annual-years.json": "c553a9a40794544860183e7d7fbb6a735f406081c599280cc5b20696adc85e39"
+      },
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
+        "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+        "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287"
+      },
+      "evidence": "tests/sourced-annual-years-review.test.js: real source packets, fixed clocks and seven read-only in-memory break-once probes. docs/sourced-annual-years-review-2026-11-07.md (preserved first-round section) records individual tests, source comparison and final PR88 replay on 2026-10-31.",
+      "review": "Builder registration only. Independent blind Claude review required; no seal, commit, push or release."
+    },
+    "reviewFix2_20261107": {
+      "date": "2026-11-07",
+      "baseHead": "4c5620ce99d175ad3e775cac472c4686643a6d9b",
+      "scope": "N1: sourced GP is only the annual candidate; newer or equally recent quarters win. N2: hold the margin tilt for a restated prior. N3: roll the existing margin window forward by one year, without changing positional inputs. N4: seven-day annual warning window, unchanged review deadlines and explicit resolution evidence. N5: preserve the first-round report in docs and append this round.",
+      "previousSourceSha256LF": {
+        "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+        "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66"
+      },
+      "sourceSha256LF": {
+        "src/scoring/axes.js": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+        "src/scoring/overview.js": "bb025e2562ab28868d7b5ed0f107f354cc5c38bdca7f063249f720fed93a65f7"
+      },
+      "supportingFilesSha256LF": {
+        "lib/handtabellen-fristen.js": "bfc60122a6ed6a44153afc4816d7c18ad52e02f5a2ee3d434725444cfc1a792c"
+      },
+      "evidence": "docs/sourced-annual-years-review-2026-11-07.md; tests/sourced-annual-years-review.test.js. Same-day replay against 4c5620ce99 with the verified B05 after arm reused as the baseline.",
+      "review": "Builder registration only. Claude blind review pending; no seal, commit, push or release."
+    }
   },
   "cycleRamp": {
     "date": "2026-11-04",
@@ -437,5 +680,14 @@
     "definitionAmendmentAt120Seal": "At the 1.2.0 seal, constants.cycleDamper and endFactors.cycle.rule in scripts/gqs00-freeze.js buildRegistry must describe the ramp (lo 0.8, hi 1.2, width 0.4) from the exported score.js constants. The version branch is implemented and tested in memory; the historical 1.1.0 registry and its verify comparison remain unchanged.",
     "evidence": "tests/scoring/cycle-ramp.test.js; scripts/cycle-ramp-compare.js; docs/zyklus-rampe-vorher-nachher-2026-11-04.md. Fixed 2026-10-31 R12 inputs, same calibration. Independent blind review outstanding.",
     "rollback": "Restore the previous cycle gate and remove its comparison additions and this registration together in a reviewed new commit; keep historical seals unchanged."
+  },
+  "revAccelerationBasisLabel": {
+    "date": "2026-11-07",
+    "scope": "Only the axes.js fingerprint. revAcceleration() reports through its existing onBasis callback the count of usable year-ago quarter comparisons and the age verdict of the newest one (onBasis(null, n, stale), before the branch), and the annual fallback reports onBasis(\"year\"). No value, branch, threshold, weight or calibration changes; the only other consumer (lib/annual-pairs.js) reads the basis string and ignores null and year. Read by scripts/write-findash-export.js revAccelerationBasis (display only).",
+    "file": "src/scoring/axes.js",
+    "previousSourceSha256LF": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+    "sourceSha256LF": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
+    "goldenImpact": "None: all 25 sealed traces must rebuild unchanged.",
+    "evidence": "tests/rev-acceleration-basis-label.test.js; node scripts/gqs00-freeze.js --verify."
   }
 }

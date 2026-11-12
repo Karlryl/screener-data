@@ -75,7 +75,7 @@ test('equal ends keep the quarter; misaligned or invalid end arrays never date a
     assert.equal(revGrowthLeg(bad).basis, 'quarter', JSON.stringify(annualRevEnds) + ': an undated year cannot be later');
   }
   const misQ = synth(); misQ.timeseries.revenueQEnds = ENDS.slice(0, 4);
-  assert.equal(revGrowthLeg(misQ).periodEnd, null, 'misaligned quarter ends: positional pair, period unknown');
+  assert.deepEqual([revGrowthLeg(misQ).basis, revGrowthLeg(misQ).periodEnd], ['year', '2025-12-31'], 'misaligned quarter ends date nothing: no quarter pair, the dated year carries');
 });
 
 test('non-adjacent annual pair, missing prior-year denominator, zero versus absence', () => {
@@ -156,8 +156,10 @@ test('B5 real cases UWMC and RKT: the revenue badge uses the revenue column cand
   }
   close(overviewMetric(real('UWMC'), { gpClass: 'degenerate' }).value, -1.1720877156337544);
   const undated = { annual: { annualRev: [150, 100] } };
-  assert.equal(overviewMetric(undated, { gpClass: 'degenerate' }).value, 0.5);
-  assert.equal(overviewShadow(undated, 'revenue-badge').period.label, 'Geschäftsjahr, Periodenende unbekannt');
+  // Period gate round 2 (30.10.2026): unknown dates no longer stay labelled, they empty the value with a reason.
+  assert.equal(overviewMetric(undated, { gpClass: 'degenerate' }).value, null);
+  assert.match(overviewShadow(undated, 'revenue-badge').period.reason, /^Periodenenden fehlen/);
+  assert.equal(overviewShadow(undated, 'revenue-badge').period.label, 'Zeitraum nicht verfügbar');
 });
 
 test('held cells MAD.AX, AJBU.SI, MODEC (6269.T), OBM.AX, CIG-C are never revived; a future #448 September cell neither', () => {

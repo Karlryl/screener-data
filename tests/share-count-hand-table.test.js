@@ -65,29 +65,16 @@ const WRONG = {
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
   'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 583349906 }, // 04.11.2026: ON-equivalents at the closes of 03.11.2026 (ratio 0.742)
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
+  // Snapshot of run 42356903064 (2026-11-07): JOJO with the announced, not yet effective 1:5 split on the unsplit price.
+  'JOJO.BO': { px: 1.1692045314, vendorShares: 689614000, mcap: 806299871.8150574, issuer: 137922800 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
-  '688428.SS': { px: 3.657160206, vendorShares: 1767202175, mcap: 6462941472.097403, issuer: 860109566 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
   '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
-  // Check of 01.11.2026, snapshots of run 41184535364: all classes at one price; Galaxy Digital with a count no report carries.
-  "688981.SS": { px: 14.5461374166, vendorShares: 8562381657, mcap: 124549580195.34126, issuer: 4815280770 },
-  "600938.SS": { px: 5.4057708738, vendorShares: 47529957582, mcap: 256936060327.23935, issuer: 28956535868 },
+  // Check of 01.11.2026, snapshots of run 41184535364: Galaxy Digital with a count no report carries. The A and H rows of that check,
+  // InnoCare and the Shandong Gold A line of #111 (600547.SS) left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
   // PR 89: the home line of Aroundtown, shown once the fixed home listing holds (snapshot of run 41184535364).
   "AT1.DE": { px: 1.6179097851000002, vendorShares: 1035531042, mcap: 1675395805.785152, issuer: 1129930393 },
-  "688185.SS": { px: 10.933273035, vendorShares: 247043807, mcap: 2700997398.4586954, issuer: 154287643 },
-  "601869.SS": { px: 38.004207355199995, vendorShares: 821905096, mcap: 31235851708.433693, issuer: 538822900 },
-  "688347.SS": { px: 19.837691279999998, vendorShares: 1737614181, mcap: 34470253683.42233, issuer: 1117756347 },
-  "001289.SZ": { px: 2.1686203422, vendorShares: 8359816214, mcap: 18129267498.73078, issuer: 6032625552 },
-  "600956.SS": { px: 0.9963931302, vendorShares: 4494093514, mcap: 4477883904.1536, issuer: 3254249834 },
-  "600685.SS": { px: 3.802224162, vendorShares: 1413506449, mcap: 5374468372.373422, issuer: 1069987866 },
-  "600871.SS": { px: 0.315599634, vendorShares: 18957044785, mcap: 5982836395.792466, issuer: 14924948024 },
-  "600188.SS": { px: 2.9065223436, vendorShares: 10037480544, mcap: 29174161475.64429, issuer: 7905916630 },
-  "688385.SS": { px: 6.877066310399999, vendorShares: 823719206, mcap: 5664771598.0227375, issuer: 653440512 },
-  "600688.SS": { px: 0.45837089699999994, vendorShares: 10542617180, mcap: 4832428893.674496, issuer: 8429167420 },
-  "1787.HK": { px: 2.0218760978, vendorShares: 4609929717, mcap: 9320706707.38866, issuer: 7252581579 },
-  "1766.HK": { px: 0.6750210553499999, vendorShares: 28698864190, mcap: 19372337593.12871, issuer: 39817324643 },
-  "0019.HK": { px: 13.564162472, vendorShares: 3627920515, mcap: 49209703299.43211, issuer: 1183568546 },
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
   "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
 };
@@ -107,6 +94,17 @@ const bleibtStale = (snap, ticker, apply = applyShareCountTable) => {
   assert.strictEqual(JSON.stringify(snap), vorher, `${ticker}: stale row changed more than the stamp`);
 };
 
+// 07.11.2026 (blind review of #122): a row of a listing with an exchange suffix (non-USD quote) needs withholdUnverified;
+// without it the full-pull write site compares the native quote with the USD market cap, the row goes stale and Yahoo's
+// value stays (JOJO.BO: 806 M instead of 161 M USD). Broken once on a copy.
+const suffixRowsCarryFlag = table => Object.entries(table).filter(([k, v]) => !k.startsWith('_') && v && v.shares && /\.[A-Z]+$/.test(k))
+  .every(([, v]) => v.withholdUnverified === true);
+pruefe('every row of a suffixed (non-USD) listing carries withholdUnverified', () => {
+  assert.ok(suffixRowsCarryFlag(TABLE), 'a suffixed row without withholdUnverified');
+  const copy = structuredClone(TABLE); delete copy['JOJO.BO'].withholdUnverified;
+  assert.equal(suffixRowsCarryFlag(copy), false, 'break-once: the guard sees a row without the flag');
+  breaks++;
+});
 pruefe('presence: every recorded wrong state is corrected to price x issuer count', () => {
   for (const t of Object.keys(WRONG)) assert.ok(TABLE[t], `required table row ${t} missing`);
   for (const t of Object.keys(TABLE)) {
@@ -269,4 +267,4 @@ for (const [f, before] of hashes) {
   pruefe('live file unchanged: ' + f, () => assert.strictEqual(sha(f), before));
 }
 console.log(`share-count-hand-table: ${ok} ok, ${fail} fail, ${breaks} break-once fired`);
-if (fail || breaks !== 1) process.exit(1);
+if (fail || breaks !== 2) process.exit(1); // 07.11.2026: the suffix-flag guard adds the second break-once
