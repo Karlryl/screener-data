@@ -137,6 +137,18 @@ function watchlistTickers(file) {
   return (w.stocks || []).map((s) => (typeof s === 'string' ? s : s.ticker)).filter(Boolean);
 }
 
+/** Latest board-history day: every ticker in a board cohort (US queue order). @param {string} boardRoot @returns {Set<string>} */
+function boardTickers(boardRoot) {
+  const out = new Set();
+  const days = fs.existsSync(boardRoot) ? fs.readdirSync(boardRoot).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort() : [];
+  if (!days.length) return out;
+  const dir = path.join(boardRoot, days[days.length - 1]);
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.json'))) {
+    for (const rows of Object.values(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).cohort || {})) for (const r of rows || []) if (r && r.ticker) out.add(r.ticker);
+  }
+  return out;
+}
+
 /** Latest board-history day: rank and quarter gaps of the Taiwan cohort rows (queue order). */
 function boardPriority(boardRoot) {
   const out = new Map();
@@ -383,7 +395,6 @@ const SEC_CAP = 600;                      // SEC requests per run; the measured 
 const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week ...
 const SEC_DAILY_AFTER_DAYS = 91;          // ... and every day once that quarter ended longer ago than this: a new filing can then exist
 const SEC_KEEP_DAYS = 820;                // nine quarters: the shown pair plus the vendor's five for the agreement check
-const SEC_STALE_DAYS = 200;               // no quarter for this long: a candidate even when the vendor names no newer one
 const SEC_ABOUT = 'Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q, 10-K, 10-KT and their amendments), one group per concept. '
   + 'Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose '
   + 'vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.';
@@ -398,13 +409,16 @@ function usCandidates(dirs, today) {
       if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       filesRead[d] += 1;
       const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), m = s.meta || {};
-      if (!m.ticker || m.country !== 'United States' || out.has(m.ticker)) continue;
+      // sd-us-kern 12.11.2026: a US listing (no exchange suffix) of a firm seated abroad files 10-Q too (MELI, ENB, TEAM).
+      if (!m.ticker || (m.country !== 'United States' && m.ticker.includes('.')) || out.has(m.ticker)) continue;
       if ((m.fxConverted === true ? m.reportingCurrencyOriginal : m.reportingCurrency) !== 'USD' || (m.fxConverted === true && m.fxRateApplied !== 1)) continue;
       const ends = s.timeseries?.revenueQEnds || [], rows = s.timeseries?.revenueQ || [];
       const newest = ends.filter((e, i) => Number.isFinite(rows[i] && typeof rows[i] === 'object' ? rows[i].value : rows[i])).sort().pop();
       if (!newest) continue;
       const mrq = tag(m.mostRecentQuarter) || null;
-      if ((mrq && dayOf(mrq) - dayOf(newest) > 15) || dayOf(today) - dayOf(newest) > SEC_STALE_DAYS) out.set(m.ticker, { ticker: m.ticker, mrq });
+      // sd-us-kern 12.11.2026: in the filing season the vendor's mostRecentQuarter lags with its own series (11.11.2026: 431 stale
+      // US board rows named no newer quarter), so a newest quarter older than SEC_DAILY_AFTER_DAYS is a candidate by itself.
+      if ((mrq && dayOf(mrq) - dayOf(newest) > 15) || dayOf(today) - dayOf(newest) > SEC_DAILY_AFTER_DAYS) out.set(m.ticker, { ticker: m.ticker, mrq });
     }
   }
   return { list: [...out.values()], filesRead };
@@ -437,8 +451,10 @@ async function runUs(ctx) {
     return !(holdsMrq && readRecently);
   });
   // Codex R21 (4): never read or read longest ago first, so a cap never starves the same firms day after day.
+  // sd-us-kern 12.11.2026: firms on the latest boards go before all others, so the cap never starves what the boards show.
   const lastRead = (tk) => next.companies[tk]?.noData?.readAt || '';
-  due.sort((x, y) => (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1));
+  const onBoard = (tk) => (ctx.usBoard.has(tk) ? 0 : 1);
+  due.sort((x, y) => onBoard(x.ticker) - onBoard(y.ticker) || (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1));
   st.due = due.length;
   for (const { ticker } of due) {
     if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
@@ -495,6 +511,7 @@ async function main(opts = {}) {
     dir: opts.dir || process.env.EXCHANGE_QUARTERS_DIR || path.join(ROOT, 'external-data', 'exchange-quarters'),
     tickers: opts.tickers || watchlistTickers(path.join(ROOT, 'watchlist.json')),
     priority: opts.priority || boardPriority(path.join(ROOT, 'board-history')),
+    usBoard: opts.usBoard || boardTickers(path.join(ROOT, 'board-history')),
     dryRun: !!opts.dryRun,
     forceCn: !!opts.forceCn,
     cnCap: opts.cnCap || CN_CAP,
@@ -538,4 +555,4 @@ if (require.main === module) {
   }).then((r) => process.exit(r.exitCode), (e) => { console.error('::error::' + e.message); process.exit(1); });
 }
 
-module.exports = { main, taiwanQueue, boardPriority, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };
+module.exports = { main, taiwanQueue, boardPriority, boardTickers, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };

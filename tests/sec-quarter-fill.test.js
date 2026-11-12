@@ -169,11 +169,12 @@ function tempStoreRun(extra = {}) {
   fs.mkdirSync(snaps);
   fs.writeFileSync(path.join(snaps, 'AMZNX.json'), JSON.stringify({ ...snapshot(), meta: { ...snapshot().meta, country: 'United States', mostRecentQuarter: '2026-06-30T00:00:00.000Z' } }));
   fs.writeFileSync(path.join(snaps, 'FRESH.json'), JSON.stringify({ ...snapshot(), meta: { ...snapshot().meta, ticker: 'FRESH', country: 'United States', mostRecentQuarter: '2026-03-31T00:00:00.000Z' } }));
-  fs.writeFileSync(path.join(snaps, 'ABROAD.json'), JSON.stringify({ ...snapshot(), meta: { ...snapshot().meta, ticker: 'ABROAD', country: 'Germany', mostRecentQuarter: '2026-06-30T00:00:00.000Z' } }));
+  // sd-us-kern 12.11.2026: a foreign listing (exchange suffix) of a firm seated abroad; a US listing of such a firm is asked (test below).
+  fs.writeFileSync(path.join(snaps, 'ABROAD.DE.json'), JSON.stringify({ ...snapshot(), meta: { ...snapshot().meta, ticker: 'ABROAD.DE', country: 'Germany', mostRecentQuarter: '2026-06-30T00:00:00.000Z' } }));
   const calls = [];
   const secFacts = async (cik) => { calls.push(cik); return { facts: { 'us-gaap': { Revenues: { units: { USD: [fact('2026-04-01', '2026-06-30', 200606e6, '2026-07-31'), fact('2025-04-01', '2025-06-30', 167702e6, '2026-07-31')] } } } } }; };
-  // ABROAD has a real CIK, so only the country filter keeps it out; FRESH has none and stays out of the requests here (see the 200-day test).
-  const base = { markets: ['us'], dir, tickers: [], priority: new Map(), log: () => {}, snapshotDirs: [snaps], secFacts, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, ABROAD: { cik: '0000000099' } }), cikMap: {}, now: () => new Date('2026-10-31T13:47:00Z'), ...extra };
+  // ABROAD.DE has a real CIK, so only the country filter keeps it out; FRESH has none and stays out of the requests here (see the 91-day test).
+  const base = { markets: ['us'], dir, tickers: [], priority: new Map(), log: () => {}, snapshotDirs: [snaps], secFacts, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, 'ABROAD.DE': { cik: '0000000099' } }), cikMap: {}, now: () => new Date('2026-10-31T13:47:00Z'), ...extra };
   return { base, dir, calls };
 }
 test('store: asks SEC only for US firms that miss a quarter, writes append-only, re-reads a satisfied firm weekly', async () => {
@@ -426,16 +427,39 @@ test('candidates: only USD statements, no converted figures', async () => {
   await main({ ...base, secTickers: async () => cik });
   assert.deepEqual(calls.sort(), ['0000000004', '0001018724']);
 });
-test('candidates: no vendor quarter for more than 200 days counts without a newer quarter named', async () => {
-  // FRESH: the vendor names 31.03.2026 and has it, so only the age can make it a candidate.
+test('candidates: no vendor quarter for more than 91 days counts without a newer quarter named (the vendor mostRecentQuarter lags with its series)', async () => {
+  // FRESH: the vendor names 31.03.2026 and has it, so only the age can make it a candidate. sd-us-kern 12.11.2026: was 200 days;
+  // on 11.11.2026 431 stale US board rows had a vendor mostRecentQuarter equal to the vendor's newest quarter.
   const ask = async now => {
     const { base, calls } = tempStoreRun();
     fs.rmSync(path.join(base.snapshotDirs[0], 'AMZNX.json'));
     await main({ ...base, secTickers: async () => ({ FRESH: { cik: '0000000005' } }), now: () => new Date(now) });
     return calls.length;
   };
-  assert.equal(await ask('2026-10-17T13:47:00Z'), 0, '200 days');
-  assert.equal(await ask('2026-10-18T13:47:00Z'), 1, '201 days');
+  assert.equal(await ask('2026-06-30T13:47:00Z'), 0, '91 days');
+  assert.equal(await ask('2026-07-01T13:47:00Z'), 1, '92 days');
+});
+
+test('candidates: a US listing of a firm seated abroad is asked, its foreign listing is not (sd-us-kern 12.11.2026)', async () => {
+  const { base, calls } = tempStoreRun();
+  addSnap(base, 'MELIX.json', usSnap('MELIX', { country: 'Uruguay' }));
+  await main({ ...base, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, 'ABROAD.DE': { cik: '0000000099' }, MELIX: { cik: '0000000007' } }) });
+  assert.deepEqual([...calls].sort(), ['0000000007', '0001018724']);
+});
+test('queue: firms on the latest boards are asked first, so the cap never starves them (sd-us-kern 12.11.2026)', async () => {
+  const { base } = tempStoreRun();
+  const secTickers = manyFirms(base, 5), calls = [];
+  // F000..F004 were never read; without the board rule the ticker order would ask F000 and F001.
+  await main({ ...base, secTickers, secCap: 2, usBoard: new Set(['F003', 'F004']), secFacts: async c => { calls.push(c); return null; } });
+  assert.deepEqual(calls, ['0000000004', '0000000005']);
+  const { boardTickers } = require('../scripts/fetch-exchange-quarters.js');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-'));
+  for (const [d, t] of [['2026-11-10', 'OLD'], ['2026-11-11', 'NEW']]) {
+    fs.mkdirSync(path.join(root, d));
+    fs.writeFileSync(path.join(root, d, 'energy.json'), JSON.stringify({ cohort: { profitable: [{ ticker: t, rank: 1 }], unprofitable: [] } }));
+  }
+  assert.deepEqual([...boardTickers(root)], ['NEW'], 'only the latest day counts');
+  assert.equal(boardTickers(path.join(root, 'absent')).size, 0);
 });
 
 // ── Store writer: when a firm is due ─────────────────────────────────────────
