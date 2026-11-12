@@ -72,10 +72,10 @@ const active = guard(dropD52, ...floorsFile({ d52: spot() }));
 assert.equal(active.status, 0, active.stdout);
 assert.match(active.stdout, /::warning::Rotstelle bis .*zuständig Test: das Feld d52/);
 assert.equal(guard(feedWith((row, i) => { if (i < 300) delete row.d52; }), ...floorsFile({ d52: spot() })).status, 1, 'below the temporary floor stays red');
-const expired = guard(dropD52, ...floorsFile({ d52: spot({ seit: day(-15), bis: day(-1) }) }));
+const expired = guard(dropD52, ...floorsFile({ d52: spot({ seit: day(-14), bis: day(-1) }) }));
 assert.equal(expired.status, 1);
 assert.match(expired.stdout, /::error::Die Rotstelle für das Feld d52 ist am .* abgelaufen/);
-assert.equal(guard(feedWith(), ...floorsFile({ d52: spot({ seit: day(-15), bis: day(-1) }) })).status, 1, 'an expired entry is red even when the field recovered');
+assert.equal(guard(feedWith(), ...floorsFile({ d52: spot({ seit: day(-14), bis: day(-1) }) })).status, 1, 'an expired entry is red even when the field recovered');
 for (const bad of [{ bis: day(13) }, { bis: day(20) }, { bis: day(-2) }, { floor: floors.d52 }, { seit: '2026-02-30' }, { zustaendig: ' ' }, { grund: undefined }]) {
   const result = guard(dropD52, ...floorsFile({ d52: spot(bad) }));
   assert.equal(result.status, 1, JSON.stringify(bad));
