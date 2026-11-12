@@ -3,7 +3,9 @@
 // `neuerer-bericht`) instead of showing a guessed number. Metas are the real cells of daily-pull run 42994757810 (11.11.2026).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { newerReportHint } = require('../scripts/write-findash-export.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const { newerReportHint, OLDER_PAIR_SENTENCE } = require('../scripts/write-findash-export.js');
 
 const POP_MART = { ticker: '9992.HK', mostRecentQuarter: '2026-06-30T00:00:00.000Z' };          // shown: fiscal year to 31.12.2025
 const GENSCRIPT = { ticker: '1548.HK', mostRecentQuarter: '2026-06-30T00:00:00.000Z' };          // shown: fiscal year to 31.12.2025
@@ -52,4 +54,15 @@ test('a newer stored quarter than the Yahoo date is named (600400.SS: Yahoo 30.0
   assert.match(h.reason, /Zahlen bis 30\.09\.2026 /);
   // A stored quarter alone counts too.
   assert.equal(newerReportHint({}, { basis: 'year', periodEnd: '2025-12-31' }, { storedQuarterEnd: '2026-06-30' })?.code, 'neuerer-bericht');
+});
+
+// Blind review round 2 of 12.11.2026 (N5, N6).
+test('a stored quarter end rounded to the month end does not beat Yahoo\'s exact date (AEHR: reported 25.09.2026)', () => {
+  const h = newerReportHint({ mostRecentQuarter: '2026-09-25' }, { basis: 'year', periodEnd: '2026-05-31' }, { storedQuarterEnd: '2026-09-30' });
+  assert.match(h.reason, /Zahlen bis 25[.]09[.]2026 /);
+});
+
+test('the older-pair sentence the hint relies on still exists in lib/g31-recency.js', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'g31-recency.js'), 'utf8');
+  assert.ok(source.includes('`' + OLDER_PAIR_SENTENCE + '$'), 'g31Hinweis() no longer starts its older-pair sentence with: ' + OLDER_PAIR_SENTENCE);
 });

@@ -418,8 +418,12 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
     meta: snap ? snap.meta : null, // issuer of the shown listing, for the held-sibling hint
-    // Newest stored quarter end with a value, for the hint `neuerer-bericht` (a later report than the shown period).
-    neuestesQuartal: snap ? (snap.timeseries?.revenueQEnds || []).filter((e, i) => typeof e === 'string' && Number.isFinite(norm(snap, 'revenueQ')[i])).sort().at(-1) ?? null : null,
+    // Newest stored quarter end with a value, for the hint `neuerer-bericht` (a later report than the shown period). Self-contained:
+    // tests/smallcap-store-evidence-p159.test.js extracts this function without the module's other bindings.
+    neuestesQuartal: snap ? (snap.timeseries?.revenueQEnds || []).filter((e, i) => {
+      const cell = snap.timeseries?.revenueQ?.[i];
+      return typeof e === 'string' && Number.isFinite(typeof cell === 'number' ? cell : cell?.value);
+    }).sort().at(-1) ?? null : null,
     // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
     wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
     overviewLegacy: snap ? withG31Variant('legacy', () => {
@@ -542,7 +546,11 @@ function newerReportHint(meta, leg, { existing = null, heldSibling = null, store
   // The row already names the newer figures (held sibling) or already explains the missing pair (older quarter pair).
   if (heldSibling || existing?.reason?.includes(OLDER_PAIR_SENTENCE)) return null;
   const shown = day(leg?.periodEnd), word = PERIOD_WORD[leg?.basis];
-  const latest = [day(meta?.mostRecentQuarter), day(storedQuarterEnd)].filter(Boolean).sort().at(-1) ?? null;
+  // Stored quarter ends are rounded to the month end (AEHR: stored 30.09.2026, reported 25.09.2026), so the stored end only wins
+  // when it is a truly later period than Yahoo's exact date, more than NEWER_REPORT_DAYS after it.
+  const yahoo = day(meta?.mostRecentQuarter), stored = day(storedQuarterEnd);
+  const later = (a, b) => Date.parse(a) - Date.parse(b) > NEWER_REPORT_DAYS * 864e5;
+  const latest = yahoo && stored ? (later(stored, yahoo) ? stored : yahoo) : yahoo || stored;
   if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
   const tag = d => d.split('-').reverse().join('.');
   return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon Zahlen bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum fehlt in den Daten ein geprüfter Vorjahresvergleich des Umsatzes, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
@@ -2876,7 +2884,7 @@ module.exports = {
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
   loadCoverage,
-  newerReportHint, // sd-halbjahr 12.11.2026: hint `neuerer-bericht`, tests/export-hinweis-neuerer-bericht.test.js
+  newerReportHint, OLDER_PAIR_SENTENCE, // sd-halbjahr 12.11.2026: hint `neuerer-bericht`, tests/export-hinweis-neuerer-bericht.test.js
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
   // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
   // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
