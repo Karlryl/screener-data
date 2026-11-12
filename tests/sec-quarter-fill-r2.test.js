@@ -270,12 +270,12 @@ test('Codex R5 P1-B: within 0.02 % on the year but 7 % on a small remainder (133
   for (const xs of perms(h1)) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'half year minus Q1: 1 or 1.02');
 });
 
-test('Codex R5 P1-A rest: three contradicting half years and a nine-month figure filed twice date the marker by the newest contradiction', () => {
+test('Codex R5 P1-A rest: three contradicting half years and a nine-month figure filed twice: the marker is dated by the first day Q3 was open (15.10.), in every order', () => {
   const hist = [f('2025-07-01', '2025-09-30', 100, '2025-11-01'), f('2025-10-01', '2025-12-31', 100, '2026-02-01'), f('2026-01-01', '2026-03-31', 100, '2026-05-01')];
   const a = f('2026-01-01', '2026-06-30', 250, '2026-08-01'), b = f('2026-01-02', '2026-06-29', 251, '2026-08-04'), c = f('2026-01-03', '2026-07-01', 252, '2026-11-02');
   const y = f('2026-01-01', '2026-09-30', 400, '2026-10-15'), again = { ...y, filed: '2026-10-26', accn: 'repeat-ytd' };
   const seen = new Set(perms([a, b, c, y, again]).map((xs) => { const q = P.pitSingleQuarters([...hist, ...xs]).find((x) => x.end === '2026-09-30'); return q.derivation + '@' + q.filed; }));
-  assert.deepEqual([...seen], ['restatement-conflict@2026-11-02']);
+  assert.deepEqual([...seen], ['restatement-conflict@2026-10-15'], 'on 15.10. the nine months give 400 - 250 or 400 - 251 already');
 });
 
 test('blind delta check 12.11. evening (M1, N2): conflictsWith names another figure for the end with the own filing of that figure, in every order', () => {
@@ -299,4 +299,35 @@ test('blind delta check 12.11. evening (range M1): a marker the range sets off i
   assert.equal(P.pitSingleQuarters([...q3, ...years], { asOf: '2026-04-15' }).find((q) => q.end === '2025-12-31').val, 1, 'before 01.05. only 400 is known: Q4 = 1');
   const h1 = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-06-30', 200, '2026-08-01'), f('2026-01-01', '2026-06-30', 200.03, '2026-09-01', '10-Q/A', 'h2')];
   for (const xs of perms(h1)) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30').filed, '2026-09-01');
+});
+
+test('Codex R5b: a conflict known since 15.09. stays open on a later data day although the same figure is filed again on 11.11.', async () => {
+  const seedFacts = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-03-31', 100, '2026-09-01', '10-Q', 'repeat-q1'), f('2026-01-01', '2026-06-30', 250, '2026-08-01'),
+    f('2025-10-01', '2025-12-31', 100, '2026-02-01', '10-K'), f('2025-07-01', '2025-09-30', 100, '2025-11-01'), f('2025-04-01', '2025-06-30', 100, '2025-08-01')];
+  const facts = [...seedFacts, f('2026-01-02', '2026-06-30', 251, '2026-09-15', '10-Q/A', 'g1'), f('2026-01-02', '2026-06-30', 251, '2026-11-11', '10-Q', 'g2')];
+  for (const xs of perms(facts.slice(-3))) {
+    const q2 = P.pitSingleQuarters([...facts.slice(0, -3), ...xs]).find((q) => q.end === '2026-06-30');
+    assert.deepEqual([q2.derivation, q2.filed], ['restatement-conflict', '2026-09-15']);
+  }
+  // An older run stored Q2 = 250 - 100 filed 01.09.; the writer runs on 12.11.
+  const seed = store([{ end: '2026-06-30', start: '2026-03-31', val: 150, filed: '2026-09-01', form: '10-Q', accn: 'old', days: 91, derivation: 'YTD-minus-YTD' },
+    ...P.pitSingleQuarters(seedFacts).filter((q) => q.end !== '2026-06-30')]);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sec-r5b-')), snaps = path.join(dir, 'snaps');
+  fs.mkdirSync(snaps);
+  const s = snapshot(['2026-03-31', '2025-12-31', '2025-09-30'], [100, 100, 100]);
+  s.meta.mostRecentQuarter = '2026-06-30';
+  fs.writeFileSync(path.join(snaps, 'REVIEWX.json'), JSON.stringify(s));
+  fs.writeFileSync(path.join(dir, 'us.json'), JSON.stringify(seed));
+  const r = await main({ markets: ['us'], dir, tickers: [], priority: new Map(), usBoard: new Set(['REVIEWX']), snapshotDirs: [snaps], cikMap: {},
+    secTickers: async () => ({ REVIEWX: { cik: '0000000001' } }), secFacts: async () => ({ facts: { 'us-gaap': { Revenues: { units: { USD: facts } } } } }),
+    log: () => {}, now: () => new Date('2026-11-12T09:00:00Z') });
+  assert.equal(r.exitCode, 0);
+  const next = JSON.parse(fs.readFileSync(path.join(dir, 'us.json'), 'utf8'));
+  S.assertAppendOnly(seed, next);
+  const at = (day) => run(snapshot(['2026-03-31', '2025-12-31', '2025-09-30'], [100, 100, 100], day), next).fill?.current ?? null;
+  assert.equal(at('2026-09-14'), 150, 'before the amendment the stored figure stands');
+  assert.equal(at('2026-09-16'), null, 'from the first trading day after 15.09. the quarter is open');
+  assert.equal(at('2026-11-11'), null, 'the repeat of 11.11. is not yet known, the September conflict is');
+  const later = { ...next.companies.REVIEWX, Revenues: { ...next.companies.REVIEWX.Revenues, '2026-06-30': [...next.companies.REVIEWX.Revenues['2026-06-30'], { start: '2026-03-31', val: 150, filed: '2026-12-01', form: '10-Q', accn: 'newer', days: 91, derivation: 'YTD-minus-YTD', confirmedBy: [] }] } };
+  assert.equal(X.secQuartersKnown(later, 'Revenues', '2026-12-10').find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'a newer stored figure never revives a known conflict');
 });
