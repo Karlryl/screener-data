@@ -513,6 +513,24 @@ function heldNewerSibling(meta, ticker, shownEnd) {
     .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
 }
 
+// A later report than the shown period counts when Yahoo's mostRecentQuarter lies more than NEWER_REPORT_DAYS after it: fiscal
+// quarter ends drift by a few days (27.09. against 30.09.), the next period is at least about 90 days later.
+const NEWER_REPORT_DAYS = 45;
+const PERIOD_WORD = { quarter: 'das Quartal', halfYear: 'das Halbjahr', ttm: 'die vier Quartale', year: 'das Geschäftsjahr', yearNewerRecord: 'das Geschäftsjahr' };
+/**
+ * Hint for a row whose company has reported a later period (Yahoo meta.mostRecentQuarter) than the shown growth period.
+ * Text only: no value, score or rank reads it.
+ * @param {object|null} meta Snapshot meta of the shown listing.
+ * @param {object|null} leg Shown growth leg (basis, periodEnd).
+ * @returns {{code:string, reason:string}|null} Hint `neuerer-bericht`, or null.
+ */
+function newerReportHint(meta, leg) {
+  const shown = isoTag(leg?.periodEnd), latest = isoTag(meta?.mostRecentQuarter), word = PERIOD_WORD[leg?.basis];
+  if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
+  const tag = d => d.split('-').reverse().join('.');
+  return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon einen Abschluss bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum liegt in den Daten kein geprüftes Umsatzpaar vor, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
+}
+
 // Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
 const AUTO_HINT_CODES = new Set(['aktuell-gross', 'vorjahr-klein', 'quartalssumme', 'aelteres-quartalspaar']);
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
@@ -549,6 +567,10 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     const reason = `Die Notierung ${neuer.ticker} derselben Firma hat neuere Zahlen bis ${tag(neuer.periodEnd)}, ihr Börsenwert ist wegen einer alten Kursmeldung von Yahoo zurückgehalten. Gezeigt werden die Zahlen von ${out.ticker} bis ${tag(leg.periodEnd)}.`;
     out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${reason}` } : { code: 'gehaltene-notierung-neuer', reason };
   }
+  // G31 with G2 (lane sd-halbjahr, 12.11.2026): the company has reported a later period than the shown one, but the data hold
+  // no valid pair for it. The row keeps the older correct number and says so; it never guesses the newer one.
+  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' ? newerReportHint(derivations.meta, leg) : null;
+  if (spaeter) out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${spaeter.reason}` } : spaeter;
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
   // null, like an unlabelled row). Display only: no score, rank or membership reads them.
@@ -2836,6 +2858,7 @@ module.exports = {
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
   loadCoverage,
+  newerReportHint, // sd-halbjahr 12.11.2026: hint `neuerer-bericht`, tests/export-hinweis-neuerer-bericht.test.js
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
   // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
   // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
