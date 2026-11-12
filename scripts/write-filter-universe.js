@@ -191,7 +191,9 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     }
     if (meta.marketCapReason && (!board || !finite(snapshot.marketCap?.value))) aus.push(meta.marketCapReason);
     if (r40.datenSuspekt(snapshot)) aus.push('data-suspect');
-    if (board?.dupIssuer) aus.push('dup-issuer');
+    // P290: a marked row with a rank stays visible only while the listing it points at holds none in this feed (fallback, home
+    // listing older), since nothing replaces it then. With an open home both rows keep their rank (AERO, AERO.MX).
+    if (board?.dupIssuer && (!Number.isInteger(board.rank) || Number.isInteger(boards.get(board.dupIssuer.of)?.row?.rank))) aus.push('dup-issuer');
     if (mixed) aus.push('mischwaehrung');
     if (board?.rankGrund) aus.push(board.rankGrund);
     const salesMixed = mischVerhaeltnisUnkorrigiert(meta);

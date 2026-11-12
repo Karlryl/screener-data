@@ -21,7 +21,7 @@ const ZAHLEN2 = '2026-11-04-sdzahlen2';
 const preRows = structuredClone(H.table);
 const ownTickers = new Set(preRows.cases.filter(c => c.revision === ZAHLEN2).map(c => c.ticker));
 // The Shriram fiscal year 2024 of 07.11.2026 extends those rows and leaves with them.
-preRows.cases = preRows.cases.filter(c => c.revision !== ZAHLEN2 && c.revision !== '2026-11-07-sdhand5');
+preRows.cases = preRows.cases.filter(c => c.revision !== ZAHLEN2 && c.revision !== '2026-11-07-sdhand5' && c.revision !== '2026-11-07-sdhand4b'); // 07.11.2026: the 360 ONE September 2025 row needs the coverage this copy removes
 preRows.coverage = preRows.coverage.flatMap(v => {
   if (!ownTickers.has(v.ticker)) return [v];
   const left = preRows.cases.filter(c => c.ticker === v.ticker && c.field === v.field && c.replacementValue !== null).map(c => c.period).sort();

@@ -2,8 +2,10 @@
   "_why": "Lowest allowed share of rows with a value per field of filter/universum.json, in percent. Measured on the feed of 30.10.2026 minus 5 points (ath, which only 5.5 % of the rows carry: minus a fifth). d52 stood at 75.1 % that day because of the bug this guard was built for: its floor is the share expected after the full-pull price fix, 99.7 %, minus 5. aus lists exclusions, so an empty one is no gap. Checked by scripts/feed-fill-guard.js.",
   "floors": {
     "t": 95, "n": 95, "b": 53.7, "sc": 53.7, "rk": 51.5, "c": 95, "rg": 95, "s": 94.2, "mc": 94.4,
-    "g": 93.2, "g3": 89.7, "ps": 91.1, "evs": 84.9, "pe": 53.7, "peSt": 95, "fpe": 47.5, "dy": 69.1,
-    "dySt": 95, "po": 89, "roe": 84.2, "fcf": 52.5, "r40": 45.9, "gm": 85.9, "d52": 94.7, "ath": 4.4,
+    "g": 93.2, "g3": 89.7, "ps": 91.6, "evs": 85.7, "pe": 53.7, "peSt": 95, "fpe": 47.5, "dy": 69.1,
+    "dySt": 95, "po": 89, "roe": 84.2, "fcf": 52.5, "r40": 46.2, "gm": 85.9, "d52": 94.7, "ath": 4.4,
     "asOf": 95, "aus": 0
-  }
+  },
+  "_why_erklaert": "Explained values (Daylauf 16, 12.11.2026, master decision): a value the filter writer withholds on a stale Yahoo quote (Tag 1538) carries its own reason in aus and leaves the denominator of its field, so the floors above keep measuring the share among rows that can show the field. erklaertMax caps that share per field, in percent of all rows: measured 7.0 % for mc, ps, evs, r40 and d52 on 12.11. (4.7 % dy, 1.3 % pe), about 1,150 of 16,393 rows; the replay of 24.10. predicted 1,185. Twelve is a bit under twice that and below the 2,900 rows (about 18 %) a 5-weekday limit would have emptied on 08.10.; above it the guard is red, because so many old quotes point at Yahoo, not at single rows. ps, evs and r40 also count stale rows that never had the value (no hint of their own; the feed is at 5.9 of 6 MB): measured against 07.11. on 12.11. that lifts ps by 0.41 and evs by 0.73 points, r40 (counted only beside g and fcf) by 0.25, so those floors rose by 0.5, 0.8 and 0.3 (from 91.1, 84.9, 45.9); the excess grows with the stale share, at the cap by about 1.7 times.",
+  "erklaertMax": 12
 }
