@@ -237,3 +237,34 @@ Jahres-Ausreisser: 144 in 15899 gelesenen Snapshots · davon NEU: 1
 Zaehlwerk: roh 1 · naiver Set-Key 1 · zwei Relationen 1 · zwei Relationen ohne Sperren 1 (erlaubt 5)
 Exit 0
 ```
+
+## Gezielte Aufnahme Daylauf 16 am 12.11.2026
+
+Die Läufe vom 10.11. (42793685547) und 11.11. (42994757810) meldeten je sechs neue Ereignisse bei erlaubten fünf. Grundlage der Nachstellung ist das CI-Artefakt `snapshots` des Laufs 42994757810 (16.423 Dateien). Der unveränderte Wächter mit der Uhr `2026-11-11T12:00:00Z` liefert vorher dieselben sechs Funde wie das CI und endet mit Exit 1.
+
+| Fund | Geschäftsjahr | Urteil | Beleg |
+|---|---|---|---|
+| 1CG.DE annualRev[2] | 2023: 371.206 Tsd. USD, Nachbarn 37.314 / 1.198 | echtes Sonderjahr, Frankfurter Zweitnotierung von CRISPR Therapeutics, dieselbe Zahl wie die bekannte Zeile CRSP | [10-K FY2024, R4](https://www.sec.gov/Archives/edgar/data/1674416/000095017025017899/R4.htm): `Total revenue $ 37,314 $ 371,206 $ 1,198` |
+| 788.DE annualNetIncome[2] | 2023: 1.360 Mio. USD, Nachbarn 154 / −92 | echtes Sonderjahr, Zweitnotierung von Coupang (bekannt als CPNG und 1CPNG.MI); 2023 trägt die Auflösung der Steuer-Wertberichtigung | [10-K FY2024, R3](https://www.sec.gov/Archives/edgar/data/1834584/000183458425000030/R3.htm): `Net income (loss) attributable to Coupang stockholders $ 154 $ 1,360 $ (92)` |
+| 7ZD.DE annualOpInc[3] | 2022: −2.109.553 Tsd. USD, Nachbarn 8.961 / 131.494 | echtes Sonderjahr, Zweitnotierung von Core Scientific (bekannt als CORZ und 1CORZ.MI); Goodwill- und Anlagen-Abschreibungen | [10-K FY2023, R5](https://www.sec.gov/Archives/edgar/data/1839341/000162828024010682/R5.htm): `Operating income (loss) 8,961,000 (2,109,553,000) 131,494,000` |
+| WOOF annualNetIncome[2] | bis 03.02.2024: −1.280.210 Tsd. USD, Nachbarn −101.816 / 90.801 | echtes Sonderjahr (Goodwill-Abschreibung 1.222.524 Tsd. USD), schon am 19.08. belegt, der Schlüssel fehlte im Bestand | [10-K FY2024, R4](https://www.sec.gov/Archives/edgar/data/1826470/000095017025047693/R4.htm): `Net (loss) income attributable to Class A and B-1 common stockholders $ (101,816) $ (1,280,210) $ 90,801` |
+| BANPU.BK annualOpInc[2] | 6.003 Mio., Nachbarn −28 / 525 | Fehlabruf, bleibt NEU | siehe unten |
+| PCT.L annualRev[2] | 30.04.2024 | Methodenfrage P276 Punkt 4 offen, bleibt NEU | P275 |
+
+**BANPU.BK.** Im Artefakt vom 07.11. (Lauf 42356903064) stand die Konzernreihe von Banpu: Umsatz 2025 5.278,1 Mio. USD wie im Abschluss (`Sales and service income` 5,278,102 Tsd. USD, Quelle in `configs/financial-known-cases.json`), Betriebsergebnis 216,0 / 304,0 / 482,7 / 2.810,3 Mio. Ab dem Lauf vom 10.11. liefert Yahoo wieder das Baht-Paket der Tochter Banpu Power unter der Einheit USD (Umsatz 2025 27.850,4 Mio.). Die Handtabelle erkennt genau dieses Paket am Fingerabdruck (`banpu-mixed-issuer-packet-20260929`, `annualRev[0]` = 27850393000) und hält Banpu seit 29.09. ohne Score vom Board; im Filter stehen Wachstum und Dreijahreswachstum leer. Der Fund ist also eine falsche Zahl, die schon nicht gezeigt wird. Er wird nicht als bekannter Fall aufgenommen, damit er verschwindet, sobald Yahoo wieder die Konzernzahlen liefert, und wieder auffällt, falls sich das Paket ändert.
+
+Vier USD-Schlüssel und vier native Identitäten kommen hinzu: Bestand 168 → 172 Schlüssel, 150 → 154 native Einträge. Aufnahmedatum und Vergleichspopulation bleiben, weil es keine Gesamtneuaufnahme ist. Wächtercode, Faktor 8, `MIN_BETRAG`, erlaubte Zahl 5 und Toleranz 1,02 sind unverändert. Test: `tests/annual-spikes-daylauf16.test.js` (Quelle, Zwilling, geänderte Werte, Währung und Firma bleiben NEU, Banpu und PCT.L-Umsatz werden nicht aufgenommen, Bruchprobe je Eintrag im Arbeitsspeicher). Zusätzlich wurde der Schlüssel von 1CG.DE einmal aus der Arbeitskopie entfernt: ein Test wurde rot, danach war die Datei bytegleich wiederhergestellt.
+
+**Boardwirkung: keine.** Die Fallliste liest außer dem Wächter nur Diagnoseskripte.
+
+```text
+Vorher:
+Jahres-Ausreisser: 149 in 16423 gelesenen Snapshots · davon NEU: 6
+Zaehlwerk: roh 6 · naiver Set-Key 6 · zwei Relationen 6 · zwei Relationen ohne Sperren 6 (erlaubt 5)
+Exit 1
+
+Nachher:
+Jahres-Ausreisser: 149 in 16423 gelesenen Snapshots · davon NEU: 2
+Zaehlwerk: roh 2 · naiver Set-Key 2 · zwei Relationen 2 · zwei Relationen ohne Sperren 2 (erlaubt 5)
+Exit 0
+```
