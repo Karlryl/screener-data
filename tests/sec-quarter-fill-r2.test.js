@@ -168,5 +168,8 @@ test('isolated: a first quarter open because two quarter-long reports disagree (
   // Starts nine days apart are two periods, neither contested on its own; only the open end of the quarter stops 250 - 100.
   const xs = [...hist.filter((x) => x.end !== '2026-03-31'), f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-10', '2026-03-31', 200, '2026-05-01'),
     f('2026-01-01', '2026-06-30', 250, '2026-08-01')];
-  for (const order of both(xs)) assert.equal(fillOf(snapshot(), order), null);
+  for (const order of both(xs)) {
+    assert.equal(fillOf(snapshot(), order), null);
+    assert.equal(P.pitSingleQuarters(order).find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'Q2 itself is open, not just unused');
+  }
 });
