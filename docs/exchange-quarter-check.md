@@ -63,9 +63,13 @@ row there = no fill; a vendor 2025
 quarter that vintage does not carry = `baseline-quarter-missing`, no fill); the store has a
 single quarter for every vendor period end and every present vendor quarter agrees; exchange Q3 > 0; once the
 store holds the next-year quarter (Q3-2026), the Q3-2025 observation must carry a confirmation whose
-`UPDATE_DATE` is on or after the Q3-2026 notice date, and (China) its first confirmation an `UPDATE_DATE` before
-that notice date, so 9M and H1 stand on one reporting basis (`november-read-late`; Codex R-pr124 P1, 12.11.2026) (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
-comparative). The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
+`UPDATE_DATE` is on or after the Q3-2026 notice date (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
+comparative). China also needs the 9M figure as filed at the first read: the first confirmation's `UPDATE_DATE` is a
+real calendar day, before the Q3-2026 notice (`november-read-late`) and equal to the 9M observation's own notice
+date (`rewritten-before-first-read`); with no second observation, the Q3-2026 report then did not change the 9M
+figure. That H1 shares its basis is inferred, not read: a retrospective change of H1 would also change 9M (Codex
+R-pr124 P1 and R2 P1, 12.11.2026). Duplicate vendor quarter ends block (`duplicate-quarter-end`); an unreadable
+board history blocks the no-July-row path (`baseline-unreadable`). The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
 operands with notice dates, source, original vendor row, reason). When the vendor later delivers the quarter, an
 agreeing value stays untouched; a disagreeing one is withheld wherever it sits (`exchange-quarter-mismatch`,
 general stratum, never the newest cell; in November it is the year-ago partner of the newest quarter and carries

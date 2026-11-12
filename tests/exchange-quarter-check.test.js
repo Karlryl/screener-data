@@ -278,6 +278,29 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   assert.equal(res(base(), ctxOf(edge, nb)).fill.blocked, 'november-read-late', 'UTC day before the notice, row already rewritten');
   const noUpd = withQ3('2026-10-02T07:07:40.607Z'); delete noUpd.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate;
   assert.equal(res(base(), ctxOf(noUpd, nb)).fill.blocked, 'november-read-late', 'first read without updateDate: unproven');
+  // Codex R-pr124 R2 P1: 9M (and FY) already carry a restatement at the FIRST observation (Eastmoney rewrote the row on
+  // 20.10., before the notice of 28.10.): no observation change shows it, so the first read must be the 9M as filed
+  const pre = withQ3('2026-10-21T02:00:00.000Z'), pq3 = pre.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1);
+  pq3.confirmedBy[0].updateDate = '2026-10-20';
+  assert.equal(res(base(), ctxOf(pre, nb)).fill.blocked, 'rewritten-before-first-read', 'rewritten before the first read, no July row');
+  assert.equal(res(base(), ctxOf(pre, F.baseline)).fill.blocked, 'rewritten-before-first-read', '... and with a July row');
+  assert.equal(pq3.noticeDate, '2025-10-31');
+  assert.equal(res(base(), ctxOf(early, nb)).fill.blocked, null, 'as filed (updateDate = its own notice) and unchanged: fills');
+  // Codex R-pr124 R2 P2-1: impossible calendar days are no proof
+  for (const d of ['0000-00-00', '2026-02-30', '2025-1-31']) {
+    const bad = withQ3('2026-10-02T07:07:40.607Z'); bad.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate = d;
+    assert.equal(res(base(), ctxOf(bad, nb)).fill.blocked, 'november-read-late', 'updateDate ' + d);
+  }
+  // Codex R-pr124 R2 P2-2: the same quarter listed twice is no second proof
+  const dup = base(), dts = dup.timeseries, i2 = dts.revenueQEnds.indexOf('2025-06-30');
+  dts.revenueQ[dts.revenueQEnds.indexOf('2025-03-31')] = null;
+  dts.revenueQEnds.splice(i2, 0, '2025-06-30'); dts.revenueQ.splice(i2, 0, structuredClone(dts.revenueQ[i2]));
+  assert.equal(res(dup, ctxOf(early, nb)).fill.blocked, 'duplicate-quarter-end');
+  // Codex R-pr124 R2 P2-3: an unreadable July history is no "not on a board in July"
+  const failed = ctxOf(early, nb); failed.baseline.failed = true;
+  assert.equal(res(base(), failed).fill.blocked, 'baseline-unreadable');
+  const unreadable = X.loadBaseline(path.join(os.tmpdir(), 'no-such-board-history-' + process.pid));
+  assert.equal(unreadable.failed, true); assert.match(unreadable.warnings[0], /unreadable/);
   assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
   // ... and before any Q3-2026 notice the basis of 9M 2025 against a restated H1 2025 is unproven: no fill
   assert.equal(res(base(), ctxOf(F.store, nb)).fill.blocked, 'no-baseline', 'no Q3-2026 report yet: not proven');
@@ -615,9 +638,16 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   const lateRead = clone(F.store), ly = lateRead.cn.companies['000002.SZ'].ytd, lq3 = ly['2025-09-30'].at(-1);
   ly['2026-09-30'] = [{ ...lq3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
   lq3.confirmedBy = [{ ...lq3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
-  red("      if (!(firstUpdate && notice && firstUpdate < notice)) return block('november-read-late');",
+  red("      if (!(isDay(firstUpdate) && isDay(notice) && firstUpdate < notice)) return block('november-read-late');",
     '      // november-read-late removed',
     lib => assert.equal(r(lib, base(), ctxOf(lateRead, F.baseline)).fill.blocked, 'november-read-late'));
+  // Codex R-pr124 R2 P1: 9M rewritten before the first read (one basis unproven)
+  const rewr = clone(lateRead), rq3 = rewr.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1);
+  rq3.confirmedBy = [{ ...rq3.confirmedBy[0], fetchedAt: '2026-10-21T02:00:00.000Z', updateDate: '2026-10-20' },
+    { ...rq3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
+  red("      if (!(isDay(o.noticeDate) && firstUpdate === o.noticeDate)) return block('rewritten-before-first-read');",
+    '      // rewritten-before-first-read removed',
+    lib => assert.equal(r(lib, base(), ctxOf(rewr, F.baseline)).fill.blocked, 'rewritten-before-first-read'));
   // Q3 > 0
   red("    if (!(xq[P] > 0)) return block('exchange-quarter-not-positive');", "",
     lib => { const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, h1 = y['2025-06-30'].at(-1).total, nine = y['2025-09-30'].at(-1);
@@ -687,7 +717,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
       assert.equal(r(lib, y).growth, null); });
-  assert.equal(breaks, 19); // +1 november-read-late (Codex R-pr124 P1, 12.11.2026)
+  assert.equal(breaks, 20); // +1 november-read-late (Codex R-pr124 P1), +1 rewritten-before-first-read (R2 P1), 12.11.2026
 });
 
 test('fill-only: identical active fills, no withholding, no residue on mode switches, no input mutation', () => {
