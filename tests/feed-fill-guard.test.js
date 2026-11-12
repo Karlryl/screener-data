@@ -62,7 +62,7 @@ assert.equal(guard(feedWith(() => {}, 'kein Datum')).status, 1, 'an unparsable s
 assert.equal(guard('{ not json').status, 2);
 
 // Red spots (Daylauf 16): a temporary floor with owner and expiry, relative to today's clock so no date ages into a red.
-const { rotstelleFault } = require('../scripts/feed-fill-guard.js');
+const { rotstelleFault, checkFill } = require('../scripts/feed-fill-guard.js');
 const day = offset => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 const spot = (extra = {}) => ({ floor: floors.d52 - 10, seit: day(-1), bis: day(13), zustaendig: 'Test', grund: 'Testgrund.', ...extra });
 // About 90 % filled: under the normal floor, over the temporary one.
@@ -83,7 +83,16 @@ for (const bad of [{ bis: day(20) }, { bis: day(-2) }, { floor: floors.d52 }, { 
 }
 assert.equal(guard(dropD52, ...floorsFile({ unbekannt: spot() })).status, 1, 'a red spot on a field without floor');
 assert.equal(guard(dropD52, ...floorsFile([])).status, 2, 'rotstellen must be an object');
-assert.equal(guard(feedWith(), '--floors', DEFAULT_FLOORS).status, 0, 'a full feed is green on the live file with its red spots');
+// The live red spots, each on its own first day (clock pinned, so their fixed bis never ages this test into a red).
+const liveSpots = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8')).rotstellen || {};
+for (const [field, entry] of Object.entries(liveSpots)) {
+  const result = checkFill(feedWith(), floors, { now: Date.parse(entry.seit + 'T12:00:00Z'), maxAgeHours: Infinity, rotstellen: liveSpots });
+  assert.deepEqual(result.problems, [], field);
+  assert.equal(result.floors[field], entry.floor, field);
+  assert.ok(result.notices.some(n => n.includes(`das Feld ${field} wird gegen`)), field);
+  assert.ok(result.notices.some(n => n.includes(`Das Feld ${field} steht mit`)), 'a recovered field says its red spot can go: ' + field);
+}
+assert.ok(active.stdout.includes('(Rotstelle)'), 'the table marks a temporary floor');
 // The live red spots are valid entries of at most 14 days on fields with a floor.
 for (const [field, entry] of Object.entries(JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8')).rotstellen || {})) {
   assert.equal(rotstelleFault(field, entry, floors), null, field);

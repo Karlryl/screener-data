@@ -14,7 +14,8 @@
  * A pull request that deliberately empties a field lowers that floor in the same pull request.
  * Red spot (Rotstelle): an intended loss found after the fact gets an entry under "rotstellen" in the floors file
  * (temporary floor, owner, reason, seit, bis at most 14 days later). Until bis the temporary floor applies and the run
- * names the red spot as a warning; from the day after bis the entry itself is an error until it is removed.
+ * names the red spot as a warning; from the day after bis the entry itself is an error until it is removed. seit and bis
+ * both count, so bis = seit + 13 gives 14 days.
  * ponytail: fixed floors, about 5 points under the measured share, so a smaller loss stays green and a floor does
  * not rise with a recovered field. Compare with the previous day's feed if a loss of that size ever matters.
  */
@@ -39,14 +40,14 @@ function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_A
   if (!Array.isArray(rows) || !rows.length) return { shares: {}, problems: ['Der Filter-Feed hat keine Zeilen.'], notices: [] };
   const problems = [], notices = [];
   const today = new Date(now).toISOString().slice(0, 10);
-  const effective = { ...floors };
+  const effective = { ...floors }, active = [];
   for (const [field, spot] of Object.entries(rotstellen ?? {})) {
     const fault = rotstelleFault(field, spot, floors);
     if (fault) { problems.push(`Die Rotstelle für das Feld ${field} ist ungültig: ${fault}.`); continue; }
     if (today > spot.bis) {
       problems.push(`Die Rotstelle für das Feld ${field} ist am ${spot.bis} abgelaufen (zuständig: ${spot.zustaendig}). Ursache klären und den Eintrag aus configs/feed-fill-floors.json entfernen.`);
     } else if (today >= spot.seit) {
-      effective[field] = spot.floor;
+      effective[field] = spot.floor; active.push(field);
       notices.push(`Rotstelle bis ${spot.bis}, zuständig ${spot.zustaendig}: das Feld ${field} wird gegen ${percent(spot.floor)} statt ${percent(floors[field])} geprüft. ${spot.grund}`);
     }
   }
@@ -62,6 +63,7 @@ function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_A
     if (!(field in floors)) problems.push(`Das Feld ${field} steht im Filter-Feed, hat aber keine Untergrenze in configs/feed-fill-floors.json.`);
     else if (shares[field] < effective[field]) problems.push(`Das Feld ${field} ist nur auf ${percent(shares[field])} der ${rows.length} Zeilen gefüllt (Untergrenze ${percent(effective[field])}).`);
   }
+  for (const field of active) if (shares[field] >= floors[field]) notices.push(`Das Feld ${field} steht mit ${percent(shares[field])} wieder über seiner normalen Untergrenze, die Rotstelle kann weg.`);
   return { shares, problems, notices, floors: effective };
 }
 
@@ -96,7 +98,7 @@ function main(argv) {
   const maxAgeHours = Number(value('--max-age-hours') ?? DEFAULT_MAX_AGE_HOURS);
   const { shares, problems, notices, floors: applied = floors } = checkFill(feed, floors, { maxAgeHours, rotstellen });
   for (const notice of notices) console.log('::warning::' + notice);
-  for (const [field, share] of Object.entries(shares)) console.log(field.padEnd(6), percent(share).padStart(9), ' floor', percent(applied[field] ?? NaN).padStart(9));
+  for (const [field, share] of Object.entries(shares)) console.log(field.padEnd(6), percent(share).padStart(9), ' floor', percent(applied[field] ?? NaN).padStart(9), applied[field] !== floors[field] ? '(Rotstelle)' : '');
   for (const problem of problems) console.log('::error::' + problem);
   if (!problems.length) console.log('Every filter feed field is at or above its floor.');
   return problems.length ? 1 : 0;
