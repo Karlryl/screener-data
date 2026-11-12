@@ -104,11 +104,11 @@ check('R5: der Erzeuger traegt continue-on-error: true — ein rank-ic-Fehler da
 check('R6: scoring job cap >= 30 min and the Rank-IC step has its own cap below it (run 42793685547)', () => {
   const s = yml.indexOf('\n  scoring:');
   const steps = yml.indexOf('\n    steps:', s);
-  const jobCap = /\n    timeout-minutes: (\d+)\n/.exec(yml.slice(s, steps + 1));
+  const jobCap = /\n    timeout-minutes: (\d+)[ \t]*(?:#[^\n]*)?\n/.exec(yml.slice(s, steps + 1));
   assert.ok(jobCap, 'scoring job has no job-level timeout-minutes');
   assert.ok(Number(jobCap[1]) >= 30, 'scoring job cap ' + jobCap[1] + ' < 30');
   const i = yml.indexOf(STEP, s);
-  const stepCap = /^\s*timeout-minutes: (\d+)\s*$/m.exec(yml.slice(i, yml.indexOf('run: |', i)));
+  const stepCap = /^\s*timeout-minutes: (\d+)[ \t]*(?:#.*)?$/m.exec(yml.slice(i, yml.indexOf('run: |', i)));
   assert.ok(stepCap, 'Rank-IC step has no own timeout-minutes');
   assert.ok(Number(stepCap[1]) > 0 && Number(stepCap[1]) <= Number(jobCap[1]) / 3, 'Rank-IC step cap ' + stepCap[1] + ' not well below the job cap ' + jobCap[1]);
 });

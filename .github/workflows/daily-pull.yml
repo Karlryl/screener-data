@@ -1923,7 +1923,7 @@ jobs:
       run_date: ${{ needs.prep.outputs.run_date }}
     # Daylauf 16 (12.11.2026): 15 -> 30. Run 42793685547 (10.11.) hit the 15-min cap at 15:12 in
     # "Rank-IC-Report erzeugen", after the board deploy, so the F-17a publish below was skipped
-    # (findash arrows stale). Green runs took 8:23 (07.11.) and 13:04 (11.11.); Checkout
+    # (findash arrows stale). Green runs took 8:23 (07.11.) and about 13 min (11.11.); Checkout
     # (fetch-depth 0) and the Live-Universum-Gate grew most. Guard: tests/rank-ic-publish.test.js R6.
     timeout-minutes: 30
     steps:
