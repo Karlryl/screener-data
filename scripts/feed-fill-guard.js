@@ -123,7 +123,8 @@ function main(argv) {
     ({ floors, rotstellen = {}, erklaertMax } = JSON.parse(fs.readFileSync(value('--floors') ?? DEFAULT_FLOORS, 'utf8')));
     if (!floors || typeof floors !== 'object') throw new Error('floors file without a floors object');
     if (!rotstellen || typeof rotstellen !== 'object' || Array.isArray(rotstellen)) throw new Error('rotstellen must be an object');
-    if (!(Number.isFinite(erklaertMax) && erklaertMax >= 0 && erklaertMax <= 100)) throw new Error('erklaertMax must be a percentage from 0 to 100');
+    // At most half: a cap of 100 would let a field hidden on every row pass (the floor sentence needs a row that can show it).
+    if (!(Number.isFinite(erklaertMax) && erklaertMax >= 0 && erklaertMax <= 50)) throw new Error('erklaertMax must be a percentage from 0 to 50');
   } catch (error) {
     console.error('::error::Der Füllstand des Filter-Feeds ist heute nicht geprüft, die Eingabe ist nicht lesbar: ' + error.message);
     return 2;

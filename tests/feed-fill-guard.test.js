@@ -166,7 +166,7 @@ const shownBeside = checkFill(feedWith((row, i) => { if (i < 100) row.aus = stal
 assert.equal(shownBeside.explainedShares.mc, 0); assert.equal(shownBeside.shares.mc, 100);
 // Fail-closed default: a caller without explainedMax allows none.
 assert.ok(checkFill(staleFeed(1), floors, { maxAgeHours: Infinity }).problems.some(p => p.includes('erlaubt sind höchstens 0,0 %')));
-for (const bad of [{ erklaertMax: undefined }, { erklaertMax: -1 }, { erklaertMax: 101 }, { erklaertMax: '12' }]) {
+for (const bad of [{ erklaertMax: undefined }, { erklaertMax: -1 }, { erklaertMax: 51 }, { erklaertMax: 100 }, { erklaertMax: '12' }]) {
   assert.equal(guard(feedWith(), ...floorsFile({}, bad)).status, 2, JSON.stringify(bad));
 }
 
