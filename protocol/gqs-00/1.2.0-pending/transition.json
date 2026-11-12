@@ -570,7 +570,7 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/hk-interim.js": "36da082e40ed8cf7a4e0c4baf47c3f39281fccf47e82fac384db9f4eb52dfe5f"
+    "lib/hk-interim.js": "c4e29edf9635e6b003d5596353c951178bf8ca916d6fc2760927734d3064d5fb"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
@@ -673,16 +673,16 @@
   "hkInterimLeg20261112": {
     "date": "2026-11-12",
     "authority": "Daylauf 16 lane sd-halbjahr (formula DRAFT for Codex): root pattern (2) of 07.11., Hong Kong half-year reporters shown on fiscal 2025 although the interim to 30.06.2026 is published (G31).",
-    "scope": "lib/g31-recency.js g31Shadow reads lib/hk-interim.js, a read-time pair from external-data/exchange-quarters/hk.json (scripts/fetch-hk-interims.js, Eastmoney RPT_HKF10_FN_MAININDICATOR). For Hong Kong listings only, beside a valid v1 leg, a six-month interim pair whose own ratio agrees with Eastmoney's growth figure within 0.1 points and that ends after the chosen leg becomes v1 (basis halfYear) and the second bonus component. Only the shared growth leg moves; no file under src/scoring changes, no vendor series changes, no amount is read. A listing named anywhere in configs/financial-known-cases.json keeps its reviewed figures; the committed store is read only inside a run with a data day (RUN_DATE_UTC).",
+    "scope": "lib/g31-recency.js g31Shadow reads lib/hk-interim.js, a read-time pair from external-data/exchange-quarters/hk.json (scripts/fetch-hk-interims.js, Eastmoney RPT_HKF10_FN_MAININDICATOR). For Hong Kong listings only, beside a valid v1 leg, a six-month interim pair becomes v1 (basis halfYear) and the second bonus component when it ends after the chosen leg and passes three conditions: Eastmoney internal consistency (own ratio equals its growth figure within 0.1 points; not a second source), general companies only (no banks, brokers, insurers), and a size and unit check against Yahoo (the year-ago half is above 0 and at most 0.9 of the fiscal year that contains it, in the reporting currency). Operands are returned in the snapshot unit (times meta.fxRateApplied). A listing named anywhere in configs/financial-known-cases.json (read, not hash-registered) keeps its reviewed figures; the committed store is read only inside a run with a data day (RUN_DATE_UTC). Only the shared growth leg moves; no file under src/scoring changes and no vendor series changes.",
     "previousDependencySha256LF": {
       "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f"
     },
     "dependencySha256LF": {
       "lib/g31-recency.js": "5ad3206c0b2fb26beec017f313d2563d22700f358d319c877573eb49c4db6e2c",
-      "lib/hk-interim.js": "36da082e40ed8cf7a4e0c4baf47c3f39281fccf47e82fac384db9f4eb52dfe5f"
+      "lib/hk-interim.js": "c4e29edf9635e6b003d5596353c951178bf8ca916d6fc2760927734d3064d5fb"
     },
     "goldenImpact": "None: no sealed trace is a Hong Kong listing, and without the store file nothing changes.",
-    "evidence": "tests/hk-interim.test.js (real cells, break-once on the switch and on the agreement limit); before and after on the snapshots of 11.11.2026 in the PR body.",
+    "evidence": "tests/hk-interim.test.js on real cells (Pop Mart, GenScript) covering every condition; each guard (switch, agreement limit, general-company rule, size check, hand-table rule, data-day rule, minimum row count of the fetch) was broken once by hand during the build on 12.11.2026 and the test went red. Before and after on the snapshots of 11.11.2026 in the PR body; blind Opus review 12.11.2026 (agent-reports/daylauf-2026-11-12/blindpruefung-sd-halbjahr-2026-11-12.md).",
     "review": "Build registration only; Opus blind review and the Codex review decide the draft. The builder does not merge.",
     "rollback": "Set ENABLED to false in lib/hk-interim.js, or revert the source change and this registration together."
   }

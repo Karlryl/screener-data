@@ -15,7 +15,8 @@
  *           (Pop Mart reports RMB, labelled HKD), so no amount from here reaches a board.
  *
  * Failure behaviour: a non-success answer, invalid JSON, a page count that does not add up to `count`, a duplicate
- * SECUCODE/REPORT_DATE, a row of another DATE_TYPE_CODE or the page cap -> abort, hk.json is not written, exit 1.
+ * SECUCODE/REPORT_DATE, a row of another DATE_TYPE_CODE, fewer than MIN_ROWS rows or the page cap -> abort, hk.json is
+ * not written, exit 1.
  * Before every write the new store is checked against the old one (assertAppendOnly); writes are atomic.
  *
  * Usage: node scripts/fetch-hk-interims.js [--dry-run] [--today=YYYY-MM-DD]
@@ -32,7 +33,8 @@ const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
 const PAGE_SIZE = 500;
-const PAGE_CAP = 30; // measured 12.11.2026: 2,134 interim rows per period end, two period ends inside 400 days -> 9 pages
+const PAGE_CAP = 30; // measured 12.11.2026: 2,319 interim rows inside 400 days -> 5 pages of 500
+const MIN_ROWS = 500;
 const WINDOW_DAYS = 400;
 const ENDPOINT = 'https://datacenter.eastmoney.com/securities/api/data/v1/get';
 const COLUMNS = ['SECUCODE', 'REPORT_DATE', 'DATE_TYPE_CODE', 'START_DATE', 'REPORT_DATE_SQ', 'OPERATE_INCOME',
@@ -71,6 +73,8 @@ async function fetchInterims(ctx, since) {
     rows.push(...j.result.data);
   }
   if (rows.length !== count) throw new Error(`HK: ${rows.length} rows read, header says ${count}`);
+  // A successful but empty or thin answer would freeze the store without a word (measured 2,319 rows on 12.11.2026).
+  if (rows.length < (ctx.minRows ?? MIN_ROWS)) throw new Error(`HK: only ${rows.length} interim rows, expected at least ${ctx.minRows ?? MIN_ROWS}`);
   const seen = new Set();
   for (const r of rows) {
     const key = r.SECUCODE + '|' + tag(r.REPORT_DATE);
@@ -91,7 +95,7 @@ function observation(r) {
 
 /** Fetch, merge append-only, write. @returns {Promise<object>} summary */
 async function run(opts = {}) {
-  const ctx = { fetchJson: opts.fetchJson || fetchJson };
+  const ctx = { fetchJson: opts.fetchJson || fetchJson, minRows: opts.minRows };
   const now = opts.now || new Date().toISOString();
   const today = opts.today || now.slice(0, 10);
   const since = new Date(Date.parse(today + 'T00:00:00Z') - WINDOW_DAYS * 864e5).toISOString().slice(0, 10);
