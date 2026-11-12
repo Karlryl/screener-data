@@ -134,3 +134,32 @@ test('productive dependency: a changed lib/annual-pairs.js turns verify() red', 
     /lib\/annual-pairs\.js differs from its registered dependency hash/);
   assert.equal(sha(), before);
 });
+
+// Codex R4 on #85 (P2-S): lib/sec-pit.js derives the SEC quarters and decides from which day a filing counts (knownOn).
+// Unregistered, or changed so that every filing counts at once, it must turn verify() red although no golden case moves.
+// Transition and library bytes are swapped in memory only.
+test('productive dependency: unregistered or changed lib/sec-pit.js turns verify() red', () => {
+  const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+  const { Module, createRequire } = require('node:module');
+  const file = path.resolve(__dirname, '../../scripts/gqs00-freeze.js'), source = fs.readFileSync(file, 'utf8');
+  const tfile = path.resolve(__dirname, '../../protocol/gqs-00/1.2.0-pending/transition.json');
+  const lfile = path.resolve(__dirname, '../../lib/sec-pit.js');
+  const sha = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'), before = [sha(tfile), sha(lfile)];
+  const load = (edit, libEdit = (s) => s) => {
+    const m = new Module(file, module), real = createRequire(file); m.filename = file; m.paths = module.paths;
+    const swapped = { ...fs, readFileSync: (p, o) => {
+      const target = path.resolve(String(p));
+      if (target === tfile) return JSON.stringify(edit(JSON.parse(fs.readFileSync(p, 'utf8'))));
+      if (target === lfile) { const s = libEdit(fs.readFileSync(p, 'utf8')); return o ? s : Buffer.from(s); }
+      return fs.readFileSync(p, o);
+    } };
+    m.require = (id) => (id === 'node:fs' ? swapped : real(id)); m._compile(source, file); return m.exports;
+  };
+  assert.equal(load((d) => d).verify().canonicalId, 'GQS-00@1.1.0');
+  const unregister = (d) => { const deps = { ...d.dependencyFiles }; delete deps['lib/sec-pit.js']; return { ...d, dependencyFiles: deps }; };
+  assert.throws(() => load(unregister).verify(), /registriert die produktive Abhaengigkeit nicht: lib\/sec-pit\.js/);
+  const anchor = 'const knownOn = (filed, asOf) => !asOf || effectiveDay(filed) <= asOf;';
+  assert.equal(fs.readFileSync(lfile, 'utf8').split(anchor).length, 2, 'exact unique anchor');
+  assert.throws(() => load((d) => d, (s) => s.replace(anchor, 'const knownOn = () => true;')).verify(), /lib\/sec-pit\.js differs from its registered dependency hash/);
+  assert.deepEqual([sha(tfile), sha(lfile)], before);
+});

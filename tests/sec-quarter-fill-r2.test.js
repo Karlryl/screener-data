@@ -194,3 +194,50 @@ test('blind delta check N1 (master 12.11.): a year restated by 0.47 % opens the 
   assert.equal(q4([...qs, year(400), year(401.9, '2026-03-01')]).derivation, 'restatement-conflict', '0.47 % was equal under 0.5 % and moved Q4 by 1.9 %');
   assert.equal(q4([...qs, year(400), year(400.05, '2026-03-01')]).derivation, 'year-minus-three-quarters', '0.0125 % stays the same figure');
 });
+
+test('Codex R4 P1-A: a later amendment of an operand dates the marker, so a stored derived quarter turns open from then on (not before)', async () => {
+  const facts = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-03-31', 100, '2026-09-01', '10-Q', 'repeat-q1'),
+    f('2026-01-01', '2026-06-30', 250, '2026-08-01'), f('2025-10-01', '2025-12-31', 100, '2026-02-01', '10-K'),
+    f('2025-07-01', '2025-09-30', 100, '2025-11-01'), f('2025-04-01', '2025-06-30', 100, '2025-08-01')];
+  const amendment = f('2026-01-10', '2026-03-31', 200, '2026-09-15', '10-Q/A', 'late-q1');
+  const fresh = P.pitSingleQuarters([...facts, amendment]).find((q) => q.end === '2026-06-30');
+  assert.deepEqual([fresh.derivation, fresh.filed], ['restatement-conflict', '2026-09-15']);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sec-r4-')), snaps = path.join(dir, 'snaps');
+  fs.mkdirSync(snaps);
+  const s = snapshot(['2026-03-31', '2025-12-31', '2025-09-30'], [100, 100, 100]);
+  s.meta.mostRecentQuarter = '2026-06-30';
+  fs.writeFileSync(path.join(snaps, 'REVIEWX.json'), JSON.stringify(s));
+  // The store as an earlier run wrote it before the amendment: Q2 = 250 - 100, filed 01.08.
+  const seed = store(P.pitSingleQuarters(facts));
+  assert.equal(run(s, seed).fill?.current, 150, 'before: the derived Q2 fills');
+  fs.writeFileSync(path.join(dir, 'us.json'), JSON.stringify(seed));
+  let prev = seed;
+  for (const day of ['2026-11-11', '2026-11-12']) {
+    const r = await main({ markets: ['us'], dir, tickers: [], priority: new Map(), usBoard: new Set(['REVIEWX']), snapshotDirs: [snaps], cikMap: {},
+      secTickers: async () => ({ REVIEWX: { cik: '0000000001' } }), secFacts: async () => ({ facts: { 'us-gaap': { Revenues: { units: { USD: [...facts, amendment] } } } } }),
+      log: () => {}, now: () => new Date(day + 'T09:00:00Z') });
+    assert.equal(r.exitCode, 0);
+    const next = JSON.parse(fs.readFileSync(path.join(dir, 'us.json'), 'utf8'));
+    S.assertAppendOnly(prev, next); prev = next;
+    assert.equal(run(s, next).fill ?? null, null, day + ': the amended operand keeps Q2 open');
+  }
+  const before = X.secQuartersKnown(prev.companies.REVIEWX, 'Revenues', '2026-09-14').find((q) => q.end === '2026-06-30');
+  assert.equal(before?.val, 150, 'a reader before the amendment still sees the figure known then');
+});
+
+test('Codex R4 P1-B: alternative cumulative figures are compared after subtraction (250/251 minus 100; a year 400/400.8/401.6), in every order', () => {
+  const h1 = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-02', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-06-30', 250, '2026-08-01'), f('2026-01-02', '2026-06-30', 251, '2026-08-01')];
+  for (const xs of perms(h1)) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict');
+  const quarters = [f('2025-01-01', '2025-03-31', 100, '2025-05-01'), f('2025-04-01', '2025-06-30', 100, '2025-08-01'), f('2025-07-01', '2025-09-30', 100, '2025-11-01')];
+  const years = [400, 400.8, 401.6].map((v, i) => f('2025-01-0' + (1 + i), '2025-12-31', v, '2026-02-01', '10-K', 'y' + i));
+  for (const xs of perms([...quarters, ...years])) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2025-12-31').derivation, 'restatement-conflict');
+});
+
+test('Codex R4 P2-D: a data day that is no plain day string (an array, a day with trailing text) holds; the derivation knows nothing on such a day', () => {
+  for (const day of [['2026-11-11'], '2026-11-11garbage', 20261111]) {
+    const s = snapshot(); s.meta.asOf = day; s.meta.fetchedAt = day;
+    assert.equal(run(s, store(P.pitSingleQuarters([...hist, direct]))).fill ?? null, null, JSON.stringify(day));
+    assert.deepEqual(P.pitSingleQuarters([...hist, direct], { asOf: day }), [], JSON.stringify(day));
+  }
+  assert.equal(P.pitSingleQuarters([...hist, direct], { asOf: '2026-11-11' }).length > 0, true);
+});

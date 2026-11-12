@@ -468,6 +468,7 @@
     "date": "2026-10-31",
     "scope": "lib/g31-recency.js quarterCandidate reads meta.secQuarterFill, a read-time record of a filed SEC quarter the vendor lacks (lib/exchange-quarter-check.js, policy usFill). Only the shared growth leg moves; no file under src/scoring changes and the vendor series stays untouched. The record carries its own source end: within the end tolerance of the vendor fiscal year it is that end (same period end), so the quarter leads as on an equal end; a fiscal year truly newer means no record at all.",
     "goldenImpact": "None: golden snapshots carry no such record.",
+    "dependencyNote": "Codex R4 on #85 (P2-S): lib/sec-pit.js derives the SEC quarters and decides when a filing is known (knownOn), so it is a required dependency of the seal like lib/exchange-quarter-check.js; a changed fingerprint turns verify() red.",
     "review": "Build registration only; Codex decides on the draft.",
     "rollback": "Set usFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
   },
@@ -608,7 +609,8 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "c15b1ab93f20c4fbc7421106d96ebfbdecbbbaa632632d6687b2690120f91e99",
-    "lib/exchange-quarter-check.js": "bd73ffb9512f23d6f8747ef2f584a5abb5973e8772a285e944a2bfb91b3be854",
+    "lib/exchange-quarter-check.js": "7c3b4cc689bbccb70d1e65f4f211689d7cc67ea6a47c5dc154cc44fa457c3fa6",
+    "lib/sec-pit.js": "80b6091c47225527d63954b3189b694d333aab92639c453065af7716dc5fcd80",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
     "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
   },
