@@ -196,3 +196,21 @@ test('the committed store is read only inside a run with a data day', () => {
   assert.equal(withDay(null, () => ORIGINAL_DEFAULT_STORE()), null);
   assert.equal(withDay('2026-11-12', () => ORIGINAL_DEFAULT_STORE())?.market, 'HK');
 });
+
+// ── Codex review round 2 of 12.11.2026 ─────────────────────────────────────────────────────────────────────────
+test('Codex round 2, finding 2: the year-ago check is judged on the year-ago half, not on the fiscal year (small bases)', () => withDay(null, () => {
+  // 2 % off the year-ago half with a growth figure recomputed from it: 1 % of the fiscal year would have let it through.
+  const st = structuredClone(F.store);
+  const o = popHalf(st);
+  o.priorRevenue *= 0.98; o.yoyPct = (o.revenue / o.priorRevenue - 1) * 100;
+  assert.ok(Math.abs(o.priorRevenue / 0.98 - o.priorRevenue) < 0.01 * popYear(st).revenue, 'inside the old fiscal-year tolerance');
+  assert.equal(H.hkInterimPair(snap('9992.HK'), st), null);
+}));
+
+test('Codex round 2, finding 1 (open, documented): both halves shifted by the same amount are not detectable from Yahoo year and TTM', () => withDay(null, () => {
+  const st = structuredClone(F.store);
+  const o = popHalf(st), c = (6 / 7) * o.priorRevenue;
+  o.revenue -= c; o.priorRevenue -= c; o.yoyPct = (o.revenue / o.priorRevenue - 1) * 100; // 166.3 % instead of 23.8 %
+  // Fiscal year and trailing twelve months see only the difference of the halves; no free source gives a half-year level.
+  assert.notEqual(H.hkInterimPair(snap('9992.HK'), st), null);
+}));

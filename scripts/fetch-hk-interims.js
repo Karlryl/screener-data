@@ -140,7 +140,7 @@ async function run(opts = {}) {
     if (!usable || usable < MIN_USABLE_SHARE * matched) {
       throw new Error(`HK: only ${usable} of ${matched} watchlist ${spec.label} rows carry usable revenue (DATE_TYPE_CODE ${type})`);
     }
-    entry.types[type] = { since, rows: rows.length, matched, usable, unusable: unusable.slice(0, 50) };
+    entry.types[type] = { since, rows: rows.length, matched, usable, unusable };
     counts[spec.group] = { rows: rows.length, matched, usable };
   }
   next.sources[src] = entry;
