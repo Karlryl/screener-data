@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-11T10:58:05.258Z",
+  "generated_at": "2026-11-12T11:23:05.873Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 69.1,
-    "generated_at": "2026-11-11T10:45:37.085Z",
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-12T11:11:15.182Z",
     "honest_coverage_pct": 88.6,
-    "n_addressable": 18359,
-    "n_ok": 16258,
-    "n_total": 23515,
-    "n_failed": 1303,
+    "n_addressable": 18331,
+    "n_ok": 16238,
+    "n_total": 23463,
+    "n_failed": 1301,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -40,7 +40,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 522806624,
+      "marketCap": 515010816,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -171,7 +171,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 351004416,
+      "marketCap": 347301088,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -285,8 +285,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CWCO",
-      "score": 45.1,
-      "scoreCycleLegacy": 45.1,
+      "score": 38.1,
+      "scoreCycleLegacy": 38.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -294,14 +294,14 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": -0.146,
-        "companion": 3.8
+        "value": -0.242,
+        "companion": -18.8
       },
       "name": "Consolidated Water Co. Ltd.",
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 413692352,
+      "marketCap": 419928320,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -312,8 +312,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 42.6,
-      "scoreShrunk": 45.1,
+      "scoreBase": 32.2,
+      "scoreShrunk": 38.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -323,7 +323,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 30,
+          "pct": 20,
           "weight": 2.2
         },
         {
@@ -338,12 +338,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 40,
+          "pct": 20,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 40,
           "weight": 0.6
         },
         {
@@ -357,7 +357,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -2.1455607305737368,
+      "revGrowthYoYPct": -11.948529652544714,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -368,10 +368,10 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "revAccelerationBasis": {
         "basis": "year",
         "quarterComparisons": 1,
@@ -379,14 +379,14 @@
       },
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": -2.1455607305737368,
+      "revGrowthYoYPctLegacy": -11.948529652544714,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
       "overviewValueLegacy": 0.06,
       "overviewPeriodLegacy": {
         "basis": "year",
@@ -397,16 +397,16 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": -2.1455607305737368,
+          "pct": -11.948529652544714,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": -0.14562018269192178,
+        "value": -0.24160883565611346,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       }
     },
@@ -415,22 +415,22 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HNRG",
-      "score": 39.6,
-      "scoreCycleLegacy": 45.6,
+      "score": 32.7,
+      "scoreCycleLegacy": 37.6,
       "track": "profitable",
       "lamps": [
         "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": -0.324,
-        "companion": -3
+        "value": -0.193,
+        "companion": -25.6
       },
       "name": "Hallador Energy Company",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 470490656,
+      "marketCap": 478995744,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -441,8 +441,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 43.3,
-      "scoreShrunk": 45.6,
+      "scoreBase": 31.4,
+      "scoreShrunk": 37.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -452,7 +452,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 20,
           "weight": 2.2
         },
         {
@@ -467,12 +467,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 30,
+          "pct": 20,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 30,
+          "pct": 40,
           "weight": 0.6
         },
         {
@@ -486,7 +486,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -1.2837345003646972,
+      "revGrowthYoYPct": -11.126728849526124,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -497,10 +497,10 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "revAccelerationBasis": {
         "basis": "year",
         "quarterComparisons": 1,
@@ -508,14 +508,14 @@
       },
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": -1.2837345003646972,
+      "revGrowthYoYPctLegacy": -11.126728849526124,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
       "overviewValueLegacy": 0.133,
       "overviewPeriodLegacy": {
         "basis": "year",
@@ -526,16 +526,16 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": -1.2837345003646972,
+          "pct": -11.126728849526124,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": -0.3239339630970248,
+        "value": -0.19346392685300684,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       }
     }

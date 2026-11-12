@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-11T10:57:56.872Z",
+  "generated_at": "2026-11-12T11:22:57.848Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 69.1,
-    "generated_at": "2026-11-11T10:45:37.085Z",
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-12T11:11:15.182Z",
     "honest_coverage_pct": 88.6,
-    "n_addressable": 18359,
-    "n_ok": 16258,
-    "n_total": 23515,
-    "n_failed": 1303,
+    "n_addressable": 18331,
+    "n_ok": 16238,
+    "n_total": 23463,
+    "n_failed": 1301,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
-  "generatedFromSnapshots": 16405,
+  "generatedFromSnapshots": 16372,
   "boards": [
     "rule40"
   ],
@@ -35,8 +35,8 @@
   },
   "counts": {
     "rule40": {
-      "profitable": 444,
-      "unprofitable": 47
+      "profitable": 451,
+      "unprofitable": 44
     }
   },
   "rule40": {
@@ -61,58 +61,58 @@
       "Internet Content & Information"
     ],
     "growthBounds": {
-      "p1": -38.92604345132451,
-      "p99": 168.17630975477078
+      "p1": -39.02436249395822,
+      "p99": 167.96828825252587
     },
     "counts": {
       "universeBasis": "routed",
-      "universe": 16423,
-      "onBoard": 9412,
-      "computable": 5538,
-      "above40": 1007,
-      "exported": 491,
-      "exportedLargeCap": 415,
-      "exportedSmallCap": 76,
-      "largeCapBeforeCap": 931,
-      "smallCapBeforeCap": 76,
-      "offBoardMcapUsdDirect": 1593,
+      "universe": 16393,
+      "onBoard": 9374,
+      "computable": 5552,
+      "above40": 998,
+      "exported": 495,
+      "exportedLargeCap": 418,
+      "exportedSmallCap": 77,
+      "largeCapBeforeCap": 921,
+      "smallCapBeforeCap": 77,
+      "offBoardMcapUsdDirect": 1613,
       "offBoardMcapNull": 0,
-      "excludedNotRouted": 3166,
-      "excludedMarketCap": 1258,
-      "excludedDataSuspect": 103,
-      "excludedSector": 1256,
+      "excludedNotRouted": 3169,
+      "excludedMarketCap": 1267,
+      "excludedDataSuspect": 92,
+      "excludedSector": 1255,
       "excludedOutlier": 4,
       "excludedStale": 0,
       "excludedNoPeriod": 0,
-      "excludedTinyBase": 17,
+      "excludedTinyBase": 16,
       "excludedFcfAboveRevenue": 14,
-      "excludedDuplicateIssuer": 1526,
-      "noValidMargin": 3344,
+      "excludedDuplicateIssuer": 1557,
+      "noValidMargin": 3268,
       "noGrowth": 23,
-      "noRank": 168,
+      "noRank": 170,
       "unreadableSnapshot": 0,
       "missingFullBoard": 0
     },
     "rejected": {
       "keinVollboard": 0,
-      "nichtGeroutet": 3166,
-      "datenSuspekt": 103,
-      "sektorAusgeschlossen": 1256,
+      "nichtGeroutet": 3169,
+      "datenSuspekt": 92,
+      "sektorAusgeschlossen": 1255,
       "keinWachstum": 23,
       "fcfUnterdrueckt": 96,
-      "fcfUngueltig": 3248,
+      "fcfUngueltig": 3172,
       "fcfUeberUmsatz": 14,
       "einheitenVerdacht": 4,
-      "basisQuartalStub": 17,
+      "basisQuartalStub": 16,
       "basisJahrStub": 6,
       "veraltet": 0,
       "frischeUnbekannt": 0,
-      "ohneRang": 168,
+      "ohneRang": 170,
       "snapshotUnlesbar": 0,
-      "dupEmittent": 1526,
-      "offBoardMcapUsdDirect": 1593,
+      "dupEmittent": 1557,
+      "offBoardMcapUsdDirect": 1613,
       "offBoardMcapNull": 0,
-      "marketCap": 1258
+      "marketCap": 1267
     }
   }
 }
