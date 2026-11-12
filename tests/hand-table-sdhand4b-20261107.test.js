@@ -143,13 +143,13 @@ test('rows: eleven, one block after every earlier case, sources traced, reasons 
   }
 });
 
-test('expectations from the run of 10.11.2026: the September pairs, bound to the issuer name', () => {
+test('expectations from the run of 13.11.2026: the September pairs, bound to the issuer name', () => {
   const own = require('../data-health/erwartungen.json').filter(e => e.id.startsWith('sdhand4b-'));
   const names = Object.fromEntries(ROWS.map(([t]) => [t, F[t].meta.name]));
   for (const [t, [, , before], after] of ROWS) {
     const e = own.find(x => x.name === names[t] && x.feld === 'revGrowthYoYPct');
     assert.ok(e, t);
-    assert.equal(e.gueltigAb, '2026-11-10');
+    assert.equal(e.gueltigAb, '2026-11-13');
     assert.ok(e.min < after && after < e.max && !(e.min < before && before < e.max), t);
   }
   assert.equal(own.length, 3);

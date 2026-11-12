@@ -100,7 +100,9 @@
     {"ticker": "BURE.ST", "field": "revenueQ", "coversThrough": "2026-06-30"},
     { "ticker": "285A.T", "field": "revenueQ", "coversThrough": "2026-09-30" },
     { "ticker": "285A.T", "field": "grossProfitQ", "coversThrough": "2026-09-30" },
-    { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" }
+    { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" },
+    { "ticker": "TLN", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "GUJENERGY.NS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -30689,6 +30691,485 @@
           "currency": "JPY",
           "unit": "currency",
           "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "uwmc-2025-12-31-annualRev-20261107",
+      "ticker": "UWMC",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 2403247000,
+      "replacementValue": 3160569000,
+      "revision": "2026-11-07-sdhand5c",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2025 liefert der Anbieter 2.403,2 Mio. USD, das ist der Umsatz nach Abzug der sonstigen Verluste (Other gains (losses), net, minus 757,3 Mio. USD, vor allem die Wertänderung der Mortgage Servicing Rights). UWM führt diese Zeile unter dem Umsatz in einem eigenen Block und meldet 3.160,6 Mio. USD (Total revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://s21.q4cdn.com/406353517/files/doc_financials/2025/ar/2025_AR.pdf",
+          "form": "UWM Holdings Corporation, Annual Report 2025 (Form 10-K), consolidated statements of operations",
+          "filed": "2026-02-25",
+          "page": "76 (printed 68), consolidated statements of operations, years ended December 31, 2025, 2024, 2023",
+          "quote": "3,160,569 2,674,126 2,165,475",
+          "value": 3160569000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "uwmc-2024-12-31-annualRev-20261107",
+      "ticker": "UWMC",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 2163691000,
+      "replacementValue": 2674126000,
+      "revision": "2026-11-07-sdhand5c",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2024 liefert der Anbieter 2.163,7 Mio. USD, das ist der Umsatz nach Abzug der sonstigen Verluste (Other gains (losses), net, minus 510,4 Mio. USD, vor allem die Wertänderung der Mortgage Servicing Rights). UWM führt diese Zeile unter dem Umsatz in einem eigenen Block und meldet 2.674,1 Mio. USD (Total revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://s21.q4cdn.com/406353517/files/doc_financials/2025/ar/2025_AR.pdf",
+          "form": "UWM Holdings Corporation, Annual Report 2025 (Form 10-K), consolidated statements of operations",
+          "filed": "2026-02-25",
+          "page": "76 (printed 68), consolidated statements of operations, years ended December 31, 2025, 2024, 2023",
+          "quote": "3,160,569 2,674,126 2,165,475",
+          "value": 2674126000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "uwmc-2023-12-31-annualRev-20261107",
+      "ticker": "UWMC",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 1311327000,
+      "replacementValue": 2165475000,
+      "revision": "2026-11-07-sdhand5c",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2023 liefert der Anbieter 1.311,3 Mio. USD, das ist der Umsatz nach Abzug der sonstigen Verluste (Other gains (losses), net, minus 854,1 Mio. USD, vor allem die Wertänderung der Mortgage Servicing Rights). UWM führt diese Zeile unter dem Umsatz in einem eigenen Block und meldet 2.165,5 Mio. USD (Total revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://s21.q4cdn.com/406353517/files/doc_financials/2025/ar/2025_AR.pdf",
+          "form": "UWM Holdings Corporation, Annual Report 2025 (Form 10-K), consolidated statements of operations",
+          "filed": "2026-02-25",
+          "page": "76 (printed 68), consolidated statements of operations, years ended December 31, 2025, 2024, 2023",
+          "quote": "3,160,569 2,674,126 2,165,475",
+          "value": 2165475000,
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2025-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 208300000,
+      "replacementValue": 211400000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2025 liefert der Anbieter 208,3 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 211,4 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (3,1 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 19, Consolidated Income Statement, first line",
+          "quote": "Revenue 2A,4 211.4 121.1",
+          "value": 211400000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 31, note 4 Revenue",
+          "quote": "Joint venture management fees1 3.1 4.4 9.1 10.7 Total 211.4 121.1",
+          "value": 211400000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2024-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 116700000,
+      "replacementValue": 121100000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2024 liefert der Anbieter 116,7 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 121,1 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (4,4 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 19, Consolidated Income Statement, comparative column 2024",
+          "quote": "Revenue 2A,4 211.4 121.1",
+          "value": 121100000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 25, Consolidated income statement, first line",
+          "quote": "Revenue 2A,4 121.1 134.3",
+          "value": 121100000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2023-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 127800000,
+      "replacementValue": 134300000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2023 liefert der Anbieter 127,8 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 134,3 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (6,5 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 25, Consolidated income statement, comparative column 2023",
+          "quote": "Revenue 2A,4 121.1 134.3",
+          "value": 134300000,
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 37, note 4 Revenue",
+          "quote": "Joint venture and associate management fees1 4.4 6.5 10.7 14.9 Total – continuing operations 121.1 134.3",
+          "value": 134300000,
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2022-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 125900000,
+      "replacementValue": 131400000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2022 liefert der Anbieter 125,9 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 131,4 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (5,5 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/sites/hammerson-corp/files/2024-02/Hammerson%20Full%20Year%20Results%202023.pdf",
+          "form": "Full Year 2023 Results, 29.02.2024",
+          "page": "Consolidated income statement, comparative column 2022 (read through a web text reader; the server refused the direct download on 07.11.2026)",
+          "quote": "Revenue 2,4 134.3 131.4",
+          "value": 131400000,
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "filed": "2024-02-29",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2025-06-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 454000000,
+      "replacementValue": 630000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 454 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 630 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 630000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2025-09-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 770000000,
+      "replacementValue": 812000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2025 liefert der Anbieter 770 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 812 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://talenenergy.gcs-web.com/static-files/3a408a78-3ceb-4107-9bd1-3cbc4d5c15b4",
+          "form": "Talen Energy Corporation, Form 8-K of November 3, 2026, results for the third quarter 2026",
+          "filed": "2026-11-03",
+          "page": "7, consolidated statements of operations",
+          "quote": "Operating Revenues 1,327 812 3,203 1,832",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 812000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2026-03-31-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 1241000000,
+      "replacementValue": 1129000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 1.241 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 1.129 Mio. USD (Operating Revenues; Halbjahr 1.876 Mio. USD minus zweites Quartal 747 Mio. USD). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 1876000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 747000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2026-06-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 959000000,
+      "replacementValue": 747000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 959 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 747 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 747000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2026-06-30-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 95449800000,
+      "replacementValue": 97713800000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 9.544,98 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 226,40 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 9.771,38 Crore INR (Revenue from operations, Konzern). Alle Werte enthalten die Verschmelzung mit GSPC und GSPL (wirksam seit 01.05.2026, rückwirkend ab 01.04.2024). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 97713800000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "filed": "2026-08-11",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2026-03-31-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 57918500000,
+      "replacementValue": 60024000000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 5.791,85 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 210,55 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 6.002,40 Crore INR (Revenue from operations, Konzern). Alle Werte enthalten die Verschmelzung mit GSPC und GSPL (wirksam seit 01.05.2026, rückwirkend ab 01.04.2024). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 60024000000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "filed": "2026-08-11",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2025-06-30-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 58513600000,
+      "replacementValue": 60458800000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 5.851,36 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 194,52 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 6.045,88 Crore INR (Revenue from operations, Konzern). Alle Werte enthalten die Verschmelzung mit GSPC und GSPL (wirksam seit 01.05.2026, rückwirkend ab 01.04.2024). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 60458800000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "filed": "2026-08-11",
+          "currency": "INR",
+          "unit": "currency",
           "verifiedAt": "2026-11-07"
         }
       ]

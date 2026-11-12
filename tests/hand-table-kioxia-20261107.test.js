@@ -87,10 +87,10 @@ test('a later vendor packet: the September quarter at the filed value is confirm
 test('rows: eighteen, appended last, coverage through 30.09.2026, exact sources, reasons naming the period, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 18);
-  // Only the eleven follow-up rows of lane sd-hand-4 (07.11.2026, tests/hand-table-sdhand4b-20261107.test.js) follow these.
   const at = H.table.cases.indexOf(own[0]);
   assert.deepEqual(H.table.cases.slice(at, at + 18), own, 'one block');
-  assert.deepEqual(H.table.cases.slice(at + 18).map(c => c.revision), Array(11).fill('2026-11-07-sdhand4b'), 'appended after every earlier case');
+  // Only the three UWMC annual rows (tests/hand-table-triage-20261024.test.js) the four Hammerson rows (tests/hand-table-hmso-20261107.test.js) and the four Talen rows (tests/hand-table-tln-20261107.test.js) of the same day follow. The eleven follow-up rows of lane sd-hand-4 (tests/hand-table-sdhand4b-20261107.test.js) come last.
+  assert.deepEqual(H.table.cases.slice(at + 18).map(c => c.revision), [...Array(3).fill('2026-11-07-sdhand5c'), ...Array(4).fill('2026-11-07-sdhand7'), ...Array(4).fill('2026-11-07-sdhand5d'), ...Array(3).fill('2026-11-07-sdhand7b'), ...Array(11).fill('2026-11-07-sdhand4b')], 'appended last');
   assert.equal(own.filter(c => c.expectedBadValue !== c.replacementValue).length, 6, 'six corrected, twelve confirmed');
   for (const f of FIELDS) assert.equal(H.table.coverage.find(v => v.ticker === T && v.field === f).coversThrough, '2026-09-30');
   for (const c of own) {

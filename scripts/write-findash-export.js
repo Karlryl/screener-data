@@ -155,6 +155,20 @@ function periodGateShadowForSnapshot(snapshot) {
       gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds), capitalEfficiencyAxis: axes.capitalEfficiency(snapshot) };
   });
 }
+// Basis label of the revenue acceleration axis (07.11.2026, display only): which branch revAcceleration() took on this
+// snapshot and how many usable year-ago quarter comparisons it found. The quarterly basis needs at least two, and the newest
+// must not be stale; otherwise the annual series (or the sourced newer year) carries the axis, or there is none.
+const REV_ACCELERATION_BASES = Object.freeze(['quarter', 'year', 'sourcedYear', 'none']);
+function revAccelerationBasisForSnapshot(snapshot) {
+  if (!snapshot) return null;
+  let basis = null, quarterComparisons = 0, newestQuarterStale = false;
+  const value = require('../src/scoring/axes.js').revAcceleration(snapshot, undefined, (b, n, stale) => {
+    basis = b;
+    if (n !== undefined) { quarterComparisons = n; newestQuarterStale = stale; }
+  });
+  const label = value === null ? 'none' : REV_ACCELERATION_BASES.includes(basis) ? basis : null;
+  return label === null ? null : { basis: label, quarterComparisons, newestQuarterStale };
+}
 let _behoerde;
 let _schrankenGewarnt = false;
 // Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
@@ -421,6 +435,11 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
       Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
       return value;
     },
+    get revAccelerationBasis() {
+      const value = revAccelerationBasisForSnapshot(snap);
+      Object.defineProperty(this, 'revAccelerationBasis', { value, enumerable: true });
+      return value;
+    },
     get periodGateShadow() { // PR #72 comparison until 04.12.2026
       const value = periodGateShadowForSnapshot(snap);
       Object.defineProperty(this, 'periodGateShadow', { value, enumerable: true });
@@ -522,6 +541,7 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
   out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
   out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
+  out.revAccelerationBasis = derivations.revAccelerationBasis; // display only, from the same snapshot as the growth label
   // A sibling listing of this firm with newer figures is held by the stale-price gate: the shown row says so, naming both.
   const neuer = passt && leg.periodEnd && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' ? heldNewerSibling(derivations.meta, out.ticker, leg.periodEnd) : null;
   if (neuer) {
@@ -1860,6 +1880,16 @@ function checkOverviewPeriods(r, where, errs) {
     if ((value ?? null) === null && p.basis !== 'none' && !p.reason) errs.push(`${where}: ${key} Zeitraum ohne Wert und ohne Grund`);
   }
 }
+function checkRevAccelerationBasis(r, where, errs) {
+  if (!('revAccelerationBasis' in r) || r.revAccelerationBasis === null) return;
+  const v = r.revAccelerationBasis;
+  if (typeof v !== 'object' || Array.isArray(v) || !REV_ACCELERATION_BASES.includes(v.basis)
+      || !Number.isInteger(v.quarterComparisons) || v.quarterComparisons < 0 || typeof v.newestQuarterStale !== 'boolean'
+      || Object.keys(v).length !== 3) { errs.push(`${where}: revAccelerationBasis=${JSON.stringify(v)} keine Basisangabe`); return; }
+  if (v.basis === 'quarter' && (v.quarterComparisons < 2 || v.newestQuarterStale)) {
+    errs.push(`${where}: revAccelerationBasis quarter mit ${v.quarterComparisons} Vergleichen${v.newestQuarterStale ? ', jüngstes veraltet' : ''}`);
+  }
+}
 function checkRevGrowthBasis(r, where, errs) {
   const alt = Object.entries(REV_GROWTH_LEGACY).filter(([, k]) => k in r);
   if (alt.length && alt.length !== 4) errs.push(`${where}: revGrowth*Legacy nur teilweise vorhanden`);
@@ -1964,6 +1994,7 @@ function validateGeo(r, where, errs) {
   checkOptionalNumOrNull(r, 'overviewValueLegacy', where, errs);   // G31 switch 18.10. additiv OPTIONAL
   checkOverviewPeriods(r, where, errs);                             // P267 additiv OPTIONAL
   checkRevGrowthBasis(r, where, errs);                             // 01.10. additiv OPTIONAL
+  checkRevAccelerationBasis(r, where, errs);                       // 07.11. additiv OPTIONAL
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
@@ -2353,6 +2384,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
   checkFeldHomogen(alleZeilen, 'revGrowthBasis', kind, errs);
+  checkFeldHomogen(alleZeilen, 'revAccelerationBasis', kind, errs);
   checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
@@ -2798,7 +2830,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, ageRuleOffWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, revAccelerationBasisForSnapshot, checkRevAccelerationBasis, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, ageRuleOffWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
