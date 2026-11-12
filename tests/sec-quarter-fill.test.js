@@ -243,7 +243,7 @@ test('store concepts of the writer and of the reader are the same list', () => {
   assert.match(src, /const SEC_CONCEPTS = \[\.\.\.REV_CONCEPTS, 'RevenuesNetOfInterestExpense'\]/);
   assert.deepEqual(SEC_CONCEPTS, [...require('../lib/sec-pit.js').REV_CONCEPTS, 'RevenuesNetOfInterestExpense']);
 });
-test('every market checks append-only before it writes', () => assert.equal(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8').match(/^ {2}S\.assertAppendOnly\(prev, next\);\r?$/gm).length, 3));
+test('every market checks append-only before it writes', () => assert.equal(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8').match(/^ {2}S\.assertAppendOnly\(prev, next\);\r?$/gm).length, 4)); // cn, tw, us, br (Brazil since #115)
 test('no personal contact or literal SEC identity in the writer; it reads SEC_CONTACT through the project helper', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8');
   assert.match(src, /'User-Agent': assertSecContact\(\)/);
