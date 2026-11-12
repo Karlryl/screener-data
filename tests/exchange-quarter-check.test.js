@@ -241,28 +241,39 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; // 2025-06-30
   assert.equal(b.rows['000002.SZ'].revenueQEnds[3], '2025-06-30');
   assert.equal(blocked(base(), ctxOf(F.store, b)), 'vendor-2025-changed');
-  // sd-quellen 07.11.2026: no baseline row (on no board in July) -> the exchange agreement of the three other
-  // vendor 2025 quarters is the proof; the fill applies and says so.
+  // sd-quellen 07.11.2026: no baseline row (on no board in July) -> the exchange agreement of the other vendor 2025
+  // quarters is the proof, but only on one reporting basis (Codex R-pr124 P1, 12.11.): the 9M-2025 figure must have
+  // been read before the Q3-2026 notice and be unchanged after it (the existing restatement signal); then that report
+  // restated nothing, so H1 2025 and 9M 2025 stand on the same basis.
   const nb = clone(F.baseline); delete nb.rows['000002.SZ'];
-  const r = res(base(), ctxOf(F.store, nb));
+  const withQ3 = firstRead => {
+    const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
+    y['2026-09-30'] = [{ ...q3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
+    q3.confirmedBy = [{ ...q3.confirmedBy[0], fetchedAt: firstRead }, { ...q3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
+    return st;
+  };
+  const early = withQ3('2026-10-02T07:07:40.607Z'), late = withQ3('2026-10-30T00:00:00.000Z');
+  late.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy.shift();   // first read after the Q3-2026 notice
+  const r = res(base(), ctxOf(early, nb));
   assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.baseline, 'exchange-agreement');
   // ... but not with a single agreeing vendor quarter of 2025
   const thin = base(), ends = thin.timeseries.revenueQEnds;
   for (const e of ['2025-06-30', '2025-03-31']) thin.timeseries.revenueQ[ends.indexOf(e)] = null;
-  const r1 = res(thin, ctxOf(F.store, nb));
+  const r1 = res(thin, ctxOf(early, nb));
   assert.equal(r1.fill.blocked, 'no-baseline'); assert.equal(r1.fill.otherwiseFillable, true); assert.notEqual(r1.category, 'would-fill');
   // exactly two vendor quarters suffice (review PR #124 N3: 1,235 of 1,326 fills of 07.11. have exactly two)
   const two = base(); two.timeseries.revenueQ[two.timeseries.revenueQEnds.indexOf('2025-03-31')] = null;
-  assert.equal(res(two, ctxOf(F.store, nb)).category, 'would-fill');
-  // review M1: without the vendor Q4 of the fill year the Q3 observation must have been read before the next-year report
-  const late = clone(F.store), y = late.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
-  y['2026-09-30'] = [{ ...q3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
-  q3.confirmedBy = [{ ...q3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
+  assert.equal(res(two, ctxOf(early, nb)).category, 'would-fill');
+  // Codex R-pr124 P1: 9M 2025 first read after the Q3-2026 notice may already carry a restatement that the stored
+  // H1 2025 lacks (old H1 200, new 9M 350 and FY 450 -> fill 150 instead of 100). The vendor Q4 does not prove the
+  // basis (the same addition sits in 9M and FY and cancels in Q4), so a late first read stays empty, Q4 or not.
+  assert.equal(res(base(), ctxOf(late, nb)).fill.blocked, 'november-read-late', 'late first read, vendor Q4 present: not proven');
+  assert.equal(res(base(), ctxOf(late, F.baseline)).fill.blocked, 'november-read-late', 'late first read with a July row: not proven either');
   const noQ4 = base(); noQ4.timeseries.revenueQ[noQ4.timeseries.revenueQEnds.indexOf('2025-12-31')] = null;
-  const rl = res(noQ4, ctxOf(late, nb));
-  assert.equal(rl.fill.blocked, 'no-baseline', 'read only after the Q3 2026 report and no vendor Q4: not proven');
-  const early = clone(late); early.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].fetchedAt = '2025-10-31T00:00:00.000Z';
+  assert.equal(res(noQ4, ctxOf(late, nb)).fill.blocked, 'november-read-late', 'late first read, no vendor Q4: not proven');
   assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
+  // ... and before any Q3-2026 notice the basis of 9M 2025 against a restated H1 2025 is unproven: no fill
+  assert.equal(res(base(), ctxOf(F.store, nb)).fill.blocked, 'no-baseline', 'no Q3-2026 report yet: not proven');
   // ... and a baseline row that exists still wins: an unchanged vintage fills without the alternative
   const rb = res(base(), ctxOf(F.store, F.baseline));
   assert.equal(rb.category, 'would-fill'); assert.equal(rb.fill.baseline, undefined);
@@ -593,6 +604,13 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   red("  const agree = (v, e) => finite(v) && finite(e) && Math.abs(v - e) <= Math.max(tol * Math.abs(e), x.floor);",
     "  const agree = (v, e) => finite(v) && finite(e);",
     lib => assert.notEqual(r(lib, scaleCell(base(), '2026-03-31', 1.001001)).category, 'would-fill'));
+  // Codex R-pr124 P1: 9M of the fill year first read after the next-year notice (one basis unproven)
+  const lateRead = clone(F.store), ly = lateRead.cn.companies['000002.SZ'].ytd, lq3 = ly['2025-09-30'].at(-1);
+  ly['2026-09-30'] = [{ ...lq3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
+  lq3.confirmedBy = [{ ...lq3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
+  red("      if (!(firstRead && notice && firstRead.slice(0, 10) < notice)) return block('november-read-late');",
+    '      // november-read-late removed',
+    lib => assert.equal(r(lib, base(), ctxOf(lateRead, F.baseline)).fill.blocked, 'november-read-late'));
   // Q3 > 0
   red("    if (!(xq[P] > 0)) return block('exchange-quarter-not-positive');", "",
     lib => { const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, h1 = y['2025-06-30'].at(-1).total, nine = y['2025-09-30'].at(-1);
@@ -662,7 +680,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
       assert.equal(r(lib, y).growth, null); });
-  assert.equal(breaks, 18);
+  assert.equal(breaks, 19); // +1 november-read-late (Codex R-pr124 P1, 12.11.2026)
 });
 
 test('fill-only: identical active fills, no withholding, no residue on mode switches, no input mutation', () => {
