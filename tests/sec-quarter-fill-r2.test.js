@@ -288,3 +288,15 @@ test('blind delta check 12.11. evening (M1, N2): conflictsWith names another fig
   const n2 = [f('2026-04-01', '2026-06-30', 150, '2026-08-01', '10-Q', 'A'), f('2026-04-01', '2026-06-30', 151, '2026-09-01', '10-Q/A', 'B'), f('2026-04-01', '2026-06-30', 150, '2026-10-01', '10-Q', 'C')];
   for (const xs of perms(n2)) assert.deepEqual(P.pitSingleQuarters(xs)[0].conflictsWith, { val: 151, filed: '2026-09-01', accn: 'B' });
 });
+
+test('blind delta check 12.11. evening (range M1): a marker the range sets off is dated by the later near-equal figure, not by the first', () => {
+  const q3 = [f('2025-01-01', '2025-03-31', 133, '2025-05-01'), f('2025-04-01', '2025-06-30', 133, '2025-08-01'), f('2025-07-01', '2025-09-30', 133, '2025-11-01')];
+  const years = [f('2025-01-01', '2025-12-31', 400, '2026-02-02', '10-K', 'y1'), f('2025-01-01', '2025-12-31', 400.07, '2026-05-01', '10-K', 'y2')];
+  for (const xs of perms([...q3, ...years])) {
+    const q4 = P.pitSingleQuarters(xs).find((q) => q.end === '2025-12-31');
+    assert.deepEqual([q4.derivation, q4.filed, q4.accn], ['restatement-conflict', '2026-05-01', 'y2']);
+  }
+  assert.equal(P.pitSingleQuarters([...q3, ...years], { asOf: '2026-04-15' }).find((q) => q.end === '2025-12-31').val, 1, 'before 01.05. only 400 is known: Q4 = 1');
+  const h1 = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-06-30', 200, '2026-08-01'), f('2026-01-01', '2026-06-30', 200.03, '2026-09-01', '10-Q/A', 'h2')];
+  for (const xs of perms(h1)) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30').filed, '2026-09-01');
+});
