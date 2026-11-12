@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
-    "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
+    "src/scoring/score.js": "12524b090177496e334c739bf17f42373d11625ad4cd4544b7716ac9a7daf0fa",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
@@ -89,7 +89,7 @@
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
     "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow). G31 switch 2026-10-18: production runs the v1 arm of lib/g31-recency.js (newest labelled quarter or validated fiscal year); the pre-G31 code is the legacy arm for the comparison export (see g31Switch). Period gate 2026-10-24 (formula draft): gpGrowth drops a gross-profit pair whose dated ends are not 334..397 days apart (see periodGate). Staleness rule review fix 2026-11-04 (formula draft, Codex R16): revAcceleration judges the newest quarter pair it uses for age (365 days); a stale one leaves the quarterly branch to the annual fallback (see staleSeriesP286P287.reviewFix20261104). Sourced annual year 2026-11-04 (formula draft): only gpGrowth and the annual revAcceleration fallback read verified FY2025 outside all positional arrays; see sourcedAnnualYear20261104.",
-    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
+    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair. P290 2026-11-01: issuerDedupComparator prefers the newest shown growth period, then the evidenced home listing, then the old market-cap order; issuerDedupComparatorOld keeps the old rule as the visible comparison for at most four weeks. See p290HomeListing.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
@@ -471,6 +471,35 @@
     "review": "Build registration only; Codex decides on the draft.",
     "rollback": "Set usFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
   },
+  "p290HomeListing": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "12524b090177496e334c739bf17f42373d11625ad4cd4544b7716ac9a7daf0fa",
+    "previousSealedSha256LF": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "dependencies": "lib/home-listing.js and configs/home-listing.json are registered in dependencyFiles and required. The sourced homeListingProposal rows of configs/dup-issuer-shadow-table.json are a hand table outside the fingerprint, like the other hand tables.",
+    "goldenImpact": "verify() rebuilds the golden traces: 0 score and 0 rank mismatches. A golden fixture is a single listing, so the comparator never decides there.",
+    "homeListingProposalSha256": "1522d3699d92e1ee4fcde6c7cacb6d07bf6782cf3bc2dd92d56c4308134ac8aa",
+    "rebuildR23": {
+      "date": "2026-11-07",
+      "authority": "Codex verdict R23 on PR #89 (NOT APPROVED 98 %), Daylauf 15 lane sd-formel. Method decision Claude, pending the Codex review.",
+      "scope": "(1) After the three first keys the issuer dedup asks, in order: can the leg hold a rank (covered weighted axes as the score counts them, the export gate 4 of 7 shared through lib/home-listing.js rankCapable), the newest shown month (G31), the share of covered axes, the home listing, then market cap. excluded.json homeListing names the deciding key (keinRang, aeltererZeitraum, wenigerBelegteAchsen). (2) The country rule in shownGrowthMonth is gone. lib/g31-recency.js applies the exchange gate of the older-pair walk to every listing whose own quarters a CN/TW exchange store proves (lib/exchange-quarter-check.js exchangeSiblings: store currency, at least three quarters equal within the tolerance and more equal than off); a listing without such proof keeps the walk. Selection and display read the same comparison. (3) homeListingProposal rows of configs/dup-issuer-shadow-table.json are pinned by homeListingProposalSha256 (tests/home-listing.test.js). (4) Market cap on the home line: configs/share-count-hand-table.json gets AT1.DE (Aroundtown, Yahoo 1.68 against 1.83 bn USD on 31.10.2026, same source as 1AT1.MI and AT1.SW); CNOOC 0883.HK: since Tag 1545 the class sum (configs/mcap-class-sum.json, shownLine 0883.HK) carries the firm market cap, so the known-case pin left tests/hand-table-nachfolger-20261104.test.js with the merge of 12.11.2026.",
+      "evidence": "tests/home-listing.test.js R23-1, R23-2 (real 0107.HK and 601107.SS of 31.10.2026), R23-3; red against head 0efd363022, green here.",
+      "review": "Builder evidence only; one blind Opus review, then the Codex review decide."
+    },
+    "codexR1Fix20261112": {
+      "date": "2026-11-12",
+      "authority": "Codex verdict R1 on PR #89 head ab7714d84f (NOT APPROVED 99 %), lane sd-us-kern of Daylauf 16.",
+      "scope": "P1-1: lib/mcap-class-sum.js writeFirm prepares each priced line as run-screener.js reads it (prepareSnapshot) and routes it through score.js routeEntry (step 1 of scoreUniverse, now shared), so dedupCoverage decides the carrier line as in the scoring; a line the scoring excludes before its issuer dedup ranks after every line it keeps (it can still carry the sum when it is the only line with a Yahoo value of its own, Codex R2 finding A, unchanged from the earlier writer). P1-2: scripts/write-rule40-export.js caches the same coverage on each candidate before the snapshot is narrowed. P3: lib/exchange-quarter-check.js is a required dependency of the seal.",
+      "file": "src/scoring/score.js",
+      "sourceSha256LF": "12524b090177496e334c739bf17f42373d11625ad4cd4544b7716ac9a7daf0fa",
+      "previousPendingSha256LF": "b8b30f01b726724053d93693f0124f40f37b8f96cc2cfb4c8c981bb437fe1fb6",
+      "evidence": "tests/home-listing-consumers.test.js (class sum and Rule of 40 with the ALNY probe pair, break-once on each line in memory); tests/mcap-class-sum.test.js 26; Codex probes counterexamples.cjs and rule40-coverage-probe.cjs keep PROBE.VI 4/7 rank 1.",
+      "review": "Builder evidence only; Codex round 2 decides."
+    }
+  },
   "periodGateRound3OnPr75": {
     "date": "2026-11-01",
     "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): the period gate rebased on PR #75, with the two findings of Codex's verdict on eccc09b32c that blocked it.",
@@ -572,11 +601,14 @@
     "rollback": "Revert the PR #81 source change and only this registration together in a reviewed new commit."
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "341eefe1b89c25d3015cbd8870c06a804f9ff27f21a4331de69c6d5cd95705e0",
+    "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
+    "lib/home-listing.js": "4a834a29722ab66cafa69f20c2a621502f6f1718c54bf39a2d1146c38c1de000",
+    "lib/g31-recency.js": "998c2db0128d4648b087d7dcdd3481fe6bbf85f5cb107d06d192b19b0b48d154",
     "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "c15b1ab93f20c4fbc7421106d96ebfbdecbbbaa632632d6687b2690120f91e99",
+    "lib/exchange-quarter-check.js": "6aac1542383d119e3777f20da7fe2ca0fbf8817d2fd8a6bf7df80ef42936350b",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
     "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
   },
