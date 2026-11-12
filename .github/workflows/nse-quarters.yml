@@ -1,0 +1,45 @@
+name: NSE Quarters Shadow
+
+# Shadow first: manual, read-only repository permissions, downloadable evidence.
+# The reviewed first live run must precede any schedule or read-time fill.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nse-quarters-shadow
+  cancel-in-progress: false
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline-Tests
+        run: node --test tests/nse-quarters.test.js
+      - name: NSE-Quartale abrufen
+        run: node scripts/fetch-nse-quarters.js --cap=200 --symbols=20
+      - name: Schattenbericht
+        if: ${{ !cancelled() }}
+        # Without Yahoo snapshots the report explicitly says unchecked. Claude runs
+        # the matched-date comparison with the saved snapshot package locally.
+        run: node scripts/nse-shadow-report.js --json=nse-shadow.json > nse-shadow.md
+      - name: Pruefpaket sichern
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nse-quarters-shadow-${{ github.run_id }}
+          path: |
+            external-data/exchange-quarters/in.json
+            nse-shadow.json
+            nse-shadow.md
+          if-no-files-found: error
+          retention-days: 30
