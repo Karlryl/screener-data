@@ -155,6 +155,43 @@ test('expectations from the run of 13.11.2026: the September pairs, bound to the
   assert.equal(own.length, 3);
 });
 
+test('Codex R2 on #116 (12.11.2026): stored fills, duplicate dates and short statement periods fail closed', () => {
+  // P1: a fill stored by the earlier code on a cell of another context is withheld on the next pass, with a reason and an event.
+  for (const t of ['601211.SS', '360ONE.NS']) {
+    const c = active.cases.find(x => x.vendorGap && x.ticker === t), base = pkt(t), i = base.timeseries.revenueQEnds.indexOf('2025-09-30');
+    const fill = c.replacementValue * base.meta.fxRateApplied;
+    for (const odd of [{ currency: 'EUR' }, { currencyUnit: 'EUR' }, { unit: 'shares' }, { multiplier: 1000 }, { periodType: '6M' }, { source: 'sec' }]) {
+      const p = pkt(t), origin = { value: null, ...odd };
+      p.timeseries.revenueQ[i] = { ...origin, value: fill, financialCorrection: { caseId: c.caseId, originalVendorRow: origin,
+        originalNativeValue: null, replacementNativeValue: c.replacementValue, nativeCurrency: c.currency, reason: c.reason, sources: c.sources, revision: c.revision } };
+      const r = H.applyFinancialCases(p, { table: active }), o = r.snapshot.timeseries.revenueQ[i];
+      assert.deepEqual([value(o), o.financialMissing?.reasonCode], [null, 'context-changed'], t + ' ' + JSON.stringify(odd));
+      assert.ok(r.events.some(e => e.caseId === c.caseId && e.reasonCode === 'context-changed'), t + ' event ' + JSON.stringify(odd));
+    }
+    const ok = apply(pkt(t));
+    assert.equal(value(ok.timeseries.revenueQ[i]), fill, t + ': a correct packet keeps its fill');
+    assert.deepEqual(apply(structuredClone(ok)), ok, t + ': and stays idempotent');
+  }
+  // P3: two cells on the same comparison date are both withheld, never one kept.
+  const dup = pkt('601211.SS'); dup.timeseries.revenueQEnds[5] = '2025-09-30';
+  assert.deepEqual(apply(dup).timeseries.revenueQ.slice(4).map(r => [value(r), r?.financialMissing?.reasonCode]), [[null, 'context-changed'], [null, 'context-changed']]);
+  // P2: statement periods shorter than the series or on other ends anywhere: no insert, logged; never a padded or invented duration.
+  for (const cut of [3, 4]) {
+    const p = pkt('CHENNPETRO.NS'); p.meta.statementPeriods.revenueQ = p.meta.statementPeriods.revenueQ.slice(0, cut);
+    const r = H.applyFinancialCases(p, { table: active });
+    assert.ok(!r.snapshot.timeseries.revenueQEnds.includes('2025-09-30'), 'cut ' + cut);
+    assert.deepEqual(r.snapshot.meta.statementPeriods.revenueQ, p.meta.statementPeriods.revenueQ, 'cut ' + cut + ': periods untouched');
+    assert.ok(r.events.some(e => e.reasonCode === 'vendor-gap-unfilled' && e.period === '2025-09-30'), 'cut ' + cut + ': logged');
+  }
+  const far = pkt('CHENNPETRO.NS'); far.meta.statementPeriods.revenueQ[0] = { ...far.meta.statementPeriods.revenueQ[0], end: '2026-08-31' };
+  assert.ok(!apply(far).timeseries.revenueQEnds.includes('2025-09-30'), 'an end away from the insert position also stops it');
+  // A stored half year on the newest quarter of a full list is still seen against the inserted 3M quarter.
+  const half = pkt('CHENNPETRO.NS'); half.meta.statementPeriods.revenueQ[0] = { ...half.meta.statementPeriods.revenueQ[0], duration: '6M' };
+  const hs = apply(half);
+  assert.equal(hs.meta.statementPeriods.revenueQ.length, hs.timeseries.revenueQ.length);
+  assert.notEqual(g31Shadow(hs).v1.periodEnd, '2026-09-30');
+});
+
 test('the live files are unchanged by this test', () => {
   assert.deepEqual(liveHashes(), beforeHashes);
 });
