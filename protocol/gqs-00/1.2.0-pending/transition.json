@@ -596,12 +596,14 @@
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
     "lib/home-listing.js": "4a834a29722ab66cafa69f20c2a621502f6f1718c54bf39a2d1146c38c1de000",
-    "lib/g31-recency.js": "761bd3657e48eed5dfebca99140e6ad7bd46537e94618af27a8b188f27b5dcf8",
+    "lib/g31-recency.js": "039e96267213a0ead4d8749e501e1b4ab5df9825790b7b17798443b35f04b9db",
     "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d"
+    "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d",
+    "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
+    "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
@@ -700,5 +702,22 @@
     "sourceSha256LF": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
     "goldenImpact": "None: all 25 sealed traces must rebuild unchanged.",
     "evidence": "tests/rev-acceleration-basis-label.test.js; node scripts/gqs00-freeze.js --verify."
+  },
+  "hkInterimLeg20261112": {
+    "date": "2026-11-12",
+    "authority": "Daylauf 16 lane sd-halbjahr (formula DRAFT for Codex): root pattern (2) of 07.11., Hong Kong half-year reporters shown on fiscal 2025 although the interim to 30.06.2026 is published (G31).",
+    "scope": "lib/g31-recency.js g31Shadow reads lib/hk-interim.js, a read-time pair from external-data/exchange-quarters/hk.json (scripts/fetch-hk-interims.js, Eastmoney RPT_HKF10_FN_MAININDICATOR, interim and fiscal-year rows). For Hong Kong listings only, beside a valid v1 leg, a six-month interim pair becomes v1 (basis halfYear) and the second bonus component when it ends after the chosen leg and passes: Eastmoney internal consistency (own ratio equals its growth figure within 0.1 points; not a second source), general companies only, the same quantity against Yahoo (Eastmoney fiscal year containing the year-ago half equals Yahoo fiscal year within 1 %, which fixes unit, currency and revenue line), a size bound (year-ago half at most 0.9 of that year), and the year-ago half against Yahoo trailing twelve months to the same end (implied as fiscal year plus new half minus trailing twelve months, within 1 % of the year-ago half itself). Operands are returned in the snapshot unit (times meta.fxRateApplied); lib/export-provenance.js cites the operands (from condition 6 on: the filed values with link, page and line). A listing named anywhere in configs/financial-known-cases.json (read, not hash-registered) keeps its reviewed figures; the committed store is read only inside a run with a data day (RUN_DATE_UTC). No file under src/scoring changes and no vendor series changes. Condition 6 (Codex round 2): both half-year levels must equal the values printed in the company HKEX interim filing, recorded in configs/hk-interim-filed.json (78 board companies, each read twice independently with link, page and verbatim line; 12 of 12 sampled readings confirmed by an Opus check in the PDFs); the filed values are the operands and lib/export-provenance.js cites the filing. Without a record the row keeps its fiscal year and the neuerer-bericht hint.",
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f"
+    },
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "d1f8a17da868301cbac8456b10826da9e56a8198e43f23f5966c5b2d45cba6eb",
+      "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
+      "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
+    },
+    "goldenImpact": "None: no sealed trace is a Hong Kong listing, and without the store file nothing changes.",
+    "evidence": "tests/hk-interim.test.js on real cells (Pop Mart, GenScript) covering every condition; each guard (switch, agreement limit, general-company rule, size check, hand-table rule, data-day rule, minimum row count of the fetch) was broken once by hand during the build on 12.11.2026 and the test went red. Before and after on the snapshots of 11.11.2026 in the PR body; blind Opus review 12.11.2026 (agent-reports/daylauf-2026-11-12/blindpruefung-sd-halbjahr-2026-11-12.md).",
+    "review": "Build registration only. Opus blind review rounds 1 and 2; Codex review 12.11.2026 KEINE FREIGABE on 6d679a23fb (unit not proven, provenance empty, empty fetch green), all three addressed at the following head; Codex decides the draft. The builder does not merge. Codex round 2 on bc1b0fc38e: KEINE FREIGABE (the year and TTM checks prove only the difference of the two halves; tolerance on small bases); the tolerance is fixed at the following head, the level of a half year still needs an independent source. Codex round 3 on 4821bd5be5: FREIGABE MIT AUFLAGEN 94 % (text and coverage hand-over, done). Merged with origin/main 64be931d40 (#124, #125, #128, #115) afterwards; the merge step gets its own narrow Opus check.",
+    "rollback": "Set ENABLED to false in lib/hk-interim.js, or revert the source change and this registration together."
   }
 }

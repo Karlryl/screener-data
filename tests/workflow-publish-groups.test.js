@@ -41,6 +41,8 @@ const WORKFLOWS = [
     top: "  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}" },
   { file: 'exchange-quarters', job: 'fetch', prefix: 'exchange-quarters',
     top: "  group: ${{ github.event_name == 'schedule' && 'main-push' || format('manual-{0}', github.run_id) }}" },
+  { file: 'hk-interims', job: 'fetch', prefix: 'hk-interims',
+    top: "  group: ${{ github.event_name == 'schedule' && 'main-push' || format('manual-{0}', github.run_id) }}" },
 ];
 
 /** @param {string} wf Workflow text. @param {string} job Job id. @returns {string} The lines of the job up to its `steps:`. */
