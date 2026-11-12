@@ -1921,7 +1921,11 @@ jobs:
     # Relayed for the jobs behind scoring, so they read the same frozen day without a second edge to prep.
     outputs:
       run_date: ${{ needs.prep.outputs.run_date }}
-    timeout-minutes: 15
+    # Daylauf 16 (12.11.2026): 15 -> 30. Run 42793685547 (10.11.) hit the 15-min cap at 15:12 in
+    # "Rank-IC-Report erzeugen", after the board deploy, so the F-17a publish below was skipped
+    # (findash arrows stale). Green runs took 8:23 (07.11.) and 13:04 (11.11.); Checkout
+    # (fetch-depth 0) and the Live-Universum-Gate grew most. Guard: tests/rank-ic-publish.test.js R6.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -2627,6 +2631,12 @@ jobs:
         # Protokoll-Drift in loadFamiliesOrThrow) hielte dann die board-history-Bewegung aus dem
         # Datenkanal fern, obwohl das Vintage laengst auf main liegt. Entkoppelt: der Schritt bleibt
         # laut (::error::, roter Schritt), blockt aber nichts hinter sich.
+        # Daylauf 16 (12.11.2026): own step cap. continue-on-error covers a failing rank-ic, but a
+        # HANGING one would eat the job budget and the job timeout skips the publish below. The step
+        # takes 10 to 14 s; at 5 min it ends as a failed step and the publish still runs (without
+        # today's report: the channel keeps the previous one, logged in the publish step).
+        # The order Commit -> Rank-IC -> F-17a stays: the publish carries the report (R1, R4).
+        timeout-minutes: 5
         continue-on-error: true
         run: |
           n=$(ls -d board-history/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] 2>/dev/null | wc -l)
