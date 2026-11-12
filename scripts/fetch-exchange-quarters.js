@@ -43,14 +43,15 @@
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
  *
- *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, previous two years DFP) plus FCA
- *            valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
+ *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, current and previous two years DFP)
+ *            plus FCA valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
  *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). A pass is
- *            skipped while the last written pass is less than 6 days old (CVM rebuilds weekly); --force-br, a dry
- *            run (writes nothing) and a retry after a failed pass (nothing written) fetch again. A 404 is a named gap only for DFP of the current year,
- *            ITR of the current year until May and DFP of the previous year until April;
- *            any other failure, a missing zip entry, a CSV row with the wrong field count or no document at
- *            all aborts the market and br.json is not written.
+ *            skipped while the last written pass is less than 6 days old (CVM rebuilds weekly), dry runs included;
+ *            only --force-br overrides that; a failed pass writes nothing, so the next run fetches again.
+ *            A 404 or a file without any document of the mapped companies is a named gap only for DFP of the
+ *            current year, ITR of the current year until May and DFP of the previous year until April, and only
+ *            while the store holds no document of that file; any other failure, a missing zip entry or column,
+ *            a CSV row with the wrong field count or no document at all aborts the market and br.json is not written.
  *
  * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw,br] [--dry-run] [--force-cn] [--force-br] [--tw-cap=600]
  *   --dry-run   fetch and check everything, write nothing (branch runs of the workflow)
@@ -419,6 +420,13 @@ const BR_COLS = {
   cap: ['CNPJ_CIA', 'DT_REFER', 'VERSAO', 'QT_ACAO_ORDIN_CAP_INTEGR', 'QT_ACAO_PREF_CAP_INTEGR', 'QT_ACAO_ORDIN_TESOURO', 'QT_ACAO_PREF_TESOURO'],
   fca: ['CNPJ_Companhia', 'Data_Referencia', 'Versao', 'Valor_Mobiliario', 'Codigo_Negociacao', 'Mercado', 'Data_Fim_Negociacao'],
 };
+/** Order of two filings of one document: VERSAO, then receipt date, then ID_DOC (numbers or index rows). */
+function docOrder(a, b) {
+  const v = (x) => Number(x.VERSAO !== undefined ? x.VERSAO : x.version) || 0;
+  const rec = (x) => String(x.DT_RECEB !== undefined ? x.DT_RECEB : x.received || '');
+  const id = (x) => Number(x.ID_DOC !== undefined ? x.ID_DOC : x.idDoc) || 0;
+  return v(a) - v(b) || (rec(a) > rec(b) ? 1 : rec(a) < rec(b) ? -1 : 0) || id(a) - id(b);
+}
 function requireColumns(text, name, cols) {
   const head = String(text || '').replace(/^﻿/, '').split(/\r?\n/, 1)[0].split(';');
   const missing = cols.filter((c) => !head.includes(c));
@@ -474,7 +482,8 @@ function brObservations(kind, year, files, cnpjs) {
     if (!cnpjs.has(r.CNPJ_CIA) || r.CATEG_DOC !== kind) continue;
     const k = r.CNPJ_CIA + '|' + r.DT_REFER;
     const p = newest.get(k);
-    if (!p || Number(r.VERSAO) > Number(p.VERSAO)) newest.set(k, r);
+    // newest version, then latest receipt, then ID_DOC: independent of the row order (Codex R-pr115 R2 P2-3)
+    if (!p || docOrder(r, p) > 0) newest.set(k, r);
   }
   const rowsBy = new Map();   // 'cnpj|refer' -> {dreCon:[], dreInd:[], dfcCon:[], dfcInd:[], cap:row}
   const add = (rows, slot) => {
@@ -497,9 +506,11 @@ function brObservations(kind, year, files, cnpjs) {
     // Consolidated only when it carries a figure: some companies file a consolidated DRE of zeros next to the
     // real individual one (TIM S.A. DFP 2025: con 3.01 = 0, ind 3.01 = 26,624,721 thousand; review PR #115 H2).
     const live = (rows) => (rows || []).some((r) => (r.CD_CONTA === '3.01' || r.CD_CONTA === '3.11') && Number(r.VL_CONTA) !== 0);
-    // ... but a consolidated DRE of zeros with no individual one is the company's filing, zeros included (Codex R-pr115 run 2)
-    const basis = live(b.dreCon) || !(b.dreInd && b.dreInd.length) ? 'con' : 'ind';
-    const rows = basis === 'con' ? [...b.dreCon, ...(b.dfcCon || [])] : [...(b.dreInd || []), ...(b.dfcInd || [])];
+    // ... but a consolidated DRE of zeros with no individual one is the company's filing, zeros included (Codex R-pr115
+    // run 2); a document without any DRE keeps the basis of its cash flow, and one without anything is a counted gap (R2 P2-1)
+    const has = (x) => !!(x && x.length);
+    const basis = live(b.dreCon) ? 'con' : has(b.dreInd) ? 'ind' : has(b.dreCon) || has(b.dfcCon) ? 'con' : 'ind';
+    const rows = basis === 'con' ? [...(b.dreCon || []), ...(b.dfcCon || [])] : [...(b.dreInd || []), ...(b.dfcInd || [])];
     if (!rows.length) { counts.noRows += 1; continue; }
     if (rows.some((r) => r.MOEDA !== 'REAL')) { counts.otherCurrency += 1; continue; }
     if (rows.some((r) => !BR_SCALE[r.ESCALA_MOEDA])) { counts.otherScale += 1; continue; }
@@ -572,21 +583,28 @@ async function runBrazil(ctx) {
     const pre = kind.toLowerCase() + '_cia_aberta_';
     const z = await cvmZip(ctx, CVM_BASE + kind + '/DADOS/' + pre + year + '.zip', parts.map((p) => pre + p + year + '.csv'));
     // A year that CVM has not opened yet (January: ITR of the new year) is a gap, not a failure;
-    // the older years must exist.
-    if (!z) { if (mayBeMissing(kind, year)) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404'); }
+    // the older years must exist. A year the store already holds documents of was opened: if it vanishes or reads
+    // empty, that is an outage, never a gap (Codex R-pr115 R2 P2-2).
+    const known = !!prev && Object.values(prev.companies || {}).some((c) => Object.keys(c.docs || {}).some((d) => d.startsWith(kind + ' ' + year + '-')));
+    const gapAllowed = mayBeMissing(kind, year) && !known;
+    if (!z) { if (gapAllowed) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404' + (known ? ' (the store holds documents of this file)' : '')); }
     fileLog.push(z.file);
     const { fresh, counts } = brObservations(kind, year, z.files, cnpjs);
     for (const k of Object.keys(counts)) st[k] += counts[k];
     // Codex R-pr115 E2: a file that is there but gives no document of the mapped companies is broken, unless CVM may
     // not have opened that year yet (the same window as the 404 gap); older years reading fine prove nothing.
-    if (!counts.docs && !mayBeMissing(kind, year)) throw new Error(kind + ' ' + year + ': no readable document for any of the ' + cnpjs.size + ' mapped companies');
+    if (!counts.docs && !gapAllowed) throw new Error(kind + ' ' + year + ': no readable document for any of the ' + cnpjs.size + ' mapped companies');
     for (const [cnpj, key, obs] of fresh) {
       const c = next.companies[cnpj] || (next.companies[cnpj] = { docs: {} });
       const list = c.docs[key] || (c.docs[key] = []);
-      // Codex R-pr115 E3: a lower VERSAO than the stored one is a regression of the CVM file, not news; it is
-      // recorded in the source entry and never becomes the current observation (readers take the last one)
+      // Codex R-pr115 E3 / R2 P2-3: an older filing than the stored one (lower VERSAO, or the same VERSAO received
+      // earlier) is a regression of the CVM file, not news; it is recorded in the source entry and never becomes the
+      // current observation (readers take the last one)
       const last = list[list.length - 1];
-      if (last && obs.version < last.version) { st.versionRegressions.push(cnpj + ' ' + key + ' v' + obs.version + ' < v' + last.version); continue; }
+      if (last && docOrder(obs, last) < 0) {
+        st.versionRegressions.push(cnpj + ' ' + key + ' v' + obs.version + ' ' + obs.received + ' < v' + last.version + ' ' + last.received);
+        continue;
+      }
       st[S.mergeObservation(list, obs, { src, fetchedAt, updateDate: obs.received })] += 1;
     }
   }

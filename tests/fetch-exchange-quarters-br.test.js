@@ -491,7 +491,69 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     const st = brOf(dir);
     assert.deepEqual(st.companies[WEG].docs['ITR 2026-06-30'].map((o) => o.version), [1, 2], 'version 2 stays current');
     assert.equal(back.results[0].versionRegressions.length, 1);
-    assert.match(Object.values(st.sources).find((s) => s.versionRegressions).versionRegressions[0], /ITR 2026-06-30 v1 < v2/);
+    assert.match(Object.values(st.sources).find((s) => s.versionRegressions).versionRegressions[0], /ITR 2026-06-30 v1 2026-07-22 < v2 2026-08-30/);
+  });
+
+  // ── Codex R-pr115 R2 (12.11.2026): each red on 2d118a701c ─────────────────────────────────────────────────
+  await t('Codex R2 P2-3: the same VERSAO received earlier never displaces the later receipt; row order does not matter', async () => {
+    const S2 = 'CNPJ_CIA;DT_REFER;VERSAO;DENOM_CIA;CD_CVM;CATEG_DOC;ID_DOC;DT_RECEB;LINK_DOC';
+    const { brObservations } = require('../scripts/fetch-exchange-quarters.js');
+    const files = (order) => {
+      const rows = [idx(WEG, '2026-06-30', 1, 'ITR', '2', '2026-07-22'), idx(WEG, '2026-06-30', 1, 'ITR', '5', '2026-08-30')];
+      const p = 'itr_cia_aberta_';
+      return { [p + '2026.csv']: csv(S2, order ? rows : rows.reverse()),
+        [p + 'DRE_con_2026.csv']: csv(DRE, [row(WEG, '2026-06-30', 1, 'ÚLTIMO', '2026-04-01', '2026-06-30', '3.01', '10')]),
+        ...Object.fromEntries(['DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => [p + x + '2026.csv', csv(DRE, [])])),
+        [p + 'composicao_capital_2026.csv']: csv(CAP, []) };
+    };
+    const pick = (order) => brObservations('ITR', 2026, files(order), new Set([WEG])).fresh[0][2];
+    assert.deepEqual([pick(true).received, pick(false).received], ['2026-08-30', '2026-08-30']);
+    // across fetches: v1 of 30.08. stored, a later answer with v1 of 22.07. is a regression
+    const dir = tmpDir();
+    const late = makeZip(files(true)), early = makeZip({ ...files(true), ['itr_cia_aberta_2026.csv']: csv(S2, [idx(WEG, '2026-06-30', 1, 'ITR', '2', '2026-07-22')]) });
+    assert.equal((await run(dir, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': late } }))).exitCode, 0);
+    const r = await run(dir, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': early } }), '2026-11-14T15:00:00Z');
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    const list = brOf(dir).companies[WEG].docs['ITR 2026-06-30'];
+    assert.deepEqual(list.map((o) => o.received), ['2026-08-30']);
+    assert.equal(r.results[0].versionRegressions.length, 1);
+  });
+
+  await t('Codex R2 P2-1: a document without a DRE is a counted gap or its cash flow, never a crash', () => {
+    const { brObservations } = require('../scripts/fetch-exchange-quarters.js');
+    const p = 'itr_cia_aberta_';
+    const base = (dre, dfc) => ({ [p + '2026.csv']: csv(IDX, [idx(WEG, '2026-06-30', 1, 'ITR', '2', '2026-07-22')]),
+      [p + 'DRE_con_2026.csv']: csv(DRE, dre), [p + 'DFC_MI_con_2026.csv']: csv(DRE, dfc),
+      ...Object.fromEntries(['DRE_ind_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => [p + x + '2026.csv', csv(DRE, [])])),
+      [p + 'composicao_capital_2026.csv']: csv(CAP, []) });
+    const none = brObservations('ITR', 2026, base([], []), new Set([WEG]));
+    assert.deepEqual([none.fresh.length, none.counts.noRows], [0, 1]);
+    const dfcOnly = brObservations('ITR', 2026, base([], [row(WEG, '2026-06-30', 1, 'ÚLTIMO', '2026-01-01', '2026-06-30', '6.01', '25')]), new Set([WEG]));
+    assert.deepEqual([dfcOnly.fresh[0][2].basis, dfcOnly.fresh[0][2].values], ['con', { '6.01 2026-01-01': 25000 }]);
+    const zero = brObservations('ITR', 2026, base([row(WEG, '2026-06-30', 1, 'ÚLTIMO', '2026-04-01', '2026-06-30', '3.01', '0')], []), new Set([WEG]));
+    assert.deepEqual(zero.fresh[0][2].values, { '3.01 2026-04-01': 0 });
+  });
+
+  await t('Codex R2 P2-2: a year the store holds documents of may not vanish or read empty as a "not yet opened" gap', async () => {
+    const dir = tmpDir();
+    const withDfp26 = makeZip({
+      'dfp_cia_aberta_2026.csv': csv(IDX, [idx(WEG, '2026-03-31', 1, 'DFP', '7', '2026-06-20')]),
+      'dfp_cia_aberta_DRE_con_2026.csv': csv(DRE, [row(WEG, '2026-03-31', 1, 'ÚLTIMO', '2025-04-01', '2026-03-31', '3.01', '9')]),
+      ...Object.fromEntries(['DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => ['dfp_cia_aberta_' + x + '2026.csv', csv(DRE, [])])),
+      'dfp_cia_aberta_composicao_capital_2026.csv': csv(CAP, []) });
+    const r1 = await run(dir, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2026.zip': withDfp26 } }));
+    assert.equal(r1.exitCode, 0, JSON.stringify(r1.results));
+    const before = fs.readFileSync(path.join(dir, 'br.json'), 'utf8');
+    const gone = await run(dir, cvm(), '2026-11-14T15:00:00Z');   // DFP 2026 now HTTP 404
+    assert.equal(gone.exitCode, 1); assert.match(gone.results[0].aborted, /DFP 2026: HTTP 404 \(the store holds documents/);
+    const empty = makeZip({ ...Object.fromEntries(['', 'DRE_con_', 'DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => ['dfp_cia_aberta_' + x + '2026.csv', csv(x ? DRE : IDX, [])])),
+      'dfp_cia_aberta_composicao_capital_2026.csv': csv(CAP, []) });
+    const hollow = await run(dir, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2026.zip': empty } }), '2026-11-21T15:00:00Z');
+    assert.equal(hollow.exitCode, 1); assert.match(hollow.results[0].aborted, /DFP 2026: no readable document/);
+    assert.equal(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'), before, 'store unchanged, the 6-day clock not reset');
+    // a year never seen stays a gap inside its window
+    const fresh = await run(tmpDir(), cvm());
+    assert.equal(fresh.exitCode, 0); assert.deepEqual(fresh.results[0].missingYears, ['DFP 2026']);
   });
 
   await t('Codex run 2: a consolidated DRE of zeros without an individual one is stored with its zeros', async () => {
