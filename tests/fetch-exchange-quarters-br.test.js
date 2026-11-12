@@ -65,7 +65,7 @@ const row = (cnpj, refer, v, ordem, ini, fim, acc, val, moeda = 'REAL', esc = 'M
   [cnpj, refer, v, 'X S.A.', '005410', 'DF', moeda, esc, ordem, ini, fim, acc, acc === '3.01' ? 'Receita de Venda de Bens e/ou Serviços' : 'conta', val, 'S'].join(';');
 const csv = (head, rows) => [head, ...rows].join('\n') + '\n';
 
-function itr(year, { wegV2 = false, bankUsd = false } = {}) {
+function itr(year, { wegV2 = false, bankUsd = false, dreHead = DRE, patch = (x) => x } = {}) {
   const p = 'itr_cia_aberta_';
   const i = [idx(WEG, year + '-03-31', 1, 'ITR', '1', year + '-04-29'), idx(WEG, year + '-06-30', 1, 'ITR', '2', year + '-07-22'),
     idx(WEG, year + '-09-30', 1, 'ITR', '3', year + '-10-21'), idx(BANK, year + '-06-30', 1, 'ITR', '9', year + '-08-12')];
@@ -86,8 +86,8 @@ function itr(year, { wegV2 = false, bankUsd = false } = {}) {
   const dfc = [row(WEG, year + '-03-31', 1, 'ÚLTIMO', year + '-01-01', year + '-03-31', '6.01', '1262449'),
     row(WEG, year + '-06-30', v2, 'ÚLTIMO', year + '-01-01', year + '-06-30', '6.01', '2451238')];
   return makeZip({
-    [p + year + '.csv']: csv(IDX, i), [p + 'DRE_con_' + year + '.csv']: csv(DRE, d), [p + 'DRE_ind_' + year + '.csv']: csv(DRE, []),
-    [p + 'DFC_MI_con_' + year + '.csv']: csv(DRE, dfc), [p + 'DFC_MD_con_' + year + '.csv']: csv(DRE, []),
+    [p + year + '.csv']: csv(IDX, i), [p + 'DRE_con_' + year + '.csv']: csv(dreHead, patch(d)), [p + 'DRE_ind_' + year + '.csv']: csv(DRE, []),
+    [p + 'DFC_MI_con_' + year + '.csv']: csv(DRE, patch(dfc)), [p + 'DFC_MD_con_' + year + '.csv']: csv(DRE, []),
     [p + 'DFC_MI_ind_' + year + '.csv']: csv(DRE, []), [p + 'DFC_MD_ind_' + year + '.csv']: csv(DRE, []),
     [p + 'composicao_capital_' + year + '.csv']: csv(CAP, [[WEG, year + '-06-30', v2, 'WEG', '4197317998', '0', '4197317998', '1488307', '0', '1488307'].join(';'),
       [WEG, year + '-09-30', 1, 'WEG', '4197317998', '', '4197317998', '1488307', '', '1488307'].join(';')]),
@@ -420,7 +420,15 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     const ended = makeZip({ ['fca_cia_aberta_valor_mobiliario_2026.csv']: csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3', 'Bolsa', '2026-06-30'),
       vm(BANK, 'Ações Ordinárias', 'BBAS3')]) });
     const dir = tmpDir();
-    const r = await run(dir, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': ended } }));
+    // the bank must file a DFP of its own once it is the only mapped company (a read year without any document aborts)
+    const dfpOf = (cnpj, year) => makeZip({
+      ['dfp_cia_aberta_' + year + '.csv']: csv(IDX, [idx(cnpj, year + '-12-31', 1, 'DFP', '8', (year + 1) + '-02-20')]),
+      ['dfp_cia_aberta_DRE_con_' + year + '.csv']: csv(DRE, [row(cnpj, year + '-12-31', 1, 'ÚLTIMO', year + '-01-01', year + '-12-31', '3.11', '7')]),
+      ...Object.fromEntries(['DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((p) => ['dfp_cia_aberta_' + p + year + '.csv', csv(DRE, [])])),
+      ['dfp_cia_aberta_composicao_capital_' + year + '.csv']: csv(CAP, []),
+    });
+    const r = await run(dir, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': ended,
+      'DFP/DADOS/dfp_cia_aberta_2025.zip': dfpOf(BANK, 2025), 'DFP/DADOS/dfp_cia_aberta_2024.zip': dfpOf(BANK, 2024) } }));
     assert.equal(r.exitCode, 0, JSON.stringify(r.results));
     const tickers = JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8')).tickers;
     assert.equal(tickers['WEGE3.SA'], undefined, 'ended in 2026, active in 2025: ended wins');
@@ -449,6 +457,69 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
       'ITR 2026-06-30': [{ received: '2026-08-04', basis: 'con', revenueLabel: null, values: { '3.11 2026-04-01': 10 } }] } } } };
     assert.match(compareTicker({ meta: { ticker: 'WEGE3.SA', reportingCurrency: 'BRL' }, timeseries: { netIncomeQ: [{ value: 10 }], netIncomeQEnds: ['2026-06-30'] } }, bare, 0.01).unchecked || '',
       /no 3\.01 line/);
+  });
+
+  // ── Codex R-pr115 run 2 (12.11.2026): E2, E3, all-zero consolidated, FCA version, each red on 086b4eb475 ──
+  const brOf = (dir) => JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'));
+  await t('Codex E2: a renamed header or a document of only unreadable numbers is never stored as a fresh observation', async () => {
+    const dir = tmpDir();
+    assert.equal((await run(dir, cvm())).exitCode, 0);
+    const before = fs.readFileSync(path.join(dir, 'br.json'), 'utf8');
+    const drift = await run(dir, cvm({ itr2026: { dreHead: DRE.replace('CD_CONTA', 'CHANGED_ACCOUNT') } }), '2026-11-14T15:00:00Z');
+    assert.equal(drift.exitCode, 1, 'same field count, renamed column: abort');
+    assert.match(drift.results[0].aborted, /header lacks CD_CONTA/);
+    assert.equal(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'), before, 'store unchanged');
+    const all = await run(dir, cvm({ itr2026: { patch: (d) => d.map((l) => l.replace(/;([^;]*);S$/, ';x;S')) } }), '2026-11-14T15:00:00Z');
+    assert.equal(all.exitCode, 1, 'every number of the current ITR unreadable: abort, older years reading fine prove nothing');
+    assert.match(all.results[0].aborted, /ITR 2026: no readable document/);
+    assert.equal(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'), before);
+    const one = await run(dir, cvm({ itr2026: { patch: (d) => d.map((l) => (l.includes(WEG + ';2026-06-30') ? l.replace(/;([^;]*);S$/, ';x;S') : l)) } }), '2026-11-14T15:00:00Z', { forceBr: true });
+    assert.equal(one.exitCode, 0, JSON.stringify(one.results));
+    assert.ok(one.results[0].unreadableDocs >= 1);
+    const q2 = brOf(dir).companies[WEG].docs['ITR 2026-06-30'];
+    assert.equal(q2.length, 1, 'the stored Q2 stays the current observation');
+    assert.ok(Object.keys(q2[0].values).length > 0);
+  });
+
+  await t('Codex E3: a lower VERSAO than the stored one is recorded, never the current observation; 1 -> 2 still advances', async () => {
+    const dir = tmpDir();
+    assert.equal((await run(dir, cvm())).exitCode, 0);
+    assert.equal((await run(dir, cvm({ itr2026: { wegV2: true } }), '2026-11-14T15:00:00Z')).exitCode, 0);
+    assert.deepEqual(brOf(dir).companies[WEG].docs['ITR 2026-06-30'].map((o) => o.version), [1, 2], 'version 1 -> 2 advances');
+    const back = await run(dir, cvm(), '2026-11-21T15:00:00Z');
+    assert.equal(back.exitCode, 0, JSON.stringify(back.results));
+    const st = brOf(dir);
+    assert.deepEqual(st.companies[WEG].docs['ITR 2026-06-30'].map((o) => o.version), [1, 2], 'version 2 stays current');
+    assert.equal(back.results[0].versionRegressions.length, 1);
+    assert.match(Object.values(st.sources).find((s) => s.versionRegressions).versionRegressions[0], /ITR 2026-06-30 v1 < v2/);
+  });
+
+  await t('Codex run 2: a consolidated DRE of zeros without an individual one is stored with its zeros', async () => {
+    const p = 'dfp_cia_aberta_';
+    const z = makeZip({
+      [p + '2025.csv']: csv(IDX, [idx(WEG, '2025-12-31', 1, 'DFP', '7', '2026-02-20')]),
+      [p + 'DRE_con_2025.csv']: csv(DRE, [row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.01', '0'),
+        row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.11', '0')]),
+      ...Object.fromEntries(['DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => [p + x + '2025.csv', csv(DRE, [])])),
+      [p + 'composicao_capital_2025.csv']: csv(CAP, []),
+    });
+    const dir = tmpDir();
+    const r = await run(dir, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2025.zip': z } }));
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    const o = brOf(dir).companies[WEG].docs['DFP 2025-12-31'][0];
+    assert.deepEqual([o.basis, o.values], ['con', { '3.01 2025-01-01': 0, '3.11 2025-01-01': 0 }]);
+  });
+
+  await t('Codex run 2: only the newest FCA form (reference date, then version) of a company maps', () => {
+    const { brTickerMap } = require('../scripts/fetch-exchange-quarters.js');
+    const want = new Set(['WEGE3.SA']);
+    const rowv = (ref, v, fim) => ({ CNPJ_Companhia: WEG, Data_Referencia: ref, Versao: String(v), Valor_Mobiliario: 'Ações Ordinárias',
+      Codigo_Negociacao: 'WEGE3', Mercado: 'Bolsa', Data_Fim_Negociacao: fim });
+    const ended = brTickerMap([rowv('2026-01-01', 1, ''), rowv('2026-01-01', 2, '2026-06-30')], want);
+    assert.equal(ended.map.has('WEGE3.SA'), false); assert.deepEqual(ended.ended, ['WEGE3.SA']);
+    const active = brTickerMap([rowv('2026-01-01', 2, ''), rowv('2026-01-01', 1, '2026-06-30')], want);
+    assert.equal(active.map.get('WEGE3.SA').cnpj, WEG); assert.deepEqual(active.ended, []);
+    assert.equal(brTickerMap([rowv('2026-03-01', 1, ''), rowv('2026-01-01', 3, '2026-02-01')], want).map.has('WEGE3.SA'), true, 'newer reference beats a higher version of an older one');
   });
 
   await t('the live stores are untouched', () => {

@@ -411,11 +411,34 @@ async function cvmZip(ctx, url, names) {
   return { files, file: { url, bytes: buf.length, lastModified: (a.headers && a.headers['last-modified']) || null } };
 }
 
+// Columns the BR pass reads, per CVM file type (Codex R-pr115 E2: a renamed header with the same field count must abort,
+// not read every row as empty).
+const BR_COLS = {
+  index: ['CNPJ_CIA', 'DT_REFER', 'VERSAO', 'CATEG_DOC', 'ID_DOC', 'DT_RECEB'],
+  statement: ['CNPJ_CIA', 'DT_REFER', 'VERSAO', 'MOEDA', 'ESCALA_MOEDA', 'ORDEM_EXERC', 'DT_INI_EXERC', 'DT_FIM_EXERC', 'CD_CONTA', 'DS_CONTA', 'VL_CONTA'],
+  cap: ['CNPJ_CIA', 'DT_REFER', 'VERSAO', 'QT_ACAO_ORDIN_CAP_INTEGR', 'QT_ACAO_PREF_CAP_INTEGR', 'QT_ACAO_ORDIN_TESOURO', 'QT_ACAO_PREF_TESOURO'],
+  fca: ['CNPJ_Companhia', 'Data_Referencia', 'Versao', 'Valor_Mobiliario', 'Codigo_Negociacao', 'Mercado', 'Data_Fim_Negociacao'],
+};
+function requireColumns(text, name, cols) {
+  const head = String(text || '').replace(/^﻿/, '').split(/\r?\n/, 1)[0].split(';');
+  const missing = cols.filter((c) => !head.includes(c));
+  if (missing.length) throw new Error(name + ': header lacks ' + missing.join(', ') + ' (format change?)');
+}
+
 /** FCA valor_mobiliario rows -> Map(yahooTicker -> {cnpj, cls}); a code on two CNPJ is ambiguous and dropped;
  * `ended`: codes this form lists only with an end of trading (they cancel an older year's mapping, Codex R-pr115 F3). */
 function brTickerMap(rows, want) {
   const out = new Map(), bad = new Set(), endedRows = new Set();
+  // only the newest form (Data_Referencia, then Versao) of each company counts (Codex R-pr115 run 2)
+  const rank = (r) => [r.Data_Referencia || '', Number(r.Versao) || 0];
+  const newest = new Map();
   for (const r of rows) {
+    const b = newest.get(r.CNPJ_Companhia), [d, v] = rank(r);
+    if (!b || d > b[0] || (d === b[0] && v > b[1])) newest.set(r.CNPJ_Companhia, [d, v]);
+  }
+  for (const r of rows) {
+    const [d, v] = rank(r), b = newest.get(r.CNPJ_Companhia);
+    if (d !== b[0] || v !== b[1]) continue;
     const cls = BR_CLASS[r.Valor_Mobiliario];
     const code = (r.Codigo_Negociacao || '').trim().toUpperCase();
     if (!cls || !code || r.Mercado !== 'Bolsa') continue;
@@ -440,8 +463,12 @@ function brTickerMap(rows, want) {
  */
 function brObservations(kind, year, files, cnpjs) {
   const pre = kind.toLowerCase() + '_cia_aberta_';
-  const f = (part) => S.parseCvmCsv(files[pre + part + year + '.csv'], pre + part + year + '.csv');
-  const counts = { docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0 };
+  const f = (part) => {
+    const name = pre + part + year + '.csv';
+    requireColumns(files[name], name, part === '' ? BR_COLS.index : part === 'composicao_capital_' ? BR_COLS.cap : BR_COLS.statement);
+    return S.parseCvmCsv(files[name], name);
+  };
+  const counts = { docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0, unreadableDocs: 0 };
   const newest = new Map();   // 'cnpj|refer' -> index row
   for (const r of f('')) {
     if (!cnpjs.has(r.CNPJ_CIA) || r.CATEG_DOC !== kind) continue;
@@ -470,19 +497,22 @@ function brObservations(kind, year, files, cnpjs) {
     // Consolidated only when it carries a figure: some companies file a consolidated DRE of zeros next to the
     // real individual one (TIM S.A. DFP 2025: con 3.01 = 0, ind 3.01 = 26,624,721 thousand; review PR #115 H2).
     const live = (rows) => (rows || []).some((r) => (r.CD_CONTA === '3.01' || r.CD_CONTA === '3.11') && Number(r.VL_CONTA) !== 0);
-    const basis = live(b.dreCon) ? 'con' : 'ind';
+    // ... but a consolidated DRE of zeros with no individual one is the company's filing, zeros included (Codex R-pr115 run 2)
+    const basis = live(b.dreCon) || !(b.dreInd && b.dreInd.length) ? 'con' : 'ind';
     const rows = basis === 'con' ? [...b.dreCon, ...(b.dfcCon || [])] : [...(b.dreInd || []), ...(b.dfcInd || [])];
     if (!rows.length) { counts.noRows += 1; continue; }
     if (rows.some((r) => r.MOEDA !== 'REAL')) { counts.otherCurrency += 1; continue; }
     if (rows.some((r) => !BR_SCALE[r.ESCALA_MOEDA])) { counts.otherScale += 1; continue; }
     const vals = {};
-    let label = null;
+    let label = null, docBad = 0;
     for (const r of rows) {
       if (r.CD_CONTA === '3.01') label = r.DS_CONTA;   // the scheme label, even when the amount is empty (Codex R-pr115 F4)
       const v = r.VL_CONTA.trim() === '' ? NaN : Number(r.VL_CONTA) * BR_SCALE[r.ESCALA_MOEDA];
-      if (!Number.isFinite(v)) { counts.badNumbers += 1; continue; }   // a gap, never 0
+      if (!Number.isFinite(v)) { counts.badNumbers += 1; docBad += 1; continue; }   // a gap, never 0
       vals[r.CD_CONTA + ' ' + r.DT_INI_EXERC] = v;
     }
+    // Codex R-pr115 E2: a document whose kept numbers are all unreadable is no fresh observation (it would hide the stored one)
+    if (!Object.keys(vals).length && docBad) { counts.unreadableDocs += 1; continue; }
     const values = Object.fromEntries(Object.keys(vals).sort().map((x) => [x, vals[x]]));
     const c = b.cap;
     const n = (x) => (x == null || String(x).trim() === '' || !Number.isFinite(Number(x)) ? null : Number(x));
@@ -518,6 +548,7 @@ async function runBrazil(ctx) {
     if (!fca) { if (fy === y) continue; throw new Error('FCA ' + fy + ': HTTP 404'); }
     fileLog.push(fca.file);
     fcaYears.push(fy);
+    requireColumns(fca.files[name], name, BR_COLS.fca);
     const r = brTickerMap(S.parseCvmCsv(fca.files[name], 'valor_mobiliario'), want);
     for (const [tk, m] of r.map) { map.set(tk, m); ambiguous.delete(tk); }
     for (const tk of r.ended) { map.delete(tk); ambiguous.delete(tk); }
@@ -536,7 +567,7 @@ async function runBrazil(ctx) {
   const fetchedAt = now.toISOString();
   const src = 'br-' + stamp(fetchedAt);
   const next = prev ? clone(prev) : emptyStore('BR');
-  const st = { new: 0, confirmed: 0, changed: 0, docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0, missingYears: [] };
+  const st = { new: 0, confirmed: 0, changed: 0, docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0, unreadableDocs: 0, missingYears: [], versionRegressions: [] };
   for (const [kind, year] of plan) {
     const pre = kind.toLowerCase() + '_cia_aberta_';
     const z = await cvmZip(ctx, CVM_BASE + kind + '/DADOS/' + pre + year + '.zip', parts.map((p) => pre + p + year + '.csv'));
@@ -546,15 +577,25 @@ async function runBrazil(ctx) {
     fileLog.push(z.file);
     const { fresh, counts } = brObservations(kind, year, z.files, cnpjs);
     for (const k of Object.keys(counts)) st[k] += counts[k];
+    // Codex R-pr115 E2: a file that is there but gives no document of the mapped companies is broken, unless CVM may
+    // not have opened that year yet (the same window as the 404 gap); older years reading fine prove nothing.
+    if (!counts.docs && !mayBeMissing(kind, year)) throw new Error(kind + ' ' + year + ': no readable document for any of the ' + cnpjs.size + ' mapped companies');
     for (const [cnpj, key, obs] of fresh) {
       const c = next.companies[cnpj] || (next.companies[cnpj] = { docs: {} });
       const list = c.docs[key] || (c.docs[key] = []);
+      // Codex R-pr115 E3: a lower VERSAO than the stored one is a regression of the CVM file, not news; it is
+      // recorded in the source entry and never becomes the current observation (readers take the last one)
+      const last = list[list.length - 1];
+      if (last && obs.version < last.version) { st.versionRegressions.push(cnpj + ' ' + key + ' v' + obs.version + ' < v' + last.version); continue; }
       st[S.mergeObservation(list, obs, { src, fetchedAt, updateDate: obs.received })] += 1;
     }
   }
   if (!st.docs) throw new Error('CVM: no document for any of the ' + cnpjs.size + ' mapped companies (format change?)');
   next.tickers = Object.fromEntries([...map.entries()].sort().map(([tk, m]) => [tk, m]));
-  next.sources[src] = { fetchedAt, endpoint: CVM_BASE + '{ITR,DFP,FCA}/DADOS/', files: fileLog, fcaYears, ambiguous: [...ambiguous].sort(), unmapped, missingYears: st.missingYears };
+  next.sources[src] = { fetchedAt, endpoint: CVM_BASE + '{ITR,DFP,FCA}/DADOS/', files: fileLog, fcaYears, ambiguous: [...ambiguous].sort(), unmapped, missingYears: st.missingYears,
+    ...(st.versionRegressions.length ? { versionRegressions: st.versionRegressions } : {}), ...(st.unreadableDocs ? { unreadableDocs: st.unreadableDocs } : {}) };
+  if (st.versionRegressions.length) ctx.log('::warning::exchange-quarters BR: ' + st.versionRegressions.length + ' document(s) with a lower VERSAO than stored, kept the stored one: ' + st.versionRegressions.slice(0, 5).join('; '));
+  if (st.unreadableDocs) ctx.log('::warning::exchange-quarters BR: ' + st.unreadableDocs + ' document(s) with only unreadable numbers, not stored');
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);
