@@ -418,6 +418,8 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
     meta: snap ? snap.meta : null, // issuer of the shown listing, for the held-sibling hint
+    // Newest stored quarter end with a value, for the hint `neuerer-bericht` (a later report than the shown period).
+    neuestesQuartal: snap ? (snap.timeseries?.revenueQEnds || []).filter((e, i) => typeof e === 'string' && Number.isFinite(norm(snap, 'revenueQ')[i])).sort().at(-1) ?? null : null,
     // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
     wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
     overviewLegacy: snap ? withG31Variant('legacy', () => {
@@ -517,24 +519,33 @@ function heldNewerSibling(meta, ticker, shownEnd) {
 // quarter ends drift by a few days (27.09. against 30.09.), the next period is at least about 90 days later.
 const NEWER_REPORT_DAYS = 45;
 const PERIOD_WORD = { quarter: 'das Quartal', halfYear: 'das Halbjahr', ttm: 'die vier Quartale', year: 'das Geschäftsjahr', yearNewerRecord: 'das Geschäftsjahr' };
+// The sentence lib/g31-recency.js g31Hinweis() appends when it shows an older quarter pair; that hint already explains the gap.
+const OLDER_PAIR_SENTENCE = 'Gezeigt wird der ältere ';
 /**
- * Hint for a row whose company has reported a later period (Yahoo meta.mostRecentQuarter) than the shown growth period.
- * Text only: no value, score or rank reads it.
+ * Hint for a row whose company has reported a later period than the shown growth period: Yahoo meta.mostRecentQuarter or a
+ * newer stored quarter, whichever is later. Text only: no value, score or rank reads it.
  * @param {object|null} meta Snapshot meta of the shown listing.
  * @param {object|null} leg Shown growth leg (basis, periodEnd).
+ * @param {object} [context] What else the row says: existing g31Hinweis, a held sibling with newer figures, newest stored quarter end.
+ * @param {object|null} [context.existing] Hint already on the row.
+ * @param {object|null} [context.heldSibling] Held listing of the same firm with newer figures (the row then names it already).
+ * @param {string|null} [context.storedQuarterEnd] Newest stored quarter end with a value.
  * @returns {{code:string, reason:string}|null} Hint `neuerer-bericht`, or null.
  */
-function newerReportHint(meta, leg) {
+function newerReportHint(meta, leg, { existing = null, heldSibling = null, storedQuarterEnd = null } = {}) {
   // Own day check (round trip, like isoTag): tests replace lib/rev-growth-basis.js with stubs that lack isoTag.
   const day = d => {
     if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(d)) return null;
     const t = Date.parse(d.slice(0, 10) + 'T00:00:00Z');
     return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === d.slice(0, 10) ? d.slice(0, 10) : null;
   };
-  const shown = day(leg?.periodEnd), latest = day(meta?.mostRecentQuarter), word = PERIOD_WORD[leg?.basis];
+  // The row already names the newer figures (held sibling) or already explains the missing pair (older quarter pair).
+  if (heldSibling || existing?.reason?.includes(OLDER_PAIR_SENTENCE)) return null;
+  const shown = day(leg?.periodEnd), word = PERIOD_WORD[leg?.basis];
+  const latest = [day(meta?.mostRecentQuarter), day(storedQuarterEnd)].filter(Boolean).sort().at(-1) ?? null;
   if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
   const tag = d => d.split('-').reverse().join('.');
-  return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon einen Abschluss bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum liegt in den Daten kein geprüftes Umsatzpaar vor, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
+  return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon Zahlen bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum fehlt in den Daten ein geprüfter Vorjahresvergleich des Umsatzes, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
 }
 
 // Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
@@ -575,9 +586,8 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   }
   // G31 with G2 (lane sd-halbjahr, 12.11.2026): the company has reported a later period than the shown one, but the data hold
   // no valid pair for it. The row keeps the older correct number and says so; it never guesses the newer one.
-  // `aelteres-quartalspaar` already says that a newer stored quarter lacks its pair; a second sentence would repeat it.
-  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' && out.g31Hinweis?.code !== 'aelteres-quartalspaar'
-    ? newerReportHint(derivations.meta, leg) : null;
+  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap'
+    ? newerReportHint(derivations.meta, leg, { existing: out.g31Hinweis, heldSibling: neuer, storedQuarterEnd: derivations.neuestesQuartal }) : null;
   if (spaeter) out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${spaeter.reason}` } : spaeter;
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
