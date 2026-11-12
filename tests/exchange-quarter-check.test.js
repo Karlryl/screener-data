@@ -253,7 +253,7 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const early = withQ3('2026-10-02T07:07:40.607Z'), late = withQ3('2026-10-30T00:00:00.000Z');
   late.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy.shift();   // first read after the Q3-2026 notice
   const r = res(base(), ctxOf(early, nb));
-  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true); assert.notEqual(r.category, 'would-fill');
+  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true); assert.equal(r.category, 'agree');
   assert.equal(r.fill.baseline, undefined);
   // July row, 9M as filed (updateDate = its own notice), read before the Q3-2026 notice and unchanged after it: fills
   const ok = res(base(), ctxOf(early, F.baseline));

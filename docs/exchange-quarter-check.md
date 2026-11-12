@@ -62,10 +62,11 @@ quarter that vintage does not carry = `baseline-quarter-missing`, no fill); the 
 single quarter for every vendor period end and every present vendor quarter agrees; exchange Q3 > 0; once the
 store holds the next-year quarter (Q3-2026), the Q3-2025 observation must carry a confirmation whose
 `UPDATE_DATE` is a real calendar day on or after the Q3-2026 notice date (Taiwan: Q3-2025 then comes from the
-Q3-2026 filing's comparative). China also blocks two risk signals (sd-quellen 12.11.2026): a 9M figure first read
-only after the Q3-2026 notice (`november-read-late`, Eastmoney's own `UPDATE_DATE`, the notice is a Beijing day) and
-a 9M row rewritten before the store's first read (`rewritten-before-first-read`). These lower the risk of a mixed
-basis of 9M and H1; they do not prove a common basis (Codex R-pr124 R3 P1: an unchanged 9M only gives
+Q3-2026 filing's comparative). China also blocks two risk signals from stored date fields only (sd-quellen
+12.11.2026): the first stored confirmation's `UPDATE_DATE` is not before the Q3-2026 notice (`november-read-late`;
+the notice is a Beijing day) or differs from the 9M observation's own notice date (`rewritten-before-first-read`).
+The fetch time is not checked, and an equal date does not prove that no new version appeared on that day. These
+lower the risk of a mixed basis of 9M and H1; they do not prove a common basis (Codex R-pr124 R3 P1: an unchanged 9M only gives
 dH1 + dQ3 = 0). A fill without a July row was built and withdrawn for that reason; it needs the comparable Q3-2025
 single quarter printed in the Q3-2026 report. Duplicate vendor quarter ends block (`duplicate-quarter-end`).
 The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
