@@ -156,3 +156,17 @@ test('a different CIK: no link to a listing that names another CIK', () => {
   const same = snapshot(); same.meta.cik = '1';
   assert.equal(X.evaluateUs(same, st)?.category, 'sec-fill', 'the same CIK, written without leading zeros, still fills');
 });
+test('isolated: a half year reported twice with start days one apart (250 and 350) opens Q2 even though no first-quarter start matches the second', () => {
+  // Only the grouping of close start days into one period catches this: H1 from 02.01. pairs with no quarter, so without it
+  // the two remaining ways (reported 150, 250 - 100) agree and 150 would fill against the contradicting 350.
+  const facts = [...hist, d100, { ...d100, val: 150 }].filter((x) => x.val !== 100 || x.end !== '2026-06-30');
+  const xs = [...hist, { ...d100, val: 150 }, f('2026-01-01', '2026-06-30', 250, '2026-08-01'), f('2026-01-02', '2026-06-30', 350, '2026-08-01')];
+  for (const order of both(xs)) assert.equal(fillOf(snapshot(), order), null);
+  assert.ok(facts.length > 0);
+});
+test('isolated: a first quarter open because two quarter-long reports disagree (start 01.01. 100, start 10.01. 200) is no operand of the half year', () => {
+  // Starts nine days apart are two periods, neither contested on its own; only the open end of the quarter stops 250 - 100.
+  const xs = [...hist.filter((x) => x.end !== '2026-03-31'), f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-10', '2026-03-31', 200, '2026-05-01'),
+    f('2026-01-01', '2026-06-30', 250, '2026-08-01')];
+  for (const order of both(xs)) assert.equal(fillOf(snapshot(), order), null);
+});
