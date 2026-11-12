@@ -241,3 +241,22 @@ test('Codex R4 P2-D: a data day that is no plain day string (an array, a day wit
   }
   assert.equal(P.pitSingleQuarters([...hist, direct], { asOf: '2026-11-11' }).length > 0, true);
 });
+
+test('blind delta check F1 (12.11. evening): marker day and conflictsWith are the same in every input order', () => {
+  const a = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-01', '2026-06-30', 250, '2026-08-01'),
+    f('2026-01-02', '2026-06-30', 251, '2026-09-15', '10-Q/A', 'g1'), f('2026-01-02', '2026-06-30', 251, '2027-08-01', '10-Q', 'g2')];
+  const resA = new Set(perms(a).map((xs) => JSON.stringify(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30'))));
+  assert.equal(resA.size, 1, [...resA].join('\n'));
+  const b = [f('2026-04-01', '2026-06-30', 150, '2026-08-01'), f('2026-04-01', '2026-06-30', 151, '2026-09-15', '10-Q/A', 'b1')];
+  const resB = perms(b).map((xs) => P.pitSingleQuarters(xs)[0]);
+  assert.equal(new Set(resB.map((x) => JSON.stringify(x))).size, 1);
+  assert.deepEqual([resB[0].derivation, resB[0].val, resB[0].filed, resB[0].conflictsWith.val], ['restatement-conflict', 150, '2026-09-15', 151], 'conflictsWith names the other figure');
+});
+
+test('blind delta check F4: two figures of one filing day count as the same only within 0.02 % when the store is read', () => {
+  const obs = (val, accn) => ({ start: '2026-04-01', val, filed: '2026-08-01', form: '10-Q', accn, days: 90, derivation: 'reported-3M', confirmedBy: [] });
+  const company = (v2) => ({ cik: '0000000001', Revenues: { '2026-06-30': [obs(150, 'a'), obs(v2, 'b')] } });
+  const read = (v2) => X.secQuartersKnown(company(v2), 'Revenues', '2026-11-11').find((q) => q.end === '2026-06-30');
+  assert.deepEqual([read(150.02).derivation, read(150.02).val], ['reported-3M', 150], '0.013 % apart: one figure');
+  assert.equal(read(150.3).derivation, 'restatement-conflict', '0.2 % apart: the day is split, the period stays open');
+});
