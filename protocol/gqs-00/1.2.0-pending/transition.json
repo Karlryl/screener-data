@@ -570,7 +570,7 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/hk-interim.js": "91c97cc03980b960ea41112d130dbab3f5291acde0a47773aa27777c8ed309ad"
+    "lib/hk-interim.js": "3976d516831502f05d4c5f763d398cb0456f53c94e5efe425b83d31dbad386be"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
@@ -679,7 +679,7 @@
     },
     "dependencySha256LF": {
       "lib/g31-recency.js": "5ad3206c0b2fb26beec017f313d2563d22700f358d319c877573eb49c4db6e2c",
-      "lib/hk-interim.js": "91c97cc03980b960ea41112d130dbab3f5291acde0a47773aa27777c8ed309ad"
+      "lib/hk-interim.js": "3976d516831502f05d4c5f763d398cb0456f53c94e5efe425b83d31dbad386be"
     },
     "goldenImpact": "None: no sealed trace is a Hong Kong listing, and without the store file nothing changes.",
     "evidence": "tests/hk-interim.test.js (real cells, break-once on the switch and on the agreement limit); before and after on the snapshots of 11.11.2026 in the PR body.",
