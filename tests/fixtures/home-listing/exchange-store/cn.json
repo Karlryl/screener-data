@@ -1,0 +1,358 @@
+{
+ "schemaVersion": 1,
+ "market": "CN",
+ "currency": "CNY",
+ "unit": 1,
+ "tables": {
+  "GINCOME": "通用",
+  "SINCOME": "证券"
+ },
+ "about": "Extract of external-data/exchange-quarters/cn.json at main de509263a7 (07.11.2026): only 601107.SS and the two runs that read it, frozen for tests/home-listing.test.js.",
+ "sources": {
+  "cn-20261002T070740Z": {
+   "fetchedAt": "2026-10-02T07:07:40.607Z",
+   "endpoint": "https://datacenter.eastmoney.com/securities/api/data/v1/get (source=HSF10)",
+   "periods": [
+    "2026-09-30",
+    "2026-06-30",
+    "2026-03-31",
+    "2025-12-31",
+    "2025-09-30",
+    "2025-06-30",
+    "2025-03-31",
+    "2024-12-31"
+   ],
+   "calls": 168,
+   "requests": [
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-09-30",
+     "rows": 0
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-09-30",
+     "rows": 0
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-06-30",
+     "rows": 13469
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-06-30",
+     "rows": 81
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-03-31",
+     "rows": 7216
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-03-31",
+     "rows": 62
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-12-31",
+     "rows": 13985
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-12-31",
+     "rows": 84
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-09-30",
+     "rows": 7100
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-09-30",
+     "rows": 60
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-06-30",
+     "rows": 14043
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-06-30",
+     "rows": 83
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-03-31",
+     "rows": 7420
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-03-31",
+     "rows": 62
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2024-12-31",
+     "rows": 14563
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2024-12-31",
+     "rows": 86
+    }
+   ],
+   "absent": {}
+  },
+  "cn-20261029T191600Z": {
+   "fetchedAt": "2026-10-29T19:16:00.792Z",
+   "endpoint": "https://datacenter.eastmoney.com/securities/api/data/v1/get (source=HSF10)",
+   "periods": [
+    "2026-09-30",
+    "2026-06-30",
+    "2026-03-31",
+    "2025-12-31",
+    "2025-09-30",
+    "2025-06-30",
+    "2025-03-31",
+    "2024-12-31"
+   ],
+   "calls": 179,
+   "requests": [
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-09-30",
+     "rows": 5972
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-09-30",
+     "rows": 37
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-06-30",
+     "rows": 13484
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-06-30",
+     "rows": 81
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2026-03-31",
+     "rows": 7217
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2026-03-31",
+     "rows": 62
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-12-31",
+     "rows": 14000
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-12-31",
+     "rows": 84
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-09-30",
+     "rows": 7178
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-09-30",
+     "rows": 61
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-06-30",
+     "rows": 14052
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-06-30",
+     "rows": 83
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2025-03-31",
+     "rows": 7421
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2025-03-31",
+     "rows": 62
+    },
+    {
+     "report": "RPT_F10_FINANCE_GINCOME",
+     "period": "2024-12-31",
+     "rows": 14575
+    },
+    {
+     "report": "RPT_F10_FINANCE_SINCOME",
+     "period": "2024-12-31",
+     "rows": 86
+    }
+   ],
+   "absent": {}
+  }
+ },
+ "companies": {
+  "601107.SS": {
+   "secucode": "601107.SH",
+   "ytd": {
+    "2026-06-30": [
+     {
+      "table": "GINCOME",
+      "reportType": "中报",
+      "total": 4944955478.2,
+      "operate": 4944955478.2,
+      "noticeDate": "2026-08-28",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-08-28"
+       }
+      ]
+     }
+    ],
+    "2026-03-31": [
+     {
+      "table": "GINCOME",
+      "reportType": "一季报",
+      "total": 2411405720.17,
+      "operate": 2411405720.17,
+      "noticeDate": "2026-04-30",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-04-30"
+       }
+      ]
+     }
+    ],
+    "2025-12-31": [
+     {
+      "table": "GINCOME",
+      "reportType": "年报",
+      "total": 8757989737.49,
+      "operate": 8757989737.49,
+      "noticeDate": "2026-03-31",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-03-31"
+       }
+      ]
+     }
+    ],
+    "2025-09-30": [
+     {
+      "table": "GINCOME",
+      "reportType": "三季报",
+      "total": 6086278164.99,
+      "operate": 6086278164.99,
+      "noticeDate": "2025-10-31",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2025-10-31"
+       }
+      ]
+     },
+     {
+      "table": "GINCOME",
+      "reportType": "三季报",
+      "total": 6493258282.62,
+      "operate": 6493258282.62,
+      "noticeDate": "2025-10-31",
+      "confirmedBy": [
+       {
+        "src": "cn-20261029T191600Z",
+        "fetchedAt": "2026-10-29T19:16:00.792Z",
+        "updateDate": "2026-10-30"
+       }
+      ]
+     }
+    ],
+    "2025-06-30": [
+     {
+      "table": "GINCOME",
+      "reportType": "中报",
+      "total": 4389573334,
+      "operate": 4389573334,
+      "noticeDate": "2025-08-29",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-08-28"
+       }
+      ]
+     }
+    ],
+    "2025-03-31": [
+     {
+      "table": "GINCOME",
+      "reportType": "一季报",
+      "total": 1988802182.73,
+      "operate": 1988802182.73,
+      "noticeDate": "2025-04-30",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-04-30"
+       }
+      ]
+     }
+    ],
+    "2024-12-31": [
+     {
+      "table": "GINCOME",
+      "reportType": "年报",
+      "total": 10362174673.9,
+      "operate": 10362174673.9,
+      "noticeDate": "2025-03-29",
+      "confirmedBy": [
+       {
+        "src": "cn-20261002T070740Z",
+        "fetchedAt": "2026-10-02T07:07:40.607Z",
+        "updateDate": "2026-03-31"
+       }
+      ]
+     }
+    ],
+    "2026-09-30": [
+     {
+      "table": "GINCOME",
+      "reportType": "三季报",
+      "total": 7044188689.94,
+      "operate": 7044188689.94,
+      "noticeDate": "2026-10-30",
+      "confirmedBy": [
+       {
+        "src": "cn-20261029T191600Z",
+        "fetchedAt": "2026-10-29T19:16:00.792Z",
+        "updateDate": "2026-10-30"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

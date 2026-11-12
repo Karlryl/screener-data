@@ -1,0 +1,71 @@
+name: HK Interims
+
+# Lane sd-halbjahr (12.11.2026) — fills the append-only store external-data/exchange-quarters/hk.json with Hong Kong
+# interim (six-month) revenue from Eastmoney, see scripts/fetch-hk-interims.js. lib/hk-interim.js reads it for the G31
+# growth leg (newest half year instead of the older fiscal year, only where two computations agree).
+#
+# TIMING: same reasoning as exchange-quarters.yml (the daily pull's cron fires 5 to 6.5 hours late); 14:17 UTC runs after
+# that workflow's 13:47 slot and long before the next daily pull. One whole-market query (about 5 pages), daily, so a new
+# interim reaches the next daily pull. Branch runs use --dry-run: all checks run, nothing is written or committed.
+on:
+  schedule:
+    - cron: '17 14 * * *'   # daily 14:17 UTC
+  workflow_dispatch: {}
+
+# Only the scheduled run joins main-push (serialised with daily-pull and the other writers); a manual run gets its own
+# group so it can never cancel a pending scheduled run of another workflow.
+concurrency:
+  group: ${{ github.event_name == 'schedule' && 'main-push' || format('manual-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+# ZWEIG-WACHE (see tests/zweig-wache.test.js): only refs/heads/main may publish.
+env:
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    # A hand start overlapping the schedule would rewrite hk.json from the same base; queue behind a running one on main
+    # and check out the branch tip at job start (same fault and fix as exchange-quarters.yml).
+    concurrency:
+      group: ${{ github.ref == 'refs/heads/main' && 'hk-interims-main' || format('hk-interims-{0}', github.run_id) }}
+      cancel-in-progress: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}  # tip of the branch at job start (see the job's concurrency note)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'  # BH-134: package.json engines requires >=22
+
+      - name: Fetch HK interims
+        run: |
+          if [ "$VEROEFFENTLICHEN" = "true" ]; then
+            node scripts/fetch-hk-interims.js
+          else
+            node scripts/fetch-hk-interims.js --dry-run
+          fi
+
+      - name: Commit store + push
+        if: ${{ success() }}
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — Lauf auf $GITHUB_REF (Trockenlauf mit --dry-run). Eastmoney wurde abgefragt und geprueft, geschrieben und gepusht wurde nichts."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add external-data/exchange-quarters/hk.json
+          if git diff --cached --quiet; then echo "kein Delta"; exit 0; fi
+          git commit -m "chore: hk-interims store [skip ci]"
+          for i in 1 2 3; do
+            git rebase --abort >/dev/null 2>&1 || true
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; exit 0; fi
+            echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
+          done
+          echo "::error::hk-interims push failed after 3 attempts — main-push conflict; the next run fetches again."
+          exit 1

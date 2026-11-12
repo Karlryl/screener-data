@@ -25,6 +25,7 @@ const { profitStreakOf } = require('./profit-streak.js'); // Task 4.5: belegte G
 // data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
 // revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
 const { gradeSnapshot, GRADE_THRESHOLDS } = require('../../methods/data-quality.js');
+const { homeListingRank, shownGrowthMonth, rankCapable, NOT_HOME } = require('../../lib/home-listing.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
@@ -193,6 +194,8 @@ function mcapKlasseOf(mc) {
   return 'mega';
 }
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
+// P290: steps of 10 % keep the comparison a total order; a per-pair threshold would not be transitive.
+const mcapStep = (s) => (mcapOf(s) > 0 ? Math.round(Math.log(mcapOf(s)) / Math.log(1.1)) : -Infinity);
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
 // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
 // untrustworthy marketCap -> im Dedup-Tie-Break deprioritisieren. Konjunktion (ccy-Divergenz UND
@@ -300,7 +303,7 @@ function issuerDedupGroups(entries) {
 // US-Primaerboerse, kein Auslands-Suffix), NICHT das domizil-basierte isUS. Ein Toronto-Bein mit
 // country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
 // deprioritisierte danach ausgerechnet das echte US-Primaerbein (GFL vs GFL.TO). Danach isUS
-// (Domizil), fxSuspect, marketCap, Ticker-Tie-Break. Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
+// (Domizil), fxSuspect; danach seit P290 Zeitraum und Heimatnotierung (issuerDedupComparator). Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
 // MESSUNG 27.07. (Tag 465) — „waehlt der Sieger die falsche Branchenformel?"
 // Anlass: derselbe Emittent traegt bei Yahoo je nach Boersenplatz eine andere Branche. Weil
 // hier genau EIN Bein ueberlebt, entscheidet dieser Vergleich mit darueber, gegen welche
@@ -324,17 +327,72 @@ function issuerDedupGroups(entries) {
 // `node scripts/probe-issuer-branchenkonflikt.js <CI-Snapshot-Ordner>`. Steigt die Zahl der
 // echten Faelle, ist der Mehrheitsentscheid der naechste Schritt — mit der Auflage, dass
 // Beine OHNE Branche nicht mitstimmen duerfen (sonst gewinnt „keine Branche" per Anzahl).
-function issuerDedupComparator(a, b) {
+function issuerDedupFirstKeys(a, b) {
   const pa = isUsPrimaryListing((a.snapshot && a.snapshot.meta) || {}) ? 1 : 0;
   const pb = isUsPrimaryListing((b.snapshot && b.snapshot.meta) || {}) ? 1 : 0;
   if (pa !== pb) return pb - pa;                        // US-PRIMAER-gelistetes Bein zuerst (Listing, nicht Domizil)
   const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
   if (ua !== ub) return ub - ua;                        // dann US-Domizil
   const fa = fxSuspect(a.snapshot) ? 1 : 0, fb = fxSuspect(b.snapshot) ? 1 : 0;
-  if (fa !== fb) return fa - fb;                        // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
-  const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
-  if (ma !== mb) return mb - ma;                        // dann groesste marketCap
-  return cmpTicker(a.ticker, b.ticker);                 // dann stabiler Ticker-Tie-Break (deterministisch)
+  return fa - fb;                                       // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
+}
+// The rule before P290, kept only as the visible comparison (excluded.json homeListing); at most four weeks after go-live.
+function issuerDedupComparatorOld(a, b) {
+  return issuerDedupFirstKeys(a, b) || mcapOf(b.snapshot) - mcapOf(a.snapshot) || cmpTicker(a.ticker, b.ticker);
+}
+/**
+ * Codex R23 (1): the covered axes of a routed leg as the score counts them later (weight above 0 on its track, a raw value
+ * present, the one-off lamp blinding its five axes), and whether that is enough for a rank (lib/home-listing.js rankCapable).
+ * Bounds do not decide presence, so none are needed before they are learned. Cached on the entry.
+ * @param {object} e Result entry with snapshot, formula, track and lamps.
+ * @returns {?{n: number, m: number, rankable: boolean}} null without a formula (survival, slim snapshots).
+ */
+function dedupCoverage(e) {
+  // Cache first: a loser loses its formula after the dedup, and excluded.json still has to read the key that decided.
+  if (e && e._dedupCoverage) return e._dedupCoverage;
+  if (!e || !e.formula || !Array.isArray(e.formula.axes)) return null;
+  let n = 0, m = 0;
+  for (const ax of e.formula.axes) {
+    if (!(ax.w && ax.w[e.track] > 0)) continue;
+    m++;
+    if (EINMALERTRAG_BLIND.includes(ax.key) && Array.isArray(e.lamps) && e.lamps.includes('einmalertrag')) continue;
+    if (Number.isFinite(rawAxisValue(e.snapshot, ax.key, e.formula, e.track, null, null))) n++;
+  }
+  e._dedupCoverage = { n, m, rankable: rankCapable(n, m) };
+  return e._dedupCoverage;
+}
+// Each key is a function of one leg alone, so the order stays total. Unknown coverage counts as full: between two such legs it never
+// decides; a survival leg (no formula) therefore ranks like a fully covered one against a scored leg with fewer axes (none on 31.10.2026).
+const rankKey = (e) => { const c = dedupCoverage(e); return c && !c.rankable ? 0 : 1; };
+const axesKey = (e) => { const c = dedupCoverage(e); return c && c.m > 0 ? c.n / c.m : 1; };
+/**
+ * P290 with Codex R23: the keys after the first three, in order, each with the reason excluded.json names when it decides.
+ * 1. a leg that can hold a rank (a covered home listing without a rank must not push out a ranked one),
+ * 2. the newest period the board can show (G31: newest reported figures first), 3. more covered axes,
+ * 4. the evidenced home listing (lib/home-listing.js). Share classes on one home exchange then go by a 10 % market-cap step,
+ * other legs by market cap, last the ticker. Near-equal market caps cross daily and their statements agree.
+ */
+const DEDUP_KEYS = [
+  ['keinRang', (a, b) => rankKey(b) - rankKey(a)],
+  ['aeltererZeitraum', (a, b) => { const qa = shownGrowthMonth(a.snapshot), qb = shownGrowthMonth(b.snapshot); return qa === qb ? 0 : qa > qb ? -1 : 1; }],
+  ['wenigerBelegteAchsen', (a, b) => axesKey(b) - axesKey(a)],
+  ['heimat', (a, b) => homeListingRank(a.ticker, a.snapshot && a.snapshot.meta && a.snapshot.meta.country)
+    - homeListingRank(b.ticker, b.snapshot && b.snapshot.meta && b.snapshot.meta.country)],
+];
+/** The key that decides between two legs of one issuer: {key, d} with d < 0 when a wins. */
+function issuerDedupDecision(a, b) {
+  const first = issuerDedupFirstKeys(a, b);
+  if (first) return { key: 'vorrangUsOderFx', d: first };
+  for (const [key, cmp] of DEDUP_KEYS) {
+    const d = cmp(a, b);
+    if (d) return { key, d };
+  }
+  const home = homeListingRank(a.ticker, a.snapshot && a.snapshot.meta && a.snapshot.meta.country) < NOT_HOME;
+  const d = home ? mcapStep(b.snapshot) - mcapStep(a.snapshot) : mcapOf(b.snapshot) - mcapOf(a.snapshot);
+  return { key: 'marketCap', d: d || cmpTicker(a.ticker, b.ticker) };
+}
+function issuerDedupComparator(a, b) {
+  return issuerDedupDecision(a, b).d;
 }
 
 // A4 (Weltweit-Pivot): DISQUALIFIZIERENDE Daten-Qualitaets-Signale. Ein Name mit einer
@@ -832,6 +890,30 @@ function quintileBounds(samples) {
   return b.every((x) => x !== null) ? b : null;
 }
 
+/**
+ * Step 1 of scoreUniverse for one snapshot: routing, lamps, the A4 data-suspect gate, formula and track. Codex R1 on #89 (P1):
+ * the class-sum writer and the Rule-of-40 reader build their dedup entries here, so the listing choice reads the same
+ * coverage and rank capability (dedupCoverage) as the scoring instead of treating a missing formula as full coverage.
+ * @param {object} s Prepared snapshot (as run-screener.js reads it). @param {object} formulas Formula registry.
+ * @param {Function} [classify] Router (route by default). @returns {object} Result entry with action, formula, track, lamps.
+ */
+function routeEntry(s, formulas, classify = route) {
+  const r = classify(s);
+  const lampsActive = evaluateLamps(s).active;
+  const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
+  // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
+  if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
+    // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
+    const reasonText = s.meta?.financialDataIssue?.reason;
+    return { ...base, action: 'exclude', formulaId: null, track: null, score: null,
+      reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) };
+  }
+  if (r.action !== 'route') return { ...base, action: r.action, formulaId: null, track: null, score: null, reason: r.reason || r.track };
+  const formula = formulas[r.formulaId];
+  if (!formula) return { ...base, action: 'unrouted', formulaId: r.formulaId, track: null, score: null };
+  return { ...base, action: 'route', formulaId: r.formulaId, gpClass: r.gpClass, track: trackOf(s, formula), formula, score: null };
+}
+
 function scoreUniverse(snapshots, formulas, opts = {}) {
   // 2.9 Slice 2: refCalibration = eingefrorenes "Lineal" (aus einem frueheren Lauf). Gesetzt ->
   // NICHT neu lernen, sondern gegen die gefrorenen Schranken + Kohorten-/Boost-Verteilungen scoren
@@ -929,39 +1011,14 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   const growthBoostOn = opts.growthBoost !== false;
   const results = [];
   // 1. Routing + Track
-  for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
-    const r = classify(s);
-    const lampsActive = evaluateLamps(s).active;
-    const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
-    // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
-    if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
-      // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
-      const reasonText = s.meta?.financialDataIssue?.reason;
-      results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null,
-        reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) });
-      continue;
-    }
-    if (r.action !== 'route') {
-      results.push({ ...base, action: r.action, formulaId: null, track: null, score: null, reason: r.reason || r.track });
-      continue;
-    }
-    const formula = formulas[r.formulaId];
-    if (!formula) {
-      results.push({ ...base, action: 'unrouted', formulaId: r.formulaId, track: null, score: null });
-      continue;
-    }
-    results.push({
-      ...base, action: 'route', formulaId: r.formulaId, gpClass: r.gpClass,
-      track: trackOf(s, formula), formula, score: null,
-    });
-  }
+  for (const s of (Array.isArray(snapshots) ? snapshots : [])) results.push(routeEntry(s, formulas, classify));
 
   // 1b. Issuer-Dedup (Weltweit-Pivot A3-Stufe-2): derselbe Emittent kann mehrfach gelistet sein —
   // US-ADR (Stufe-1, USD/SEC) + Heimatboerse (Stufe-2), z.B. ASML+ASML.AS, TSM+2330.TW, SHOP+SHOP.TO,
   // BABA+9988.HK. Beide Beine wuerden dieselbe Firma DOPPELT in Topf/Kohorte/Sektor-Tab zeigen und
   // die Perzentile verzerren. Pro Emittent (normalisierter meta.name) genau EIN Bein behalten:
-  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst hoechste marketCap, dann Ticker-Tie-
-  // Break (deterministisch). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
+  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS). P290: then the newest shown period, then the home listing, last the
+  // market cap (issuerDedupComparator). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
   // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
   // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose) — ueber die
   // gemeinsame Funktion, damit die Kalibrierung garantiert dieselbe Population sieht.
@@ -982,11 +1039,8 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // mit mindestens zwei Jahren Abstand im ersten Handelstag, davon SECHS in der Uebersicht —
     // und alle sechs mit der juengeren Notierung (ZEAL.VI, UMI.VI, SBMO.VI, LUG.ST, CEPU, SVM).
     //
-    // GEHEILT WIRD HIER NUR DAS DATUM, nicht die Auswahl des Siegers. Der Comparator bleibt
-    // unangetastet: seine Reihenfolge hat belegte Gruende (Bug 7, GFL vs GFL.TO), und ein
-    // Eingriff traefe alle 2.646 mehrbeinigen Gruppen statt der gemessenen sechs. Das
-    // Boersendebuet der FIRMA ist dagegen das frueheste ihrer Notierungen — unabhaengig
-    // davon, welches Bein die besseren Kursdaten liefert.
+    // ONLY THE DATE IS HEALED HERE. The winner is the comparator's choice (P290), whose first keys stay (Bug 7, GFL vs GFL.TO).
+    // The firm's debut is the earliest of its listings, whichever leg wins.
     const erstnotizen = group
       .map((g) => g.snapshot && g.snapshot.meta && g.snapshot.meta.firstTradeDate)
       .filter((d) => typeof d === 'string' && d.length >= 4)
@@ -1567,12 +1621,12 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings,
+module.exports = { scoreUniverse, routeEntry, rankBy, trackOf, rawAxisValue, produceRankings,
   // Einmalertrag-Konsequenz: EINE Liste fuer scoreUniverse UND buildCalibMatrix (calibrate.js
   // spiegelt PASS 1; eine zweite Kopie wuerde genau die Drift erzeugen, die die Datei bewacht).
   EINMALERTRAG_BLIND, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
-  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
+  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerDedupComparatorOld, issuerDedupDecision, dedupCoverage, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // Tag 584 (VSXY/VSCO): fuer scripts/probe-issuer-strict-key-punct.js — der STRENGE Schluessel
   // selbst, damit die Kanonisierungs-Messung nicht dieselbe Logik ein zweites Mal nachbaut.
   issuerKeyStrengOhneGattung,

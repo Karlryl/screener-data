@@ -1441,6 +1441,8 @@ den Firmenbericht geprüft ist.
 
 **`g31Hinweis` code `gehaltene-notierung-neuer` (PR #79, 04.11.2026).** A full-board row of the main store whose issuer has a sibling listing held by the stale-price gate with a newer growth period gets this hint: it names the held listing and its period end and the shown listing and its period end. Which listing is shown does not change (home-listing work, PR #89). Existing hints keep their code; the sentence is appended to their reason. Issuer grouping is the production one (`issuerDedupGroups`). Text only, no score or rank reads it.
 
+**`g31Hinweis` code `neuerer-bericht` (lane sd-halbjahr, 12.11.2026, G31 with G2).** A main-store row (not survival, not small cap) whose company has reported a later period than the shown growth period gets this hint: the later of Yahoo's `meta.mostRecentQuarter` and the newest stored quarter with a value lies more than 45 days after `revGrowthPeriodEnd` (fiscal quarter ends drift by a few days). The sentence names both dates and says that the data hold no checked year-ago comparison for the later period, so the board keeps the older figure; it never guesses the newer one. Existing hints keep their code and get the sentence appended, except where the row already says it: next to `gehaltene-notierung-neuer` (the held sibling's newer figures are named) and wherever the reason already carries the older-quarter-pair sentence of `lib/g31-recency.js g31Hinweis()` (whatever its code). Export of 11.11.2026 replayed: 462 of 1,947 rows on the 13 boards (other 102, Hong Kong 99, China A 86, USA 75, Europe 75, India 25), no repeated sentence, no contradiction. Text only, no value, score or rank reads it. Source `scripts/write-findash-export.js newerReportHint()`; guard `tests/export-hinweis-neuerer-bericht.test.js`.
+
 Seit 31.10.2026 gibt es einen dritten Code, `abgrenzung`, aus `configs/g31-hinweise.json`, Schlüssel
 `definitionen` (geschrieben von `scripts/write-findash-export.js`): Die Zahl des Anbieters stimmt rechnerisch,
 folgt aber einer Abgrenzung, die der Abschluss der Firma nicht kennt (BURE.ST: Net sales 0, der Anbieter zählt
@@ -1828,6 +1830,14 @@ Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/sto
 previous-day and equal-to-stamp-day cases, tamper variants with their specific error, size cap, idempotence, sort order,
 truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
 without its daily file, workflow step order and fail-soft shape).
+
+## Heimatnotierung in `excluded.json` (P290, draft)
+
+`homeListing.fallbacks` nennt jede Firma, die nicht auf ihrer Heimatnotierung steht: `issuer`, `shown`, `home`, `reason`, `shownMonth`, `homeMonth`.
+`reason` ist der Schlüssel, der entschieden hat: `keinRang` (die Heimatnotierung hat zu wenige belegte Achsen für einen Rang, die gezeigte Notierung hat genug; seit PR 89 r5 geht das vor dem neueren Zeitraum), `aeltererZeitraum` (die Heimatnotierung zeigt ein aelteres Wachstum oder keins), `wenigerBelegteAchsen` (gleicher Zeitraum, die Heimatnotierung hat weniger belegte Achsen), `fxVerdacht`, `keineLandesnotierungInGruppe` (in dieser Namensgruppe steht keine Notierung an einer Börse des Landes, `home` ist null; das sagt nichts über die Firma: Die Zeile kann ihr wirklicher Hauptplatz sein, oder die Heimat läuft unter einem anderen Namen) oder der Ausschlussgrund der Heimatnotierung (zum Beispiel `data-suspect`). Zeigen beide Notierungen denselben Zeitraum, können beide einen Rang halten und haben sie gleich viele belegte Achsen, steht die Firma von selbst wieder auf der Heimatnotierung; sonst entscheidet weiter `keinRang` oder `wenigerBelegteAchsen`.
+`homeListing.counts` nennt `firmsWithHomeTable`, `onHomeListing`, `multiListed`, `multiListedOnHome` und `multiListedWithoutCountry`; steht weniger als die Haelfte der mehrfach notierten Firmen ausserhalb der USA auf der Heimat (am 31.10.2026: 1.182 von 1.209), warnt der Lauf.
+`homeListing.oldRuleDiffers` nennt mit `shown` und `oldRule`, wo die Regel vor P290 eine andere Notierung gezeigt haette. Dieser Vergleich bleibt hoechstens vier Wochen.
+Die Auswahl der Notierung: US-Hauptnotierung, US-Sitz, kein Waehrungsverdacht, Notierung kann einen Rang halten, neuester zeigbarer Zeitraum, mehr belegte Achsen, belegte Heimatnotierung (`configs/dup-issuer-shadow-table.json`, dann `configs/home-listing.json`), zuletzt Boersenwert.
 
 ## Notierungsabgaenge in `excluded.json` (PR 66, 30.10.2026)
 
