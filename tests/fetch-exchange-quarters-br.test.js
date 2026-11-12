@@ -359,7 +359,8 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
   });
 
   await t('shadow guarantee: no code outside the BR pass and its report opens br.json; loadStores reads cn and tw only', () => {
-    const allowed = new Set(['scripts/fetch-exchange-quarters.js', 'scripts/br-shadow-report.js', 'tests/fetch-exchange-quarters-br.test.js']);
+    // tests/cn-printed.helpers.js and tests/fetch-cn-printed.test.js only hash br.json / write a sentinel to prove the CN printed pass never touches it; they never parse it.
+    const allowed = new Set(['scripts/fetch-exchange-quarters.js', 'scripts/br-shadow-report.js', 'tests/fetch-exchange-quarters-br.test.js', 'tests/cn-printed.helpers.js', 'tests/fetch-cn-printed.test.js']);
     const hits = [];
     const walk = (d) => {
       for (const e of fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })) {
