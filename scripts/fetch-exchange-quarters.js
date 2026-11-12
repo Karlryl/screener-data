@@ -45,8 +45,9 @@
  *
  *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, previous two years DFP) plus FCA
  *            valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
- *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). At most
- *            one pass per 6 days (CVM rebuilds weekly). A 404 is a named gap only for DFP of the current year,
+ *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). A pass is
+ *            skipped while the last written pass is less than 6 days old (CVM rebuilds weekly); --force-br, a dry
+ *            run (writes nothing) and a retry after a failed pass (nothing written) fetch again. A 404 is a named gap only for DFP of the current year,
  *            ITR of the current year until May and DFP of the previous year until April;
  *            any other failure, a missing zip entry, a CSV row with the wrong field count or no document at
  *            all aborts the market and br.json is not written.
@@ -410,21 +411,23 @@ async function cvmZip(ctx, url, names) {
   return { files, file: { url, bytes: buf.length, lastModified: (a.headers && a.headers['last-modified']) || null } };
 }
 
-/** FCA valor_mobiliario rows -> Map(yahooTicker -> {cnpj, cls}); a code on two CNPJ is ambiguous and dropped. */
+/** FCA valor_mobiliario rows -> Map(yahooTicker -> {cnpj, cls}); a code on two CNPJ is ambiguous and dropped;
+ * `ended`: codes this form lists only with an end of trading (they cancel an older year's mapping, Codex R-pr115 F3). */
 function brTickerMap(rows, want) {
-  const out = new Map(), bad = new Set();
+  const out = new Map(), bad = new Set(), endedRows = new Set();
   for (const r of rows) {
     const cls = BR_CLASS[r.Valor_Mobiliario];
     const code = (r.Codigo_Negociacao || '').trim().toUpperCase();
-    if (!cls || !code || r.Mercado !== 'Bolsa' || r.Data_Fim_Negociacao) continue;
+    if (!cls || !code || r.Mercado !== 'Bolsa') continue;
     const tk = code + '.SA';
     if (!want.has(tk)) continue;
+    if (r.Data_Fim_Negociacao) { endedRows.add(tk); continue; }
     const prev = out.get(tk);
     if (prev && prev.cnpj !== r.CNPJ_Companhia) bad.add(tk);
     else out.set(tk, { cnpj: r.CNPJ_Companhia, cls });
   }
   for (const tk of bad) out.delete(tk);
-  return { map: out, ambiguous: [...bad].sort() };
+  return { map: out, ambiguous: [...bad].sort(), ended: [...endedRows].filter((tk) => !out.has(tk) && !bad.has(tk)).sort() };
 }
 
 /**
@@ -475,10 +478,10 @@ function brObservations(kind, year, files, cnpjs) {
     const vals = {};
     let label = null;
     for (const r of rows) {
+      if (r.CD_CONTA === '3.01') label = r.DS_CONTA;   // the scheme label, even when the amount is empty (Codex R-pr115 F4)
       const v = r.VL_CONTA.trim() === '' ? NaN : Number(r.VL_CONTA) * BR_SCALE[r.ESCALA_MOEDA];
       if (!Number.isFinite(v)) { counts.badNumbers += 1; continue; }   // a gap, never 0
       vals[r.CD_CONTA + ' ' + r.DT_INI_EXERC] = v;
-      if (r.CD_CONTA === '3.01') label = r.DS_CONTA;
     }
     const values = Object.fromEntries(Object.keys(vals).sort().map((x) => [x, vals[x]]));
     const c = b.cap;
@@ -517,6 +520,7 @@ async function runBrazil(ctx) {
     fcaYears.push(fy);
     const r = brTickerMap(S.parseCvmCsv(fca.files[name], 'valor_mobiliario'), want);
     for (const [tk, m] of r.map) { map.set(tk, m); ambiguous.delete(tk); }
+    for (const tk of r.ended) { map.delete(tk); ambiguous.delete(tk); }
     for (const tk of r.ambiguous) if (!r.map.has(tk)) { ambiguous.add(tk); if (fy === y) map.delete(tk); }
   }
   const unmapped = [...want].filter((tk) => !map.has(tk)).sort();

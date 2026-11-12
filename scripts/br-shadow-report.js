@@ -23,7 +23,10 @@
  * Fields: revenueQ ~ 3.01, grossProfitQ ~ 3.03, opIncQ ~ 3.05 (EBIT before financial result; Yahoo's
  * operating income may exclude equity-method or other items, so disagreement there is expected and
  * measured, not judged), netIncomeQ ~ 3.11.01 (attributable to the parent's owners, as Yahoo shows it),
- * else 3.11 (consolidated; the only line of a company without minorities).
+ * else 3.11 only on the individual statement (parent-only, so 3.11 is the owners' profit; a consolidated 3.11
+ * includes minorities and is not compared, Codex R-pr115 F1).
+ *   cvm-gap         CVM quarter not usable, with its reason (placeholder-zero, one-zero-leg); never another line
+ * A ticker without any Yahoo quarter, or without a 3.01 line in any CVM document (scheme unknown), is unchecked.
  *   cvm-zero        CVM files 0 on the line (holding or insurer without a sales line), Yahoo shows a figure
  * Banks and insurers (S.BR_FINANCIAL on the 3.01 label) are unchecked: their DRE scheme puts other lines on the codes.
  */
@@ -50,29 +53,41 @@ function compareTicker(snap, store, tolerance) {
   else if (meta.reportingCurrencyOriginal === 'BRL' && meta.fxConverted && Number.isFinite(meta.fxRateApplied)) fx = meta.fxRateApplied;
   if (fx == null) return { ticker: tk, unchecked: 'Yahoo statement currency ' + (meta.reportingCurrencyOriginal || meta.reportingCurrency) + ' (CVM is BRL)' };
   const docs = Object.values(company.docs).map((l) => l[l.length - 1]);
-  const label = (docs.find((o) => o.revenueLabel) || {}).revenueLabel || null;
-  if (label && S.BR_FINANCIAL.test(label)) return { ticker: tk, unchecked: 'financial DRE scheme (' + label + ')' };
+  const fin = docs.find((o) => o.revenueLabel && S.BR_FINANCIAL.test(o.revenueLabel));
+  if (fin) return { ticker: tk, unchecked: 'financial DRE scheme (' + fin.revenueLabel + ')' };
+  if (!docs.some((o) => o.revenueLabel)) return { ticker: tk, unchecked: 'no 3.01 line in any CVM document (scheme unknown)' };
   const q = S.brSingleQuarters(company);
   const out = { ticker: tk, cnpj: m.cnpj, cls: m.cls, fx, cells: [] };
   const ts = snap.timeseries || {};
+  // Codex R-pr115 F2: without any Yahoo quarter there is no span to compare in; say so instead of an empty row
+  const spanOf = (field) => (ts[field + 'Ends'] || ts.revenueQEnds || []).filter((e, i) => e && Number.isFinite(valueOf((ts[field] || [])[i])));
+  const tickerEnds = FIELDS.flatMap(([field]) => spanOf(field)).sort();
+  if (!tickerEnds.length) return { ticker: tk, unchecked: 'no Yahoo quarter in any compared field' };
+  // 3.11 stands in for 3.11.01 only on the individual statement, where it is the parent owners' profit (Codex F1)
+  const cvmCell = (e, f, fallback) => {
+    if (!q[e]) return null;
+    if (q[e][f]) return q[e][f];
+    return fallback && q[e][fallback] && q[e][fallback].basis === 'ind' ? q[e][fallback] : null;
+  };
   for (const [field, f, fallback] of FIELDS) {
     const vals = ts[field] || [];
     const ends = ts[field + 'Ends'] || ts.revenueQEnds || [];
     const y = new Map();
     ends.forEach((e, i) => { const v = valueOf(vals[i]); if (e) y.set(e, Number.isFinite(v) ? v : null); });
     const ySorted = [...y.keys()].sort();
-    const oldest = ySorted[0], newest = ySorted[ySorted.length - 1];
-    const allEnds = new Set([...y.keys(), ...Object.keys(q).filter((e) => (q[e][f] || (fallback && q[e][fallback])) && oldest && e >= oldest)]);
+    const oldest = ySorted[0] || tickerEnds[0], newest = ySorted[ySorted.length - 1] || tickerEnds[tickerEnds.length - 1];
+    const allEnds = new Set([...y.keys(), ...Object.keys(q).filter((e) => cvmCell(e, f, fallback) && e >= oldest)]);
     for (const e of [...allEnds].sort().reverse()) {
       const yv = y.has(e) ? y.get(e) : null;
-      const c = q[e] && (q[e][f] || (fallback && q[e][fallback]));
-      const cv = c ? c.value * fx : null;
+      const c = cvmCell(e, f, fallback);
+      const cv = c && c.value !== null ? c.value * fx : null;
       let cat;
-      if (c && yv != null) cat = cv === yv || Math.abs(cv / yv - 1) <= tolerance ? 'agree' : cv === 0 ? 'cvm-zero' : 'disagree';
+      if (c && c.value === null) cat = 'cvm-gap';
+      else if (c && yv != null) cat = cv === yv || Math.abs(cv / yv - 1) <= tolerance ? 'agree' : cv === 0 ? 'cvm-zero' : 'disagree';
       else if (c) cat = newest && e > newest ? 'cvm-newer' : 'cvm-only';
       else if (yv != null) cat = 'yahoo-only';
       else continue;
-      out.cells.push({ field, end: e, cat, yahoo: yv, cvm: cv, cvmBrl: c ? c.value : null, received: c ? c.received : null,
+      out.cells.push({ field, end: e, cat, ...(c && c.gap ? { gap: c.gap } : {}), yahoo: yv, cvm: cv, cvmBrl: c ? c.value : null, received: c ? c.received : null,
         derived: c ? c.derived : null, basis: c ? c.basis : null, ratio: c && yv ? cv / yv : null });
     }
   }

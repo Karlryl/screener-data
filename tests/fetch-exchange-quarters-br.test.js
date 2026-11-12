@@ -299,15 +299,15 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
       'ITR 2025-09-30': o('2025-11-13', { '3.11 2025-01-01': -1755161000, '3.11.01 2025-01-01': 0, '3.01 2025-01-01': 0 }),
       'DFP 2025-12-31': o('2026-03-10', { '3.11 2025-01-01': 124858000, '3.11.01 2025-01-01': 124858000, '3.01 2025-01-01': 20000000000 }),
     } });
-    assert.equal(q['2025-12-31'].niParent, undefined, 'not the whole year as a quarter (+124.9 m)');
+    assert.deepEqual([q['2025-12-31'].niParent.value, q['2025-12-31'].niParent.gap], [null, 'placeholder-zero'], 'not the whole year as a quarter (+124.9 m)');
     assert.equal(q['2025-12-31'].ni.value, 124858000 + 1755161000);
-    assert.equal(q['2025-12-31'].rev, undefined, 'nine months of 0 against a real year: not derivable');
+    assert.deepEqual([q['2025-12-31'].rev.value, q['2025-12-31'].rev.gap], [null, 'one-zero-leg'], 'nine months of 0 against a real year: not derivable');
     const intb = S.brSingleQuarters({ docs: {
       'ITR 2026-03-31': o('2026-05-05', { '3.11 2026-01-01': 150000000, '3.11.01 2026-01-01': 150000000 }),
       'ITR 2026-06-30': o('2026-08-04', { '3.11 2026-01-01': 308300000, '3.11 2026-04-01': 158300000,
         '3.11.01 2026-01-01': -3400000, '3.11.01 2026-04-01': 0 }),
     } });
-    assert.equal(intb['2026-06-30'].niParent, undefined, 'a filed 0 next to a real 3.11 is missing, and no YTD difference (-153.4 m) stands in for it');
+    assert.deepEqual([intb['2026-06-30'].niParent.value, intb['2026-06-30'].niParent.gap], [null, 'placeholder-zero'], 'a filed 0 next to a real 3.11 is a gap, and no YTD difference (-153.4 m) stands in for it');
     assert.equal(intb['2026-06-30'].ni.value, 158300000);
     assert.equal(intb['2026-03-31'].niParent.value, 150000000);
     const fin = S.brSingleQuarters({ docs: { 'ITR 2026-06-30': o('2026-08-12', { '3.01 2026-04-01': 5, '3.11 2026-04-01': 1 }, 'Receitas da Intermediação Financeira') } });
@@ -376,6 +376,79 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     const withBr = tmpDir();
     fs.writeFileSync(path.join(withBr, 'br.json'), JSON.stringify({ schemaVersion: 1, market: 'BR', currency: 'BRL', companies: {}, sources: {} }));
     assert.deepEqual(Object.keys(X.loadStores(withBr)).sort(), ['cn', 'tw', 'warnings'], 'an existing br.json is not loaded');
+  });
+
+  // ── Codex R-pr115 (12.11.2026): F1 to F4, each red on 086b4eb475 ──────────────────────────────────────────
+  await t('Codex F1: a placeholder zero or a one-zero-leg quarter is a named gap, never another line and never dropped', () => {
+    const o = (rec, values) => [{ received: rec, basis: 'con', revenueLabel: 'Receita de Venda de Bens e/ou Serviços', values }];
+    const q = S.brSingleQuarters({ docs: {
+      'ITR 2026-06-30': o('2026-08-04', { '3.11 2026-04-01': 100, '3.11.01 2026-04-01': 0, '6.01 2026-01-01': 25, '3.01 2026-04-01': 50 }),
+      'ITR 2026-03-31': o('2026-05-05', { '6.01 2026-01-01': 0 }),
+    } });
+    assert.equal(q['2026-06-30'].niParent.value, null, 'filed 0 owner profit next to 3.11 = 100');
+    assert.equal(q['2026-06-30'].niParent.gap, 'placeholder-zero');
+    assert.equal(q['2026-06-30'].cfo.value, null, 'Q1 0, H1 25: not derived ...');
+    assert.equal(q['2026-06-30'].cfo.gap, 'one-zero-leg', '... but named');
+    const store = { tickers: { 'WEGE3.SA': { cnpj: WEG, cls: 'ON' } }, companies: { [WEG]: { docs: {
+      'ITR 2026-06-30': o('2026-08-04', { '3.01 2026-04-01': 50, '3.11 2026-04-01': 100, '3.11.01 2026-04-01': 0 }) } } } };
+    const snap = { meta: { ticker: 'WEGE3.SA', reportingCurrency: 'BRL' },
+      timeseries: { revenueQ: [{ value: 50 }], revenueQEnds: ['2026-06-30'], netIncomeQ: [{ value: 0 }], netIncomeQEnds: ['2026-06-30'] } };
+    const c = compareTicker(snap, store, 0.01).cells.find((x) => x.field === 'netIncomeQ');
+    assert.equal(c.cat, 'cvm-gap', 'not "disagree 100 vs 0": 3.11 is no stand-in for a placeholder owner profit');
+    assert.equal(c.gap, 'placeholder-zero');
+    // 3.11 stands in for 3.11.01 only on the individual (parent-only) statement, where it IS the owners' profit
+    const noParent = (basis) => ({ ...store, companies: { [WEG]: { docs: { 'ITR 2026-06-30': [{ received: '2026-08-04', basis,
+      revenueLabel: 'Receita de Venda de Bens e/ou Serviços', values: { '3.01 2026-04-01': 50, '3.11 2026-04-01': 7 } }] } } } });
+    const ni = (st) => compareTicker({ ...snap, timeseries: { ...snap.timeseries, netIncomeQ: [{ value: 7 }] } }, st, 0.01).cells.find((x) => x.field === 'netIncomeQ');
+    assert.equal(ni(noParent('ind')).cat, 'agree');
+    assert.equal(ni(noParent('con')).cat, 'yahoo-only', 'consolidated 3.11 includes minorities: no comparison');
+  });
+
+  await t('Codex F2: a company without any Yahoo quarter is unchecked with a reason, not an empty comparison', () => {
+    const store = { tickers: { 'WEGE3.SA': { cnpj: WEG, cls: 'ON' } }, companies: { [WEG]: { docs: {
+      'ITR 2026-06-30': [{ received: '2026-08-04', basis: 'con', revenueLabel: 'Receita de Venda de Bens e/ou Serviços', values: { '3.01 2026-04-01': 100 } }] } } } };
+    for (const timeseries of [{}, { revenueQ: [], revenueQEnds: [] }]) {
+      const r = compareTicker({ meta: { ticker: 'WEGE3.SA', reportingCurrency: 'BRL' }, timeseries }, store, 0.01);
+      assert.match(r.unchecked || '', /no Yahoo quarter/, JSON.stringify(r));
+    }
+    // a field without its own Yahoo series still counts CVM quarters inside the ticker's Yahoo span
+    const r = compareTicker({ meta: { ticker: 'WEGE3.SA', reportingCurrency: 'BRL' }, timeseries: { netIncomeQ: [{ value: 1 }], netIncomeQEnds: ['2026-06-30'] } }, store, 0.01);
+    assert.equal(r.cells.find((x) => x.field === 'revenueQ').cat, 'cvm-only');
+  });
+
+  await t('Codex F3: a code the newest FCA explicitly ends drops the older active mapping', async () => {
+    const ended = makeZip({ ['fca_cia_aberta_valor_mobiliario_2026.csv']: csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3', 'Bolsa', '2026-06-30'),
+      vm(BANK, 'Ações Ordinárias', 'BBAS3')]) });
+    const dir = tmpDir();
+    const r = await run(dir, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': ended } }));
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    const tickers = JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8')).tickers;
+    assert.equal(tickers['WEGE3.SA'], undefined, 'ended in 2026, active in 2025: ended wins');
+    // the other direction: no new FCA row at all keeps the previous-year mapping (see the FCA-year test above)
+  });
+
+  await t('Codex F4: an empty bank revenue amount keeps the financial label, so the bank stays unchecked', async () => {
+    const p = 'itr_cia_aberta_';
+    const bankRow = (acc, val, label) => [BANK, '2026-06-30', 1, 'X S.A.', '005410', 'DF', 'REAL', 'MIL', 'ÚLTIMO', '2026-04-01', '2026-06-30', acc, label, val, 'S'].join(';');
+    const z = makeZip({
+      [p + '2026.csv']: csv(IDX, [idx(BANK, '2026-06-30', 1, 'ITR', '9', '2026-08-12')]),
+      [p + 'DRE_con_2026.csv']: csv(DRE, [bankRow('3.01', '', 'Receitas de Intermediação Financeira'), bankRow('3.11', '10', 'Lucro')]),
+      [p + 'DRE_ind_2026.csv']: csv(DRE, []), [p + 'DFC_MI_con_2026.csv']: csv(DRE, []), [p + 'DFC_MD_con_2026.csv']: csv(DRE, []),
+      [p + 'DFC_MI_ind_2026.csv']: csv(DRE, []), [p + 'DFC_MD_ind_2026.csv']: csv(DRE, []), [p + 'composicao_capital_2026.csv']: csv(CAP, []),
+    });
+    const dir = tmpDir();
+    const r = await run(dir, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': z } }));
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    const st = JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'));
+    const doc = st.companies[BANK].docs['ITR 2026-06-30'].at(-1);
+    assert.equal(doc.revenueLabel, 'Receitas de Intermediação Financeira', 'label kept although the amount is empty');
+    assert.match(compareTicker({ meta: { ticker: 'BBAS3.SA', reportingCurrency: 'BRL' },
+      timeseries: { netIncomeQ: [{ value: 10000 }], netIncomeQEnds: ['2026-06-30'] } }, st, 0.01).unchecked || '', /financial DRE scheme/);
+    // no 3.01 line in any document: the scheme is unknown, account codes are not compared
+    const bare = { tickers: { 'WEGE3.SA': { cnpj: WEG, cls: 'ON' } }, companies: { [WEG]: { docs: {
+      'ITR 2026-06-30': [{ received: '2026-08-04', basis: 'con', revenueLabel: null, values: { '3.11 2026-04-01': 10 } }] } } } };
+    assert.match(compareTicker({ meta: { ticker: 'WEGE3.SA', reportingCurrency: 'BRL' }, timeseries: { netIncomeQ: [{ value: 10 }], netIncomeQEnds: ['2026-06-30'] } }, bare, 0.01).unchecked || '',
+      /no 3\.01 line/);
   });
 
   await t('the live stores are untouched', () => {
