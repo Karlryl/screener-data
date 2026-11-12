@@ -66,7 +66,7 @@ test('an empty vendor cell is filled once, a vendor figure that appears later is
   rc.replacementValue = 22000000000; rc.sources = [{ ...rc.sources[0], value: 22000000000 }];
   const again = H.applyFinancialCases(structuredClone(s), { table: revised }).snapshot;
   assert.equal(value(again.timeseries.revenueQ[i]), 22000000000 * f);
-  const heldEmpty = pkt('601211.SS'); heldEmpty.timeseries.revenueQ[i] = { value: null, financialMissing: { reasonCode: 'context-changed', caseId: rc.caseId, originalVendorRow: null } };
+  const heldEmpty = pkt('601211.SS'); heldEmpty.timeseries.revenueQ[i] = { value: null, financialMissing: { reasonCode: 'context-changed', caseId: rc.caseId, originalVendorRow: null, holdFormat: H.HOLD_FORMAT } };
   assert.equal(value(apply(heldEmpty).timeseries.revenueQ[i]), 22019291518 * f);
 });
 
@@ -297,7 +297,7 @@ test('Codex R5 on #116 (12.11.2026): two conflicts in one chain survive the pull
     const c = active.cases.find(x => x.vendorGap && x.ticker === t), f = apply(pkt(t)), k = f.timeseries.revenueQEnds.indexOf('2025-09-30');
     for (const odd of [{ currency: 'EUR' }, { source: 'sec' }, { periodType: '6M' }]) {
       let h = structuredClone(f);
-      h.timeseries.revenueQ[k] = { ...odd, value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: structuredClone(f.timeseries.revenueQ[k]) } };
+      h.timeseries.revenueQ[k] = { ...odd, value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: structuredClone(f.timeseries.revenueQ[k]), holdFormat: H.HOLD_FORMAT } };
       for (let n = 1; n <= 3; n++) {
         h = apply(structuredClone(h));
         assert.deepEqual([value(h.timeseries.revenueQ[k]), h.timeseries.revenueQ[k].financialMissing?.reasonCode], [null, 'context-changed'], `${t} outer hold ${JSON.stringify(odd)} pass ${n}`);
@@ -306,6 +306,40 @@ test('Codex R5 on #116 (12.11.2026): two conflicts in one chain survive the pull
     // Positive control: only the now valid USD tag on the stored fill, so after the conversion the fill is released again.
     const ok = H.applyFinancialCases(native(F[t])).snapshot; cell(ok).currency = 'USD'; P._convertSnapshotToUSD(ok);
     assert.ok(value(cell(Q.prepareSnapshot(ok))) > 0, t + ': a resolved conflict releases the cell');
+  }
+});
+
+test('Codex R6/R8 on #116 (12.11.2026): holds without the format stamp stay empty until the vendor delivers the cell afresh', () => {
+  const passes = (s, n = 4) => { const out = []; for (let k = 0; k < n; k++) { const r = H.applyFinancialCases(structuredClone(k ? out[k - 1].snapshot : s), { table: active }); out.push(r); } return out; };
+  for (const t of ['601211.SS', '360ONE.NS', 'CHENNPETRO.NS']) {
+    const c = active.cases.find(x => x.vendorGap && x.ticker === t), f = apply(pkt(t)), k = f.timeseries.revenueQEnds.indexOf('2025-09-30');
+    const fill = structuredClone(f.timeseries.revenueQ[k]);
+    // Holds as earlier heads of this PR wrote them: empty origin (9400029241), a rebuilt vendor row with one tag (175847fdb7),
+    // a whole chain (52c1803f8a): none carries the stamp, so none proves its retained chain complete.
+    const legacy = [
+      { value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: null, revision: c.revision } },
+      { value: null, currency: 'USD', financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: { value: null, currency: 'USD' }, revision: c.revision } },
+      { value: null, financialMissing: { reasonCode: 'not-public-at-fetch', caseId: c.caseId, originalVendorRow: fill, revision: c.revision } },
+    ];
+    for (const [n, old] of legacy.entries()) {
+      const p = structuredClone(f); p.timeseries.revenueQ[k] = structuredClone(old);
+      for (const [m, r] of passes(p).entries()) {
+        const o = r.snapshot.timeseries.revenueQ[k];
+        assert.deepEqual([value(o), o.financialMissing?.reasonCode], [null, 'legacy-hold-unverified'], `${t} legacy ${n} pass ${m + 1}`);
+        assert.ok(r.events.some(e => e.period === '2025-09-30' && e.reasonCode === 'legacy-hold-unverified'), `${t} legacy ${n} pass ${m + 1}: event`);
+      }
+      // Wrapping the old hold in a stamped one does not legitimise it.
+      const w = structuredClone(f); w.timeseries.revenueQ[k] = { value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: structuredClone(old), holdFormat: H.HOLD_FORMAT } };
+      assert.equal(value(passes(w, 2)[1].snapshot.timeseries.revenueQ[k]), null, `${t} wrapped legacy ${n}`);
+    }
+    // A stamped hold of an empty vendor cell is a complete chain and refills; a fresh vendor packet always fills.
+    const stamped = structuredClone(f); stamped.timeseries.revenueQ[k] = { value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: null, holdFormat: H.HOLD_FORMAT } };
+    assert.equal(value(passes(stamped, 1)[0].snapshot.timeseries.revenueQ[k]), value(fill), t + ': stamped hold refills');
+    assert.equal(value(apply(pkt(t)).timeseries.revenueQ[k]), value(fill), t + ': fresh packet fills');
+    // Holds the current code writes carry the stamp, so they release once every level is valid again.
+    const odd = structuredClone(f); odd.timeseries.revenueQ[k].currency = 'EUR';
+    const held = apply(odd).timeseries.revenueQ[k];
+    assert.equal(held.financialMissing.holdFormat, H.HOLD_FORMAT, t + ': new holds are stamped');
   }
 });
 
