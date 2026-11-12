@@ -569,7 +569,9 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   }
   // G31 with G2 (lane sd-halbjahr, 12.11.2026): the company has reported a later period than the shown one, but the data hold
   // no valid pair for it. The row keeps the older correct number and says so; it never guesses the newer one.
-  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' ? newerReportHint(derivations.meta, leg) : null;
+  // `aelteres-quartalspaar` already says that a newer stored quarter lacks its pair; a second sentence would repeat it.
+  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' && out.g31Hinweis?.code !== 'aelteres-quartalspaar'
+    ? newerReportHint(derivations.meta, leg) : null;
   if (spaeter) out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${spaeter.reason}` } : spaeter;
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
