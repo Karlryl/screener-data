@@ -392,6 +392,7 @@ async function runTaiwan(ctx) {
 // ── United States (SEC quarter fill) ──────────────────────────────────────────
 const SEC_CONCEPTS = [...REV_CONCEPTS, 'RevenuesNetOfInterestExpense'];
 const SEC_CAP = 600;                      // SEC requests per run; the measured queue on 31.10.2026 is 273 firms
+const SEC_OFF_BOARD_SHARE = 0.2;          // part of the cap kept for firms off the boards (at least one call when such a firm is due)
 const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week ...
 const SEC_DAILY_AFTER_DAYS = 91;          // ... and every day once that quarter ended longer ago than this: a new filing can then exist
 const SEC_KEEP_DAYS = 820;                // nine quarters: the shown pair plus the vendor's five for the agreement check
@@ -451,10 +452,14 @@ async function runUs(ctx) {
     return !(holdsMrq && readRecently);
   });
   // Codex R21 (4): never read or read longest ago first, so a cap never starves the same firms day after day.
-  // sd-us-kern 12.11.2026: firms on the latest boards go before all others, so the cap never starves what the boards show.
+  // sd-us-kern 12.11.2026: firms on the latest boards go first, so the cap never starves what the boards show. Codex R1 on #85 (5):
+  // a fifth of the calls (SEC_OFF_BOARD_SHARE) stays for the other firms, oldest read first, so none of them waits forever.
   const lastRead = (tk) => next.companies[tk]?.noData?.readAt || '';
-  const onBoard = (tk) => (ctx.usBoard.has(tk) ? 0 : 1);
-  due.sort((x, y) => onBoard(x.ticker) - onBoard(y.ticker) || (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1));
+  const byAge = (x, y) => (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1);
+  const board = due.filter((x) => ctx.usBoard.has(x.ticker)).sort(byAge), others = due.filter((x) => !ctx.usBoard.has(x.ticker)).sort(byAge);
+  const reserve = Math.min(others.length, Math.max(1, Math.floor(ctx.secCap * SEC_OFF_BOARD_SHARE)));
+  const lead = board.slice(0, Math.max(0, ctx.secCap - reserve));
+  due.splice(0, due.length, ...lead, ...others.slice(0, reserve), ...board.slice(lead.length), ...others.slice(reserve));
   st.due = due.length;
   for (const { ticker } of due) {
     if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
@@ -482,7 +487,7 @@ async function runUs(ctx) {
       }
     }
   }
-  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (the queue runs oldest read first, so they lead the next run).');
+  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (board firms go first, a fifth of the calls goes to the others; each group runs oldest read first).');
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
   next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };

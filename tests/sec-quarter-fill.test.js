@@ -159,7 +159,41 @@ test('single quarters: year minus nine months, then year minus three quarters', 
 test('single quarters: later filing wins, a filing after asOf is unknown, other forms are ignored', () => {
   const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-04-01', '2026-06-30', 151, '2026-09-01', '10-Q/A'), fact('2026-04-01', '2026-06-30', 999, '2026-09-02', '8-K')];
   assert.equal(pitSingleQuarters(rows)[0].val, 151);
-  assert.equal(pitSingleQuarters(rows, { asOf: '2026-08-01' })[0].val, 150);
+  // Codex R1 on #85 (3): filed Friday 31.07.2026, known from Monday 03.08. (the first trading day after filing).
+  assert.equal(pitSingleQuarters(rows, { asOf: '2026-08-03' })[0].val, 150);
+  assert.deepEqual(pitSingleQuarters(rows, { asOf: '2026-08-01' }), [], 'a Saturday after a Friday filing');
+});
+test('Codex R1 (3) effective day: the filing day itself, a weekend and a holiday do not count, the first trading day after does', () => {
+  const { effectiveDay } = require('../lib/sec-pit.js');
+  assert.deepEqual(['2026-07-31', '2026-11-10', '2026-11-25', '2026-07-02', '2026-12-24'].map(effectiveDay),
+    ['2026-08-03', '2026-11-11', '2026-11-27', '2026-07-06', '2026-12-28']);
+  const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-11-25')];
+  assert.deepEqual(['2026-11-25', '2026-11-26', '2026-11-27'].map(asOf => pitSingleQuarters(rows, { asOf }).length), [0, 0, 1], 'Thanksgiving 26.11.2026');
+  const c = { Revenues: { '2026-06-30': obs(150, '2026-07-31') } };
+  assert.deepEqual(['2026-07-31', '2026-08-02', '2026-08-03'].map(d => X.secQuartersKnown(c, 'Revenues', d).length), [0, 0, 1], 'the reader applies the same day');
+});
+test('Codex R1 (1) a later amendment of any part of a derivation opens the period, also against a reported fourth quarter', () => {
+  // amendedAnnual: Q1 to Q4 reported at 100, then a 10-K/A puts the year at 550 instead of 400.
+  const year = [fact('2025-01-01', '2025-03-31', 100, '2025-05-01'), fact('2025-04-01', '2025-06-30', 100, '2025-08-01'), fact('2025-07-01', '2025-09-30', 100, '2025-11-01'),
+    fact('2025-10-01', '2025-12-31', 100, '2026-02-20', '10-K'), fact('2025-01-01', '2025-12-31', 400, '2026-02-20', '10-K')];
+  const q4 = rows => pitSingleQuarters(rows).find(x => x.end === '2025-12-31');
+  assert.equal(q4(year).derivation, 'reported-3M', 'consistent year: the reported quarter stays');
+  const amended = q4([...year, fact('2025-01-01', '2025-12-31', 550, '2026-04-01', '10-K/A')]);
+  assert.deepEqual([amended.derivation, amended.conflictsWith.val], ['restatement-conflict', 100]);
+  // amendedShorterOperand: a 10-Q/A raises Q1 from 100 to 200; H1 250 and Q2 reported at 150 are older.
+  const half = [fact('2026-01-01', '2026-03-31', 100, '2026-05-01'), fact('2026-04-01', '2026-06-30', 150, '2026-08-01'), fact('2026-01-01', '2026-06-30', 250, '2026-08-01')];
+  const q2 = rows => pitSingleQuarters(rows).find(x => x.end === '2026-06-30');
+  assert.equal(q2(half).derivation, 'reported-3M');
+  assert.equal(q2([...half, fact('2026-01-01', '2026-03-31', 200, '2026-09-01', '10-Q/A')]).derivation, 'restatement-conflict');
+});
+test('Codex R1 (2) two figures filed on the same day leave the period open in any order; the store reads the newest filing, not the last arrival', () => {
+  const a = fact('2026-04-01', '2026-06-30', 150, '2026-08-01'), b = fact('2026-04-01', '2026-06-30', 250, '2026-08-01', '10-Q/A');
+  for (const rows of [[a, b], [b, a]]) assert.equal(pitSingleQuarters(rows)[0].derivation, 'restatement-conflict');
+  assert.equal(pitSingleQuarters([a, { ...a, accn: 'b' }])[0].derivation, 'reported-3M', 'identical figures merge');
+  const regressed = { Revenues: { '2026-06-30': [...obs(250, '2026-09-01'), ...obs(150, '2026-08-01')] } };
+  assert.equal(X.secQuartersKnown(regressed, 'Revenues', '2026-10-01')[0].val, 250, 'a late older answer never wins');
+  const split = { Revenues: { '2026-06-30': [...obs(150, '2026-08-01'), ...obs(250, '2026-08-01')] } };
+  assert.equal(X.secQuartersKnown(split, 'Revenues', '2026-10-01')[0].derivation, 'restatement-conflict');
 });
 
 // ── Store writer ─────────────────────────────────────────────────────────────
@@ -446,12 +480,27 @@ test('candidates: a US listing of a firm seated abroad is asked, its foreign lis
   await main({ ...base, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, 'ABROAD.DE': { cik: '0000000099' }, MELIX: { cik: '0000000007' } }) });
   assert.deepEqual([...calls].sort(), ['0000000007', '0001018724']);
 });
+test('queue: over several days a firm off the boards is asked while board firms fill the rest of the cap (Codex R1 on #85, 5)', async () => {
+  const { base } = tempStoreRun();
+  const secTickers = manyFirms(base, 4), board = new Set(['F000', 'F001', 'F002']), seen = [];
+  // SEC holds only the quarter to 31.03.2026, more than 91 days old, so every firm is due every day; the cap of 2 is always full.
+  const old = { facts: { 'us-gaap': { Revenues: { units: { USD: [fact('2026-01-01', '2026-03-31', 1e9, '2026-05-01'), fact('2025-01-01', '2025-03-31', 9e8, '2026-05-01')] } } } } };
+  for (const day of ['2026-11-02', '2026-11-03', '2026-11-04']) {
+    const asked = [];
+    await main({ ...base, secTickers, secCap: 2, usBoard: board, now: () => new Date(day + 'T13:47:00Z'), secFacts: async c => { asked.push(c); return old; } });
+    seen.push(asked);
+  }
+  assert.ok(seen.every(d => d.length === 2 && d.filter(c => c === '0000000004').length <= 1));
+  assert.ok(seen.flat().includes('0000000004'), 'F003 off the boards was never asked');
+  assert.ok(seen.every(d => d.some(c => c !== '0000000004')), 'board firms keep the other call');
+});
 test('queue: firms on the latest boards are asked first, so the cap never starves them (sd-us-kern 12.11.2026)', async () => {
   const { base } = tempStoreRun();
   const secTickers = manyFirms(base, 5), calls = [];
-  // F000..F004 were never read; without the board rule the ticker order would ask F000 and F001.
-  await main({ ...base, secTickers, secCap: 2, usBoard: new Set(['F003', 'F004']), secFacts: async c => { calls.push(c); return null; } });
-  assert.deepEqual(calls, ['0000000004', '0000000005']);
+  // F000..F004 were never read; without the board rule the ticker order would ask F000, F001, F002. Codex R1 on #85 (5): one
+  // call of three stays for the firms off the boards.
+  await main({ ...base, secTickers, secCap: 3, usBoard: new Set(['F003', 'F004']), secFacts: async c => { calls.push(c); return null; } });
+  assert.deepEqual(calls, ['0000000004', '0000000005', '0000000001']);
   const { boardTickers } = require('../scripts/fetch-exchange-quarters.js');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-'));
   for (const [d, t] of [['2026-11-10', 'OLD'], ['2026-11-11', 'NEW']]) {
@@ -659,7 +708,8 @@ test('R21-3 another listing of the same firm reads its entry when three quarters
   const twoFirms = store();
   twoFirms.companies.TWIN = { cik: '0000000001', RevenueFromContractWithCustomerExcludingAssessedTax: quarters() };
   assert.equal(run(other(), twoFirms).result, null, 'two CIKs match: no link');
-  assert.equal(run(other({ country: 'Germany' })).result, null);
+  // Codex R1 on #85 (4): the seat no longer gates the link (MELI.VI, SEDG.VI read the entry of their US listing); the figures do.
+  assert.equal(run(other({ country: 'Uruguay' })).result.fill.aliasOf, 'AMZNX');
 });
 test('R21-4 cap: the queue runs oldest read first, so the firm left out yesterday is asked today', async () => {
   const { base } = tempStoreRun();
