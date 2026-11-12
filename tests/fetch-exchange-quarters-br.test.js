@@ -556,6 +556,30 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(fresh.exitCode, 0); assert.deepEqual(fresh.results[0].missingYears, ['DFP 2026']);
   });
 
+  await t('Codex R3 P2: a company that leaves the mapping does not make its file count as vanished', async () => {
+    // only the bank files a DFP 2026 (fiscal year to March); WEG never did
+    const bankDfp26 = makeZip({
+      'dfp_cia_aberta_2026.csv': csv(IDX, [idx(BANK, '2026-03-31', 1, 'DFP', '9', '2026-06-20')]),
+      'dfp_cia_aberta_DRE_con_2026.csv': csv(DRE, [row(BANK, '2026-03-31', 1, 'ÚLTIMO', '2025-04-01', '2026-03-31', '3.11', '9')]),
+      ...Object.fromEntries(['DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_'].map((x) => ['dfp_cia_aberta_' + x + '2026.csv', csv(DRE, [])])),
+      'dfp_cia_aberta_composicao_capital_2026.csv': csv(CAP, []) });
+    const files = { 'DFP/DADOS/dfp_cia_aberta_2026.zip': bankDfp26 };
+    const seed = async () => { const d = tmpDir(); assert.equal((await run(d, cvm({ files }))).exitCode, 0); return d; };
+    // A: the bank leaves the watchlist, every CVM file unchanged
+    const a = await run(await seed(), cvm({ files }), '2026-11-14T15:00:00Z', { tickers: TICKERS.filter((t) => t !== 'BBAS3.SA') });
+    assert.equal(a.exitCode, 0, JSON.stringify(a.results));
+    // B: the new FCA form ends the bank's code
+    const endedBank = makeZip({ ['fca_cia_aberta_valor_mobiliario_2026.csv']: csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3'),
+      vm(BANK, 'Ações Ordinárias', 'BBAS3', 'Bolsa', '2026-06-30')]) });
+    const dirB = await seed();
+    const b = await run(dirB, cvm({ files: { ...files, 'FCA/DADOS/fca_cia_aberta_2026.zip': endedBank } }), '2026-11-14T15:00:00Z');
+    assert.equal(b.exitCode, 0, JSON.stringify(b.results));
+    assert.equal(brOf(dirB).tickers['BBAS3.SA'], undefined, 'the ended mapping is not kept');
+    // the real outage of a mapped company's known file stays red
+    const gone = await run(await seed(), cvm(), '2026-11-14T15:00:00Z');
+    assert.equal(gone.exitCode, 1); assert.match(gone.results[0].aborted, /DFP 2026: HTTP 404 \(the store holds documents/);
+  });
+
   await t('Codex run 2: a consolidated DRE of zeros without an individual one is stored with its zeros', async () => {
     const p = 'dfp_cia_aberta_';
     const z = makeZip({

@@ -584,8 +584,9 @@ async function runBrazil(ctx) {
     const z = await cvmZip(ctx, CVM_BASE + kind + '/DADOS/' + pre + year + '.zip', parts.map((p) => pre + p + year + '.csv'));
     // A year that CVM has not opened yet (January: ITR of the new year) is a gap, not a failure;
     // the older years must exist. A year the store already holds documents of was opened: if it vanishes or reads
-    // empty, that is an outage, never a gap (Codex R-pr115 R2 P2-2).
-    const known = !!prev && Object.values(prev.companies || {}).some((c) => Object.keys(c.docs || {}).some((d) => d.startsWith(kind + ' ' + year + '-')));
+    // empty, that is an outage, never a gap (Codex R-pr115 R2 P2-2). Only the companies mapped now count, like counts.docs:
+    // a company that left the watchlist or the FCA map is no evidence that the file vanished (R3 P2).
+    const known = !!prev && [...cnpjs].some((id) => Object.keys((prev.companies || {})[id]?.docs || {}).some((d) => d.startsWith(kind + ' ' + year + '-')));
     const gapAllowed = mayBeMissing(kind, year) && !known;
     if (!z) { if (gapAllowed) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404' + (known ? ' (the store holds documents of this file)' : '')); }
     fileLog.push(z.file);
