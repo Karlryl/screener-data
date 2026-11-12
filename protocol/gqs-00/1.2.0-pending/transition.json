@@ -485,7 +485,7 @@
     "codexR1Fix20261112": {
       "date": "2026-11-12",
       "authority": "Codex verdict R1 on PR #89 head ab7714d84f (NOT APPROVED 99 %), lane sd-us-kern of Daylauf 16.",
-      "scope": "P1-1: lib/mcap-class-sum.js writeFirm prepares each priced line as run-screener.js reads it (prepareSnapshot) and routes it through score.js routeEntry (step 1 of scoreUniverse, now shared), so dedupCoverage decides the carrier line as in the scoring; a line the scoring excludes before its issuer dedup never carries the sum. P1-2: scripts/write-rule40-export.js caches the same coverage on each candidate before the snapshot is narrowed. P3: lib/exchange-quarter-check.js is a required dependency of the seal.",
+      "scope": "P1-1: lib/mcap-class-sum.js writeFirm prepares each priced line as run-screener.js reads it (prepareSnapshot) and routes it through score.js routeEntry (step 1 of scoreUniverse, now shared), so dedupCoverage decides the carrier line as in the scoring; a line the scoring excludes before its issuer dedup ranks after every line it keeps (it can still carry the sum when it is the only line with a Yahoo value of its own, Codex R2 finding A, unchanged from the earlier writer). P1-2: scripts/write-rule40-export.js caches the same coverage on each candidate before the snapshot is narrowed. P3: lib/exchange-quarter-check.js is a required dependency of the seal.",
       "file": "src/scoring/score.js",
       "sourceSha256LF": "12524b090177496e334c739bf17f42373d11625ad4cd4544b7716ac9a7daf0fa",
       "previousPendingSha256LF": "b8b30f01b726724053d93693f0124f40f37b8f96cc2cfb4c8c981bb437fe1fb6",
