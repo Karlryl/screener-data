@@ -229,6 +229,47 @@ test('Codex R3 on #116 (12.11.2026): a stored fill is re-checked (stored cell, s
   }
 });
 
+test('Codex R4 on #116 (12.11.2026): every stored-fill check holds on the second pass too', () => {
+  const odds = [{ currency: 'EUR' }, { currencyUnit: 'EUR' }, { unit: 'shares' }, { multiplier: 1000 }, { periodType: '6M' }, { source: 'sec' }];
+  const twice = (p, table = active) => { const a = H.applyFinancialCases(p, { table }); return [a, H.applyFinancialCases(structuredClone(a.snapshot), { table })]; };
+  const held = (r, i, code, msg) => {
+    const o = r.snapshot.timeseries.revenueQ[i];
+    assert.deepEqual([value(o), o?.financialMissing?.reasonCode], [null, code], msg);
+    assert.ok(r.events.some(e => e.period === '2025-09-30' && e.reasonCode === code), msg + ': event');
+  };
+  for (const t of ['601211.SS', '360ONE.NS', 'CHENNPETRO.NS']) {
+    const s = apply(pkt(t)), i = s.timeseries.revenueQEnds.indexOf('2025-09-30'), c = active.cases.find(x => x.vendorGap && x.ticker === t);
+    // B1: the contradicting tag sits on the stored fill (outer level) or on an older own fill under it (middle level).
+    for (const odd of odds) {
+      const outer = structuredClone(s); Object.assign(outer.timeseries.revenueQ[i], odd);
+      twice(outer).forEach((r, n) => held(r, i, 'context-changed', `${t} outer ${JSON.stringify(odd)} pass ${n + 1}`));
+      const nested = structuredClone(s), top = nested.timeseries.revenueQ[i];
+      nested.timeseries.revenueQ[i] = { ...top, financialCorrection: { ...top.financialCorrection, originalVendorRow: { ...structuredClone(top), ...odd } } };
+      twice(nested).forEach((r, n) => held(r, i, 'context-changed', `${t} middle ${JSON.stringify(odd)} pass ${n + 1}`));
+    }
+    // A correct packet stays filled and identical on every pass.
+    const [r1, r2] = twice(pkt(t));
+    assert.deepEqual(r2.snapshot, r1.snapshot, t + ': stable');
+    assert.ok(value(r2.snapshot.timeseries.revenueQ[i]) > 0, t);
+    // The R3 date hold stays a hold on the second pass.
+    const later = structuredClone(active), lc = later.cases.find(x => x.caseId === c.caseId);
+    lc.sources = lc.sources.map(x => ({ ...x, ...(x.filed ? { filed: '2026-11-30' } : { published: '2026-11-30' }) }));
+    twice(structuredClone(s), later).forEach((r, n) => held(r, i, 'not-public-at-fetch', `${t} date pass ${n + 1}`));
+  }
+  // R3 short period list on a stored Chennai insert: held on both passes.
+  const full = apply(pkt('CHENNPETRO.NS')), k = full.timeseries.revenueQEnds.indexOf('2025-09-30');
+  const short = structuredClone(full); short.meta.statementPeriods.revenueQ = full.meta.statementPeriods.revenueQ.slice(0, 3).map(x => ({ ...x }));
+  short.meta.statementPeriods.revenueQ[0].duration = '6M';
+  twice(short).forEach((r, n) => held(r, k, 'context-changed', 'short periods pass ' + n));
+  // B2: a net-income series with its own ends is checked against its own ends; the September comparison holds on both passes.
+  const own = pkt('CHENNPETRO.NS'); own.timeseries.netIncomeQEnds = own.timeseries.revenueQEnds.slice();
+  twice(own).forEach((r, n) => {
+    const v = g31Shadow(r.snapshot).v1;
+    assert.deepEqual([v.periodEnd, v.priorPeriodEnd], ['2026-09-30', '2025-09-30'], 'own net-income ends pass ' + (n + 1));
+    assert.ok(Math.abs(v.pct - pct(22055.45, 20033.62)) < 1e-9, 'own net-income ends pass ' + (n + 1));
+  });
+});
+
 test('the live files are unchanged by this test', () => {
   assert.deepEqual(liveHashes(), beforeHashes);
 });
