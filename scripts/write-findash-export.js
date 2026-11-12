@@ -525,7 +525,13 @@ const PERIOD_WORD = { quarter: 'das Quartal', halfYear: 'das Halbjahr', ttm: 'di
  * @returns {{code:string, reason:string}|null} Hint `neuerer-bericht`, or null.
  */
 function newerReportHint(meta, leg) {
-  const shown = isoTag(leg?.periodEnd), latest = isoTag(meta?.mostRecentQuarter), word = PERIOD_WORD[leg?.basis];
+  // Own day check (round trip, like isoTag): tests replace lib/rev-growth-basis.js with stubs that lack isoTag.
+  const day = d => {
+    if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(d)) return null;
+    const t = Date.parse(d.slice(0, 10) + 'T00:00:00Z');
+    return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === d.slice(0, 10) ? d.slice(0, 10) : null;
+  };
+  const shown = day(leg?.periodEnd), latest = day(meta?.mostRecentQuarter), word = PERIOD_WORD[leg?.basis];
   if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
   const tag = d => d.split('-').reverse().join('.');
   return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon einen Abschluss bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum liegt in den Daten kein geprüftes Umsatzpaar vor, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };

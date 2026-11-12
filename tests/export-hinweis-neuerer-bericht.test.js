@@ -33,4 +33,5 @@ test('no hint without a shown period, without a Yahoo date, or for a row without
   assert.equal(newerReportHint({ mostRecentQuarter: null }, { basis: 'year', periodEnd: '2025-12-31' }), null);
   assert.equal(newerReportHint(null, { basis: 'year', periodEnd: '2025-12-31' }), null);
   assert.equal(newerReportHint({ mostRecentQuarter: 'kaputt' }, { basis: 'year', periodEnd: '2025-12-31' }), null);
+  assert.equal(newerReportHint({ mostRecentQuarter: '2026-02-30' }, { basis: 'year', periodEnd: '2025-06-30' }), null);
 });
