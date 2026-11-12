@@ -50,7 +50,7 @@
  *            only --force-br overrides that; a failed pass writes nothing, so the next run fetches again.
  *            A 404 or a file without any document of the mapped companies is a named gap only for DFP of the
  *            current year, ITR of the current year until May and DFP of the previous year until April, and only
- *            while the store holds no document of that file; any other failure, a missing zip entry or column,
+ *            while the store holds no document of that file for a company mapped now; any other failure, a missing zip entry or column,
  *            a CSV row with the wrong field count or no document at all aborts the market and br.json is not written.
  *
  * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw,br] [--dry-run] [--force-cn] [--force-br] [--tw-cap=600]
