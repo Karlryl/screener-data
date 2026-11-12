@@ -129,7 +129,11 @@ for (const field of ['mc', 'ps', 'evs', 'pe', 'fpe', 'dy', 'd52', 'ath']) {
 }
 // r40: a withheld market cap makes the row data-suspect (B5), and the writer takes r40 only from rows that are not.
 assert.equal(require('../scripts/write-rule40-export.js').datenSuspekt(G.prepareMarketCap(priced(OLD, 'OLD'))), true, 'stale row is data-suspect');
-assert.equal(explained(heldRow, 'r40'), true);
+// It counts only beside the two r40 inputs, so a stale row that could never have had r40 stays a gap.
+assert.equal(heldRow.g ?? heldRow.fcf, undefined, 'the fixture row has no r40 inputs');
+assert.equal(explained(heldRow, 'r40'), false, 'without g and fcf');
+assert.equal(explained({ ...heldRow, g: 12, fcf: 5 }, 'r40'), true);
+assert.equal(explained({ ...heldRow, g: 12 }, 'r40'), false, 'without fcf');
 // No other field is explained by these reasons, and a reason without the stale quote explains nothing.
 for (const field of ['g', 'roe', 'gm', 'fcf', 'po', 'sc', 'b']) assert.equal(explained(heldRow, field), false, field);
 assert.equal(explained({ aus: ['market-cap-missing', 'data-suspect'] }, 'mc'), false);
@@ -139,6 +143,7 @@ assert.equal(explained({}, 'mc'), false, 'a row without aus');
 // The guard on such rows: 1000 rows, the first n stale (mc and d52 withheld with the writer's reasons).
 const staleAus = heldRow.aus;
 const staleFeed = (n, withReason = true) => feedWith((row, i) => { if (i < n) { delete row.mc; delete row.d52; if (withReason) row.aus = staleAus; } });
+assert.ok(erklaertMax >= 10, 'the cases below hide 10 % of the rows; a lower cap needs new cases');
 const explainedRun = guard(staleFeed(100));
 assert.equal(explainedRun.status, 0, explainedRun.stdout);
 assert.match(explainedRun.stdout, /^mc .*100,0 %.*explained 10,0 % of all rows/m, 'share among the rows that can show the field');
@@ -146,12 +151,14 @@ const unexplained = guard(staleFeed(100, false));
 assert.equal(unexplained.status, 1, 'the same loss without a reason is red');
 assert.match(unexplained.stdout, /::error::Das Feld mc ist nur auf 90,0 % der 1000 Zeilen gefüllt/);
 // The cap: exactly erklaertMax percent is green, one row more is red, and so is a mass loss with reasons.
-const atCap = Math.round(erklaertMax * 10);
+const atCap = Math.floor(erklaertMax * 10); // rows of 1000 at or under the cap
 assert.equal(guard(staleFeed(atCap)).status, 0, 'exactly at the cap');
 const overCap = guard(staleFeed(atCap + 1));
 assert.equal(overCap.status, 1, overCap.stdout);
-assert.match(overCap.stdout, /::error::Das Feld mc ist auf .* wegen einer veralteten Kursmeldung von Yahoo ausgeblendet, erlaubt sind höchstens/);
-assert.equal(guard(staleFeed(1000)).status, 1, 'every row stale is never green');
+assert.match(overCap.stdout, /::error::Das Feld mc ist auf .* wegen eines zu alten Kurses ausgeblendet, erlaubt sind höchstens/);
+const allStale = guard(staleFeed(1000));
+assert.equal(allStale.status, 1, 'every row stale is never green');
+assert.ok(!allStale.stdout.includes('der 0 Zeilen'), 'no floor sentence on a field no row can show: ' + allStale.stdout);
 // A real loss on the other rows stays red beside the explained ones (100 explained, 60 more without reason: 840/900 = 93.3 %).
 assert.equal(guard(feedWith((row, i) => { if (i < 160) { delete row.mc; if (i < 100) row.aus = staleAus; } })).status, 1);
 // A reason beside a shown value explains nothing and moves nothing.
@@ -178,7 +185,7 @@ const broken = (anchor, replacement) => {
 };
 const reasonless = broken('  return STALE_FIELDS.has(field) && aus.some(a => a.endsWith(STALE_PRICE_RETURN));', '  return STALE_FIELDS.has(field);');
 assert.deepEqual(reasonless.checkFill(feedWith((row, i) => { if (i < 100) delete row.mc; }), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a reasonless loss turns green');
-const uncapped = broken('    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen einer veralteten Kursmeldung von Yahoo ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kursmeldungen deuten auf eine Störung bei Yahoo, nicht auf einzelne Zeilen.`);', '');
+const uncapped = broken('    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen eines zu alten Kurses ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kurse deuten auf eine Störung beim Kursabruf, nicht auf einzelne Zeilen.`);', '');
 assert.ok(guard(staleFeed(500)).stdout.includes('erlaubt sind höchstens'), 'half the rows stale is red by the cap alone');
 assert.deepEqual(uncapped.checkFill(staleFeed(500), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass loss turns green');
 assert.equal(sha(), before, 'the live guard file is unchanged');

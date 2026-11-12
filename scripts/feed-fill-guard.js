@@ -40,11 +40,15 @@ const HIDDEN_LABEL = { pe: 'P/E', fpe: 'Forward P/E', dy: 'Dividendenrendite', d
 // The market cap reason ends with STALE_PRICE_RETURN. The same withhold empties P/S and EV/S (DERIVED_FIELDS in
 // lib/market-cap-guard.js), and a missing market cap makes the row data-suspect, which takes its Rule of 40 (B5 in
 // isDataSuspect, src/scoring/score.js; 11.11.: 712 of 712 lost r40 values on stale rows).
+// ps, evs and r40 get no hint of their own (the feed is at 5.9 of 6 MB), so a stale row also counts when it never had the
+// value. r40 counts only beside its two inputs g and fcf (12.11.: 800 rows, 709 of them had r40 on 07.11.; without
+// that 1,142 and 718). For ps and evs the feed holds no input, so their floors carry the measured excess (Daylauf 16).
 const STALE_FIELDS = new Set(['mc', 'ps', 'evs', 'r40']);
 // ponytail: only the stale-quote reasons count; another reason joins here with its own writer test, never a pattern list.
 function explained(row, field) {
   const aus = Array.isArray(row.aus) ? row.aus.filter(a => typeof a === 'string') : [];
   if (HIDDEN_LABEL[field]) return aus.some(a => a.startsWith(HIDDEN_LABEL[field] + ' wird nicht gezeigt, '));
+  if (field === 'r40' && !(isFilled(row.g) && isFilled(row.fcf))) return false;
   return STALE_FIELDS.has(field) && aus.some(a => a.endsWith(STALE_PRICE_RETURN));
 }
 
@@ -87,8 +91,8 @@ function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_A
     shares[field] = shown ? 100 * filled / shown : 0;
     explainedShares[field] = 100 * withheld / rows.length;
     if (!(field in floors)) problems.push(`Das Feld ${field} steht im Filter-Feed, hat aber keine Untergrenze in configs/feed-fill-floors.json.`);
-    else if (shares[field] < effective[field]) problems.push(`Das Feld ${field} ist nur auf ${percent(shares[field])} der ${shown} Zeilen gefüllt, auf denen es gezeigt werden kann (Untergrenze ${percent(effective[field])}).`);
-    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen einer veralteten Kursmeldung von Yahoo ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kursmeldungen deuten auf eine Störung bei Yahoo, nicht auf einzelne Zeilen.`);
+    else if (shown && shares[field] < effective[field]) problems.push(`Das Feld ${field} ist nur auf ${percent(shares[field])} der ${shown} Zeilen gefüllt, auf denen es gezeigt werden kann (Untergrenze ${percent(effective[field])}).`);
+    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen eines zu alten Kurses ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kurse deuten auf eine Störung beim Kursabruf, nicht auf einzelne Zeilen.`);
   }
   for (const field of active) if (shares[field] >= floors[field]) notices.push(`Das Feld ${field} steht mit ${percent(shares[field])} wieder über seiner normalen Untergrenze, die Rotstelle kann weg.`);
   return { shares, explainedShares, problems, notices, floors: effective };
