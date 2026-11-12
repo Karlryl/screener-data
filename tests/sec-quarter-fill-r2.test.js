@@ -186,3 +186,11 @@ test('blind delta check M2: the same quarter with end days one apart (29.06. 150
     assert.equal(fillOf(snapshot(), [...hist, ...order]), null);
   }
 });
+test('blind delta check N1 (master 12.11.): a year restated by 0.47 % opens the derived fourth quarter; 0.0125 % is the same figure', () => {
+  const year = (val, filed = '2026-02-01') => f('2025-01-01', '2025-12-31', val, filed, '10-K');
+  const qs = [f('2025-01-01', '2025-03-31', 100, '2025-05-01'), f('2025-04-01', '2025-06-30', 100, '2025-08-01'), f('2025-07-01', '2025-09-30', 100, '2025-11-01')];
+  const q4 = (xs) => P.pitSingleQuarters(xs).find((q) => q.end === '2025-12-31');
+  assert.deepEqual([q4([...qs, year(400)]).val, q4([...qs, year(400)]).derivation], [100, 'year-minus-three-quarters']);
+  assert.equal(q4([...qs, year(400), year(401.9, '2026-03-01')]).derivation, 'restatement-conflict', '0.47 % was equal under 0.5 % and moved Q4 by 1.9 %');
+  assert.equal(q4([...qs, year(400), year(400.05, '2026-03-01')]).derivation, 'year-minus-three-quarters', '0.0125 % stays the same figure');
+});

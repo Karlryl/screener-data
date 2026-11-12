@@ -161,8 +161,8 @@ test('single quarters: year minus nine months, then year minus three quarters', 
 });
 test('single quarters: later filing wins, a filing after asOf is unknown, other forms are ignored', () => {
   // Codex R2 on #85: no latest-filing-wins any more; a 10-Q/A with another figure (151 against 150) opens the period.
-  const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150.5, '2026-09-01', '10-Q/A'), fact('2026-04-01', '2026-06-30', 999, '2026-09-02', '8-K')];
-  assert.deepEqual([pitSingleQuarters(rows)[0].val, pitSingleQuarters(rows)[0].derivation, pitSingleQuarters(rows)[0].filed], [150, 'reported-3M', '2026-07-31'], 'an amendment within 0.5 % is the same figure, dated by its first filing');
+  const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150.02, '2026-09-01', '10-Q/A'), fact('2026-04-01', '2026-06-30', 999, '2026-09-02', '8-K')];
+  assert.deepEqual([pitSingleQuarters(rows)[0].val, pitSingleQuarters(rows)[0].derivation, pitSingleQuarters(rows)[0].filed], [150, 'reported-3M', '2026-07-31'], 'an amendment within 0.02 % (master 12.11.) is the same figure, dated by its first filing');
   assert.equal(pitSingleQuarters([...rows, fact('2026-04-01', '2026-06-30', 151, '2026-09-03', '10-Q/A')])[0].derivation, 'restatement-conflict');
   // Codex R1 on #85 (3): filed Friday 31.07.2026, known from Monday 03.08. (the first trading day after filing).
   assert.equal(pitSingleQuarters(rows, { asOf: '2026-08-03' })[0].val, 150);
