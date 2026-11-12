@@ -210,8 +210,10 @@ test('listing choice unchanged: the sum goes to the line the scoring picks on th
   assert.ok(snaps['600938.SS'].marketCap.value > snaps['0883.HK'].marketCap.value, 'without the row the A line would win');
   assert.equal(cs.writeFirm(snaps, e, r, null).shown, '0883.HK');
   assert.equal(snaps['0883.HK'].marketCap.value, r.value); assert.equal(snaps['600938.SS'].marketCap.value, null);
-  // A pinned or chosen A line takes the firm debut of the emptied H line (2004 instead of 2022).
-  const snaps2 = firm(e), e2 = { ...e, shownLine: undefined };
+  // PR 89 (fixed home listing): without the pin the scoring now also picks the home line 0883.HK, not the larger A line.
+  assert.equal(cs.writeFirm(firm(e), { ...e, shownLine: undefined }, r, null).shown, '0883.HK');
+  // A pinned A line takes the firm debut of the emptied H line (2004 instead of 2022).
+  const snaps2 = firm(e), e2 = { ...e, shownLine: '600938.SS' };
   assert.equal(cs.writeFirm(snaps2, e2, r, null).shown, '600938.SS');
   assert.equal(snaps2['600938.SS'].meta.firstTradeDate, pk.snapshots['0883.HK'].meta.firstTradeDate);
   assert.equal(snaps2['600938.SS'].meta.ipoYear, 2004); assert.equal(snaps2['600938.SS'].meta.ipoYearOwn, 2022);
