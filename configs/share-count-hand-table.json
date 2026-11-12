@@ -1599,7 +1599,7 @@
     },
     "PECN.VI": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von PetroChina Company Limited 250,03 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 601857.SS am 30.10.2026 ergeben sich rund 365,53 Mrd. USD. Letzter Handel laut Yahoo am 08.10.2026. Maßgeblich ist die Notierung 601857.SS.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von PetroChina Company Limited 250,03 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 601857.SS am 30.10.2026 ergeben sich rund 365,53 Mrd. USD. Letzter Handel laut Yahoo am 08.10.2026. Maßgeblich ist die Notierung, die das Board für PetroChina zeigt.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 601857.SS.",
@@ -2355,6 +2355,27 @@
       "checkerNote": "Two independent checkers on 2026-11-04, same count; no later 8-K or prospectus supplement with new shares found up to 2026-11-04. Treasury stock 10,144,958 at 30.09.2026 is outside the outstanding count. validFrom is 31.10.: the exchange of 16.10. was public in an 8-K that day; the exact count came with the 10-Q of 02.11."
     },
     "verifiedAt": "2026-11-04",
+    "withholdUnverified": true
+  },
+  "AT1.DE": {
+    "shares": 1129930393,
+    "sharesAsOf": "2026-06-30",
+    "validFrom": "2026-10-31",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      1035531042
+    ],
+    "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,675,395,806 USD, price 1.6179097851 USD, 1,035,531,042 shares implied (sharesOutstanding in the same snapshot: 1,129,930,393)",
+    "reason": "Yahoo rechnet für die Frankfurter Hauptnotierung von Aroundtown (Xetra) mit rund 1.035,5 Mio. Aktien und kommt auf 1,68 Mrd. USD; aus 1.129.930.393 Aktien und dem Schlusskurs vom 30.10.2026 ergeben sich rund 1,83 Mrd. USD. Seit PR 89 zeigt das Board diese Notierung: Luxemburg steht nicht in der Heimattabelle, und unter gleich guten Notierungen liegt AT1.DE vor der Wiener Spiegelzeile.",
+    "source": {
+      "form": "Der Halbjahresbericht von Aroundtown nennt die Aktienzahl ohne eigene Aktien und Aktien mit ruhenden Stimmrechten.",
+      "url": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_Q2_2026.pdf",
+      "quote": "As of June 30, 2026 Number of shares 1,537,025,609 Number of shares, base for share KPI calculations 1) 1,129,930,393",
+      "page": "22 (Board of Directors' Report, Capital markets, Trading data; 1) excluding suspended voting rights)",
+      "crossCheck": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_H1_2026_financials_presentation.pdf 58: Number of shares, base for share KPI calculations (excluding suspended voting rights) 1,129,451,330 (As of 25.08.2026)",
+      "checkerNote": "Same count and sources as the rows 1AT1.MI and AT1.SW (two independent checkers on 2026-11-04); this row only applies it to the home line AT1.DE."
+    },
+    "verifiedAt": "2026-11-07",
     "withholdUnverified": true
   }
 }

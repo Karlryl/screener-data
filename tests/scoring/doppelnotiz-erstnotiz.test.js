@@ -93,6 +93,8 @@ test('der Dedup traegt das frueheste Gruppendatum an den Sieger', () => {
   // Zwei Beine DERSELBEN Firma, exakt nach dem Zealand-Muster: gleicher Name, gleiche
   // Zahlen, nur Ticker und Erstnotiz unterscheiden sich — und das JUENGERE Bein traegt die
   // minimal groessere marketCap und gewinnt deshalb den Dedup, wie im echten Fall.
+  // P290 (01.11.2026): Vienna's mirror board no longer wins such a pair, so the younger leg here is a plain second
+  // exchange; the fixture's country has no home table row, so the market cap still decides. The date rule is what is tested.
   const basis = fixture('CRDO');
   const heimat = JSON.parse(JSON.stringify(basis));
   const zweitnotiz = JSON.parse(JSON.stringify(basis));
@@ -100,7 +102,7 @@ test('der Dedup traegt das frueheste Gruppendatum an den Sieger', () => {
   heimat.meta = { ...heimat.meta, ticker: 'TEST.CO', name: 'Testfirma A/S', firstTradeDate: '2010-11-23T08:00:00.000Z' };
   heimat.marketCap = { value: 3072033124, source: 'test', confidence: 0.9 };
 
-  zweitnotiz.meta = { ...zweitnotiz.meta, ticker: 'TEST.VI', name: 'Testfirma A/S', firstTradeDate: '2026-03-31T06:55:00.000Z' };
+  zweitnotiz.meta = { ...zweitnotiz.meta, ticker: 'TEST.ST', name: 'Testfirma A/S', firstTradeDate: '2026-03-31T06:55:00.000Z' };
   zweitnotiz.marketCap = { value: 3083231905, source: 'test', confidence: 0.9 };
 
   const results = scoreUniverse([heimat, zweitnotiz], formulas);
@@ -108,7 +110,7 @@ test('der Dedup traegt das frueheste Gruppendatum an den Sieger', () => {
   assert.equal(ueberlebende.length, 1, 'genau ein Bein darf ueberleben (Dedup)');
 
   const sieger = ueberlebende[0];
-  assert.equal(sieger.ticker, 'TEST.VI', 'Vorbedingung: das juengere Bein gewinnt weiterhin den Dedup');
+  assert.equal(sieger.ticker, 'TEST.ST', 'Vorbedingung: das juengere Bein gewinnt weiterhin den Dedup');
   assert.equal(sieger.ipoYear, 2010, 'der Sieger muss das Boersendebuet der FIRMA tragen, nicht das seines Papiers');
 
   const verlierer = results.find((e) => e.ticker === 'TEST.CO');
