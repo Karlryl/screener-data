@@ -113,9 +113,7 @@ test('all existing financial guards still reject absent rows with their original
   baseline.rows[T].revenueQ[3] *= 1.0001;
   cases.push(['vendor-2025-changed', absent(), context(F.store, baseline)]);
   baseline = clone(F.baseline); delete baseline.rows[T];
-  // sd-quellen 07.11.2026: without a baseline row two agreeing vendor 2025 quarters are the proof; with one it stays blocked
-  s = absent(); for (const e of ['2025-06-30', '2025-03-31']) s.timeseries.revenueQ[s.timeseries.revenueQEnds.indexOf(e)] = null;
-  cases.push(['no-baseline', s, context(F.store, baseline)]);
+  cases.push(['no-baseline', absent(), context(F.store, baseline)]);
   baseline = clone(F.baseline); baseline.rows[T].revenueQ[3] = null;
   cases.push(['baseline-quarter-missing', absent(), context(F.store, baseline)]);
   store = clone(F.store); delete store.cn.companies[T].ytd['2025-03-31'];

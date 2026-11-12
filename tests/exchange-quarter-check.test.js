@@ -241,10 +241,8 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; // 2025-06-30
   assert.equal(b.rows['000002.SZ'].revenueQEnds[3], '2025-06-30');
   assert.equal(blocked(base(), ctxOf(F.store, b)), 'vendor-2025-changed');
-  // sd-quellen 07.11.2026: no baseline row (on no board in July) -> the exchange agreement of the other vendor 2025
-  // quarters is the proof, but only on one reporting basis (Codex R-pr124 P1, 12.11.): the 9M-2025 figure must have
-  // been read before the Q3-2026 notice and be unchanged after it (the existing restatement signal); then that report
-  // restated nothing, so H1 2025 and 9M 2025 stand on the same basis.
+  // sd-quellen 12.11.2026: a fill without a July row was built and withdrawn (Codex R-pr124 R3 P1: no source proves
+  // the common reporting basis of 9M and H1); no baseline row stays a block
   const nb = clone(F.baseline); delete nb.rows['000002.SZ'];
   const withQ3 = firstRead => {
     const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
@@ -255,57 +253,33 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const early = withQ3('2026-10-02T07:07:40.607Z'), late = withQ3('2026-10-30T00:00:00.000Z');
   late.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy.shift();   // first read after the Q3-2026 notice
   const r = res(base(), ctxOf(early, nb));
-  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.baseline, 'exchange-agreement');
-  // ... but not with a single agreeing vendor quarter of 2025
-  const thin = base(), ends = thin.timeseries.revenueQEnds;
-  for (const e of ['2025-06-30', '2025-03-31']) thin.timeseries.revenueQ[ends.indexOf(e)] = null;
-  const r1 = res(thin, ctxOf(early, nb));
-  assert.equal(r1.fill.blocked, 'no-baseline'); assert.equal(r1.fill.otherwiseFillable, true); assert.notEqual(r1.category, 'would-fill');
-  // exactly two vendor quarters suffice (review PR #124 N3: 1,235 of 1,326 fills of 07.11. have exactly two)
-  const two = base(); two.timeseries.revenueQ[two.timeseries.revenueQEnds.indexOf('2025-03-31')] = null;
-  assert.equal(res(two, ctxOf(early, nb)).category, 'would-fill');
-  // Codex R-pr124 P1: 9M 2025 first read after the Q3-2026 notice may already carry a restatement that the stored
-  // H1 2025 lacks (old H1 200, new 9M 350 and FY 450 -> fill 150 instead of 100). The vendor Q4 does not prove the
-  // basis (the same addition sits in 9M and FY and cancels in Q4), so a late first read stays empty, Q4 or not.
-  assert.equal(res(base(), ctxOf(late, nb)).fill.blocked, 'november-read-late', 'late first read, vendor Q4 present: not proven');
-  assert.equal(res(base(), ctxOf(late, F.baseline)).fill.blocked, 'november-read-late', 'late first read with a July row: not proven either');
-  const noQ4 = base(); noQ4.timeseries.revenueQ[noQ4.timeseries.revenueQEnds.indexOf('2025-12-31')] = null;
-  assert.equal(res(noQ4, ctxOf(late, nb)).fill.blocked, 'november-read-late', 'late first read, no vendor Q4: not proven');
-  // Opus R3 P1 (12.11.): the notice date is a Beijing calendar day; a run at 19:00 UTC on 27.10. is 28.10. in Beijing and
-  // can already read the row rewritten by that notice (updateDate = notice). Eastmoney's own updateDate decides, not the UTC day.
-  const edge = withQ3('2026-10-27T19:00:00.000Z'), eq3 = edge.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1);
-  eq3.confirmedBy[0].updateDate = '2026-10-28';
-  assert.equal(res(base(), ctxOf(edge, nb)).fill.blocked, 'november-read-late', 'UTC day before the notice, row already rewritten');
+  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true); assert.notEqual(r.category, 'would-fill');
+  assert.equal(r.fill.baseline, undefined);
+  // July row, 9M as filed (updateDate = its own notice), read before the Q3-2026 notice and unchanged after it: fills
+  const ok = res(base(), ctxOf(early, F.baseline));
+  assert.equal(ok.category, 'would-fill'); assert.equal(ok.fill.blocked, null);
+  // risk signals on the July path (Codex R-pr124 R1/R2, Opus R3): late first read, Beijing day boundary, no updateDate,
+  // a 9M row rewritten before the first read, impossible calendar days at the first or at the later confirmation
+  assert.equal(res(base(), ctxOf(late, F.baseline)).fill.blocked, 'november-read-late', 'first read after the Q3-2026 notice');
+  const edge = withQ3('2026-10-27T19:00:00.000Z'); edge.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate = '2026-10-28';
+  assert.equal(res(base(), ctxOf(edge, F.baseline)).fill.blocked, 'november-read-late', 'UTC day before the notice, row already rewritten');
   const noUpd = withQ3('2026-10-02T07:07:40.607Z'); delete noUpd.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate;
-  assert.equal(res(base(), ctxOf(noUpd, nb)).fill.blocked, 'november-read-late', 'first read without updateDate: unproven');
-  // Codex R-pr124 R2 P1: 9M (and FY) already carry a restatement at the FIRST observation (Eastmoney rewrote the row on
-  // 20.10., before the notice of 28.10.): no observation change shows it, so the first read must be the 9M as filed
-  const pre = withQ3('2026-10-21T02:00:00.000Z'), pq3 = pre.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1);
-  pq3.confirmedBy[0].updateDate = '2026-10-20';
-  assert.equal(res(base(), ctxOf(pre, nb)).fill.blocked, 'rewritten-before-first-read', 'rewritten before the first read, no July row');
-  assert.equal(res(base(), ctxOf(pre, F.baseline)).fill.blocked, 'rewritten-before-first-read', '... and with a July row');
-  assert.equal(pq3.noticeDate, '2025-10-31');
-  assert.equal(res(base(), ctxOf(early, nb)).fill.blocked, null, 'as filed (updateDate = its own notice) and unchanged: fills');
-  // Codex R-pr124 R2 P2-1: impossible calendar days are no proof
+  assert.equal(res(base(), ctxOf(noUpd, F.baseline)).fill.blocked, 'november-read-late', 'first read without updateDate');
+  const pre = withQ3('2026-10-21T02:00:00.000Z'); pre.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate = '2026-10-20';
+  assert.equal(res(base(), ctxOf(pre, F.baseline)).fill.blocked, 'rewritten-before-first-read', 'rewritten on 20.10., before the notice of 28.10.');
   for (const d of ['0000-00-00', '2026-02-30', '2025-1-31']) {
     const bad = withQ3('2026-10-02T07:07:40.607Z'); bad.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate = d;
-    assert.equal(res(base(), ctxOf(bad, nb)).fill.blocked, 'november-read-late', 'updateDate ' + d);
+    assert.equal(res(base(), ctxOf(bad, F.baseline)).fill.blocked, 'november-read-late', 'first updateDate ' + d);
   }
-  // Codex R-pr124 R2 P2-2: the same quarter listed twice is no second proof
+  for (const d of ['9999-99-99', 'not-a-date', '2026-11-31']) {   // Codex R-pr124 R3 P2-1: the later confirmation too
+    const bad = withQ3('2026-10-02T07:07:40.607Z'); bad.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[1].updateDate = d;
+    assert.equal(res(base(), ctxOf(bad, F.baseline)).fill.blocked, 'november-not-confirmed', 'later updateDate ' + d);
+  }
+  // Codex R-pr124 R2 P2-2: the same quarter listed twice
   const dup = base(), dts = dup.timeseries, i2 = dts.revenueQEnds.indexOf('2025-06-30');
-  dts.revenueQ[dts.revenueQEnds.indexOf('2025-03-31')] = null;
   dts.revenueQEnds.splice(i2, 0, '2025-06-30'); dts.revenueQ.splice(i2, 0, structuredClone(dts.revenueQ[i2]));
-  assert.equal(res(dup, ctxOf(early, nb)).fill.blocked, 'duplicate-quarter-end');
-  // Codex R-pr124 R2 P2-3: an unreadable July history is no "not on a board in July"
-  const failed = ctxOf(early, nb); failed.baseline.failed = true;
-  assert.equal(res(base(), failed).fill.blocked, 'baseline-unreadable');
-  assert.equal(res(base(), { stores: failed.stores }).fill.blocked, 'baseline-unreadable', 'no July history at all');
-  const unreadable = X.loadBaseline(path.join(os.tmpdir(), 'no-such-board-history-' + process.pid));
-  assert.equal(unreadable.failed, true); assert.match(unreadable.warnings[0], /unreadable/);
-  assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
-  // ... and before any Q3-2026 notice the basis of 9M 2025 against a restated H1 2025 is unproven: no fill
-  assert.equal(res(base(), ctxOf(F.store, nb)).fill.blocked, 'no-baseline', 'no Q3-2026 report yet: not proven');
-  // ... and a baseline row that exists still wins: an unchanged vintage fills without the alternative
+  assert.equal(res(dup, ctxOf(early, F.baseline)).fill.blocked, 'duplicate-quarter-end');
+  // ... and a baseline row that exists fills without any marker of the withdrawn path
   const rb = res(base(), ctxOf(F.store, F.baseline));
   assert.equal(rb.category, 'would-fill'); assert.equal(rb.fill.baseline, undefined);
 });
@@ -639,7 +613,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   const lateRead = clone(F.store), ly = lateRead.cn.companies['000002.SZ'].ytd, lq3 = ly['2025-09-30'].at(-1);
   ly['2026-09-30'] = [{ ...lq3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
   lq3.confirmedBy = [{ ...lq3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
-  red("      if (!(isDay(firstUpdate) && isDay(notice) && firstUpdate < notice)) return block('november-read-late');",
+  red("      if (!(isDay(firstUpdate) && firstUpdate < notice)) return block('november-read-late');",
     '      // november-read-late removed',
     lib => assert.equal(r(lib, base(), ctxOf(lateRead, F.baseline)).fill.blocked, 'november-read-late'));
   // Codex R-pr124 R2 P1: 9M rewritten before the first read (one basis unproven)
@@ -661,7 +635,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
     "    p.status = ex[i] === null || ex[j] === null ? 'unchecked' : 'agree';",
     lib => assert.ok(r(lib, snap('601377.SS')).withhold.length > 0));
   // November confirmation
-  red("      if (!(x.latest[P].confirmedBy || []).some(c => c.updateDate && notice && c.updateDate >= notice)) return block('november-not-confirmed');", "",
+  red("      if (!isDay(notice) || !(x.latest[P].confirmedBy || []).some(c => isDay(c.updateDate) && c.updateDate >= notice)) return block('november-not-confirmed');", "",
     lib => { const n = november(false); assert.notEqual(r(lib, n.s, n.ctx).category, 'would-fill'); });
   // baseline (restatement since July)
   red("    const base = baselineCheck(s, ends, native, env, ctx, P.slice(0, 4));", "    const base = null;",
