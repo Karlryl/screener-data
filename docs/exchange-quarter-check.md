@@ -57,11 +57,14 @@ Readers see only eligible fills of empty 2025-09-30 cells and never a withheld c
 
 All must hold: China general or Taiwan general; the vendor cell exists, is empty and is not the newest; no
 restatement signal in the store (a key with more than one observation); the vendor's 2025 quarters equal the
-newest board-history vintage before 2026-08-01 (statement currency; no row there = no fill; a vendor 2025
+newest board-history vintage before 2026-08-01 (statement currency; China without a row there: at least two vendor
+2025 quarters, all agreeing, and the Q3-2026 report in the store, `fill.baseline = 'exchange-agreement'`; otherwise no
+row there = no fill; a vendor 2025
 quarter that vintage does not carry = `baseline-quarter-missing`, no fill); the store has a
 single quarter for every vendor period end and every present vendor quarter agrees; exchange Q3 > 0; once the
 store holds the next-year quarter (Q3-2026), the Q3-2025 observation must carry a confirmation whose
-`UPDATE_DATE` is on or after the Q3-2026 notice date (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
+`UPDATE_DATE` is on or after the Q3-2026 notice date, and (China) its first confirmation an `UPDATE_DATE` before
+that notice date, so 9M and H1 stand on one reporting basis (`november-read-late`; Codex R-pr124 P1, 12.11.2026) (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
 comparative). The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
 operands with notice dates, source, original vendor row, reason). When the vendor later delivers the quarter, an
 agreeing value stays untouched; a disagreeing one is withheld wherever it sits (`exchange-quarter-mismatch`,

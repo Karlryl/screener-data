@@ -271,6 +271,13 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   assert.equal(res(base(), ctxOf(late, F.baseline)).fill.blocked, 'november-read-late', 'late first read with a July row: not proven either');
   const noQ4 = base(); noQ4.timeseries.revenueQ[noQ4.timeseries.revenueQEnds.indexOf('2025-12-31')] = null;
   assert.equal(res(noQ4, ctxOf(late, nb)).fill.blocked, 'november-read-late', 'late first read, no vendor Q4: not proven');
+  // Opus R3 P1 (12.11.): the notice date is a Beijing calendar day; a run at 19:00 UTC on 27.10. is 28.10. in Beijing and
+  // can already read the row rewritten by that notice (updateDate = notice). Eastmoney's own updateDate decides, not the UTC day.
+  const edge = withQ3('2026-10-27T19:00:00.000Z'), eq3 = edge.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1);
+  eq3.confirmedBy[0].updateDate = '2026-10-28';
+  assert.equal(res(base(), ctxOf(edge, nb)).fill.blocked, 'november-read-late', 'UTC day before the notice, row already rewritten');
+  const noUpd = withQ3('2026-10-02T07:07:40.607Z'); delete noUpd.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].updateDate;
+  assert.equal(res(base(), ctxOf(noUpd, nb)).fill.blocked, 'november-read-late', 'first read without updateDate: unproven');
   assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
   // ... and before any Q3-2026 notice the basis of 9M 2025 against a restated H1 2025 is unproven: no fill
   assert.equal(res(base(), ctxOf(F.store, nb)).fill.blocked, 'no-baseline', 'no Q3-2026 report yet: not proven');
@@ -608,7 +615,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   const lateRead = clone(F.store), ly = lateRead.cn.companies['000002.SZ'].ytd, lq3 = ly['2025-09-30'].at(-1);
   ly['2026-09-30'] = [{ ...lq3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
   lq3.confirmedBy = [{ ...lq3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
-  red("      if (!(firstRead && notice && firstRead.slice(0, 10) < notice)) return block('november-read-late');",
+  red("      if (!(firstUpdate && notice && firstUpdate < notice)) return block('november-read-late');",
     '      // november-read-late removed',
     lib => assert.equal(r(lib, base(), ctxOf(lateRead, F.baseline)).fill.blocked, 'november-read-late'));
   // Q3 > 0
