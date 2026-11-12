@@ -127,7 +127,8 @@ test('the loader refuses a malformed second count (fail loud)', () => {
 test('3471.T and ALK.TO: gross profit no longer pairs two years, the reason says why, revenue and the newest year stay', () => {
   for (const [t, end, gpOld, gpNew] of [['3471.T', '31.07.2024', 12206983000, 20157154000], ['ALK.TO', '30.06.2024', 70085000, 507289000]]) {
     const was = applyFinancialCases(snap(t), { table: tableBefore() }).snapshot;
-    assert.ok(axes.gpGrowth(was) > (t === 'ALK.TO' ? 6 : 0.6), t + ': the two-year pair fed the axis');
+    // Period gate (PR #72): the pair two years apart is blocked by its own ends, so the axis is empty with or without the hold.
+    assert.equal(axes.gpGrowth(was), null, t + ': the gate blocks the two-year pair');
     const out = applyFinancialCases(snap(t)).snapshot;
     assert.equal(axes.gpGrowth(out), null, t);
     const native = out.annual.annualGP.map(r => (cell(r) === null ? null : Math.round(cell(r) / out.meta.fxRateApplied)));

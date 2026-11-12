@@ -56,7 +56,7 @@ const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annu
 // G31 switch (P268, 18.10.2026): 000599.SZ joins it (its unrestated Q2 2025 cells are held); the level examples use
 // 000564.SZ, the same kind of exchange level mismatch without a hand-table row.
 const T = Object.keys(F.snapshots);
-const noHandTable = T.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ'].includes(t)); // 600292.SS and 301297.SZ: board checks of 30.10.2026
+const noHandTable = T.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ', '601211.SS', '6023.TWO'].includes(t)); // 600292.SS and 301297.SZ: board checks of 30.10.2026; 601211.SS and 6023.TWO: hand table of 07.11.2026
 
 test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
   for (const t of noHandTable) {
@@ -69,7 +69,7 @@ test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/m
 });
 
 test('prepareSnapshot calls the step: in an active copy the known wrong rows are withheld and fills are applied', () => {
-  const w = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000564.SZ'])));
+  const w = quiet(() => q4Active.prepareSnapshot(require('./helpers/dated-series.js').withEnds(clone(F.snapshots['000564.SZ']))));
   assert.ok(w.timeseries.revenueQ.some(c => c?.financialMissing?.reasonCode === 'exchange-pair-mismatch'));
   const f = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000002.SZ'])));
   assert.ok(f.timeseries.revenueQ.some(c => c?.exchangeFill));

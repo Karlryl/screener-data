@@ -48,9 +48,10 @@
  * Usage:  node tests/scoring/opinc-gate-computed-margin.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const axes = require('../../src/scoring/axes.js');
+const { datedApi } = require('../helpers/dated-series.js');
+const axes = datedApi(require('../../src/scoring/axes.js'));
 const lamps = require('../../src/scoring/lamps.js');
-const { trackOf, phaseOf, cycleDamperFactor, isDataSuspect, scoreUniverse } = require('../../src/scoring/score.js');
+const { trackOf, phaseOf, cycleDamperFactor, isDataSuspect, scoreUniverse } = datedApi(require('../../src/scoring/score.js'));
 const { profitTierOf } = require('../../src/scoring/profit-tier.js');
 const { histOpInc, opIncSynthetic, norm } = require('../../src/scoring/snapshot.js');
 const formulas = require('../../src/scoring/formulas/index.js');

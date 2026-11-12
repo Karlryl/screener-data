@@ -128,7 +128,10 @@ test('fail closed: a changed vendor cell and a quarter after coverage are withhe
 test('BURE.ST: no number moves, the hint is on the row, with any growth, and only on this listing', () => {
   assert.deepEqual(own.filter(c => c.ticker === 'BURE.ST'), []);
   const s = snap('BURE.ST');
-  assert.deepEqual(native(applyFinancialCases(s).snapshot, 'annual', 'annualRev').slice(0, 2), [268000000, 241000000]);
+  // 07.11.2026 (sd-hand-4): the vendor cells are held since, because the filed total income changes sign; probed in
+  // tests/hand-table-sdhand4-20261107.test.js. On the table of this lane the number did not move.
+  const of31 = structuredClone(table); of31.cases = of31.cases.filter(c => !(c.revision === '2026-11-07-sdhand4' && c.ticker === 'BURE.ST')); of31.coverage = of31.coverage.filter(v => v.ticker !== 'BURE.ST');
+  assert.deepEqual(native(applyFinancialCases(s, { table: of31 }).snapshot, 'annual', 'annualRev').slice(0, 2), [268000000, 241000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(0, 1), [206000000 + 5000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(3, 4), [193000000 + 2000000]);
   fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(s));
@@ -140,30 +143,38 @@ test('BURE.ST: no number moves, the hint is on the row, with any growth, and onl
   assert.equal(W.mapBoardRow({ ...row, ticker: '_NO_HINT' }, 2, 'main').g31Hinweis, null);
 });
 
-test('documented order: the diagnosis on the shown pair outranks the definition hint; the swapped order fails', () => {
+test('order (Codex R08 P3, 07.11.): a checked pair entry outranks the definition, an automatic diagnosis does not; the old order fails', () => {
   const file = path.join(root, 'scripts/write-findash-export.js'), src = fs.readFileSync(file, 'utf8');
   const recency = require('../lib/g31-recency.js'), real = recency.g31Export;
   const load = code => { const m = new Module(file, module); m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file)); m._compile(code, file); return m.exports; };
   const s = applyFinancialCases(snap('BURE.ST')).snapshot;
   fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(snap('BURE.ST')));
   const row = { ticker: 'BURE.ST', score: 76.6, revGrowthYoYPct: axes.revGrowthLevel(s), overview: { kind: 'gp', value: 0.061, companion: 162.8 } };
-  const ORDER = '(passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null';
-  assert.ok(src.includes(ORDER), 'anchor');
-  recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code: 'aktuell-gross', reason: 'diagnosis' } });
-  try {
-    assert.equal(load(src).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'aktuell-gross');
-    assert.equal(load(src.replace(ORDER, 'DEFINITION_HINTS.get(out.ticker) ?? (passt ? derivations.g31Hinweis : null) ?? null')).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'abgrenzung', 'the swapped order is what this test must catch');
-  } finally { recency.g31Export = real; }
+  const hintWith = (code, source = src) => {
+    recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code, reason: 'Pair hint.' } });
+    try { return load(source).mapBoardRow(row, 0, 'main').g31Hinweis; } finally { recency.g31Export = real; }
+  };
+  for (const code of ['aktuell-gross', 'vorjahr-klein+quartalssumme', 'aelteres-quartalspaar']) {
+    const h = hintWith(code);
+    assert.equal(h.code, 'abgrenzung', code);
+    assert.match(h.reason, /Net sales 0.* Zusätzlich: Pair hint\.$/, 'the diagnosis stays as an added sentence: ' + code);
+  }
+  assert.deepEqual(hintWith('uebernahme'), { code: 'uebernahme', reason: 'Pair hint.' }, 'a checked pair entry still wins');
+  assert.equal(hintWith('uebernahme+aktuell-gross').code, 'uebernahme+aktuell-gross', 'a mixed code is not purely automatic');
+  // Break-once: the order before this repair hides the checked definition behind the diagnosis.
+  const NEW = /out\.g31Hinweis = def && pair[^;]+;/;
+  assert.ok(NEW.test(src), 'anchor');
+  assert.equal(hintWith('aktuell-gross', src.replace(NEW, 'out.g31Hinweis = pair ?? def ?? null;')).code, 'aktuell-gross', 'the old order is what this test must catch');
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
   // 02.11.2026 appends five definition rows of its own (tests/hand-table-zahlen-20261102.test.js); this test keeps its one row.
-  const own = hints.definitionen.filter(d => d.verifiedAt === '2026-10-31');
-  assert.deepEqual(own.map(d => d.ticker), ['BURE.ST']);
+  // 07.11.2026 (sd-hand-4) re-checks the BURE.ST row: the field is empty since; the row keeps its place and its sources.
+  const own = hints.definitionen.filter(d => d.ticker === 'BURE.ST');
+  assert.deepEqual(own.map(d => d.verifiedAt), ['2026-11-07']);
   assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST', 'CUPRUM.SN', 'AFPCAPITAL.SN', 'PROVIDA.SN', '003535.KS', '003530.KS']);
   for (const d of own) {
     assert.equal(d.code, 'abgrenzung');
-    assert.equal(d.verifiedAt, '2026-10-31');
     assert.ok(d.sources.length >= 3 && d.sources.every(s => s.url.startsWith('https://') && s.page && s.quote && s.form && s.published), d.ticker);
     assert.doesNotMatch(d.reason, /[–—]| - |kauf|verkauf/i);
     assert.match(d.reason, /Geschäftsjahr 2025/, 'names its period');

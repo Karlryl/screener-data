@@ -92,7 +92,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, dataDay, sealedEraSnapshot, withoutPeriodGate } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -133,6 +133,42 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
   }
   return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
 }
+// Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the three score axes the gate
+// reaches (gross profit, acceleration, capital efficiency), recomputed from the same snapshot with the period gate off; no score.
+// The hand-table holds of #72 stay on. Capital efficiency is computed without the SEC and regional annual series the score
+// attaches (run-screener mergeSecIntoUniverse), so it differs from the score for those firms (147 on 31.10.2026). Remove with the comparison.
+// Codex R31 (05.11.2026): the end is bound to the data day, RUN_DATE_UTC (else the UTC clock day): from 04.12.2026 no row carries it.
+const PERIOD_GATE_SHADOW_ENDS = '2026-12-04';
+/** @param {string} [day] Data day YYYY-MM-DD. @returns {boolean} true while the comparison is shown. */
+function periodGateShadowShown(day) {
+  const env = process.env.RUN_DATE_UTC || '';
+  const d = day || (/^\d{4}-\d{2}-\d{2}/.test(env) ? env.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  return d < PERIOD_GATE_SHADOW_ENDS;
+}
+function periodGateShadowForSnapshot(snapshot) {
+  if (!snapshot) return null;
+  wachstumsSchranken();
+  const axes = require('../src/scoring/axes.js');
+  return withoutPeriodGate(() => {
+    const leg = revGrowthLeg(snapshot);
+    return { growth: leg.pct ?? null, basis: leg.basis ?? null, periodEnd: leg.periodEnd ?? null, priorPeriodEnd: leg.priorPeriodEnd ?? null,
+      gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds), capitalEfficiencyAxis: axes.capitalEfficiency(snapshot) };
+  });
+}
+// Basis label of the revenue acceleration axis (07.11.2026, display only): which branch revAcceleration() took on this
+// snapshot and how many usable year-ago quarter comparisons it found. The quarterly basis needs at least two, and the newest
+// must not be stale; otherwise the annual series (or the sourced newer year) carries the axis, or there is none.
+const REV_ACCELERATION_BASES = Object.freeze(['quarter', 'year', 'sourcedYear', 'none']);
+function revAccelerationBasisForSnapshot(snapshot) {
+  if (!snapshot) return null;
+  let basis = null, quarterComparisons = 0, newestQuarterStale = false;
+  const value = require('../src/scoring/axes.js').revAcceleration(snapshot, undefined, (b, n, stale) => {
+    basis = b;
+    if (n !== undefined) { quarterComparisons = n; newestQuarterStale = stale; }
+  });
+  const label = value === null ? 'none' : REV_ACCELERATION_BASES.includes(basis) ? basis : null;
+  return label === null ? null : { basis: label, quarterComparisons, newestQuarterStale };
+}
 let _behoerde;
 let _schrankenGewarnt = false;
 // Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
@@ -162,8 +198,33 @@ function mitFcfSchatten(formulaId) {
   return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
 }
 
+// Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth. The score axes excuse it only on the 25
+// sealed golden fixtures with unchanged statements (lib/annual-pairs.js), so a fixture on a live board means a store restored
+// with exactly those statements; this watcher says so,
+// whichever axis it reaches. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
+const _undatedAxisTickers = new Set();
+/** Warning line of the watcher. @param {Iterable<string>} tickers Tickers counted. @returns {string|null} ::warning:: line, or null when none. */
+function undatedAxisWarning(tickers) {
+  const list = [...tickers].sort();
+  if (!list.length) return null;
+  return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen: ${list.slice(0, 20).join(', ')}`;
+}
+/** P286: without a data day the age rule is off; a run on Actions says so instead of staying silent. @returns {string|null} ::warning:: line, or null when none. */
+function ageRuleOffWarning() {
+  return process.env.GITHUB_ACTIONS && !dataDay() ? '::warning::[age-rule-off] Export ohne RUN_DATE_UTC: Die Altersregel fuer veraltete Reihen gilt in diesem Lauf nicht.' : null;
+}
+// Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
+function zaehleUndatiertSmallcap(row) {
+  if (snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).sealedFixture) _undatedAxisTickers.add(row.ticker);
+  return row;
+}
+
 function mitAnnualPairsSchatten(row) {
-  return Object.assign(row, { annualPairsShadow: snapAbleitungenFuer(row.ticker).annualPairsShadow });
+  const abl = snapAbleitungenFuer(row.ticker);
+  const annualPairsShadow = abl.annualPairsShadow;
+  const shadow = periodGateShadowShown() ? { periodGateShadow: abl.periodGateShadow } : {}; // R31: gone from 04.12.2026
+  if (abl.sealedFixture) _undatedAxisTickers.add(row.ticker);
+  return Object.assign(row, { annualPairsShadow }, shadow);
 }
 
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -343,6 +404,7 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
   }
   catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
   const abl = {
+    sealedFixture: sealedEraSnapshot(snap),
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
@@ -355,6 +417,7 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     correctedMarketCap: marketCapGuard.table[ticker] ? snap?.marketCap?.value : null,
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    meta: snap ? snap.meta : null, // issuer of the shown listing, for the held-sibling hint
     // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
     wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
     overviewLegacy: snap ? withG31Variant('legacy', () => {
@@ -370,6 +433,16 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     get annualPairsShadow() {
       const value = annualPairsShadowForSnapshot(snap, snapFehler);
       Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
+      return value;
+    },
+    get revAccelerationBasis() {
+      const value = revAccelerationBasisForSnapshot(snap);
+      Object.defineProperty(this, 'revAccelerationBasis', { value, enumerable: true });
+      return value;
+    },
+    get periodGateShadow() { // PR #72 comparison until 04.12.2026
+      const value = periodGateShadowForSnapshot(snap);
+      Object.defineProperty(this, 'periodGateShadow', { value, enumerable: true });
       return value;
     },
     get ffoGrund() { // W8 EX-02, only read for rows with an empty FFO pill
@@ -403,6 +476,45 @@ let _wachstumOhneEtikett = 0;
 // not to a period, because the next quarter does not change the definition. Display only: no value, score or rank reads it.
 // ponytail: no fingerprint on the vendor packet; a firm that changes its reporting needs its row re-checked by hand.
 const DEFINITION_HINTS = new Map(require('../configs/g31-hinweise.json').definitionen.map(d => [d.ticker, { code: d.code, reason: d.reason }]));
+// Every listing of the main store by loose issuer key, the ones the stale-price gate holds marked with their newest growth
+// period; only keys with a held listing are kept. Built once. The whole group is kept so the production guard against two
+// firms of one loose name (it needs every US primary listing of the group) decides as it does in score.js (Codex R29 P2).
+// Only rows whose own quote time is old or that carry a known hold are prepared, so the scan stays cheap.
+let _heldByIssuer = null;
+function heldNewerSibling(meta, ticker, shownEnd) {
+  const { issuerKeyLoose, issuerDedupGroups } = require('../src/scoring/score.js');
+  if (!_heldByIssuer) {
+    _heldByIssuer = new Map();
+    let files = [];
+    try { files = fs.readdirSync(SNAP_DIR); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+    for (const f of files) {
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+      let raw;
+      try { raw = readJSON(path.join(SNAP_DIR, f)); } catch (_) { continue; }
+      if (!raw?.meta?.ticker) continue;
+      let entry = { ticker: raw.meta.ticker, meta: raw.meta, periodEnd: null };
+      if (raw.meta.stalePriceHold || (marketCapGuard.priceAge(raw)?.age ?? 0) > marketCapGuard.STALE_PRICE_WEEKDAYS) {
+        const s = prepareYahooQ4Snapshot(raw);
+        if (s?.marketCap?.source === marketCapGuard.STALE_PRICE_SOURCE) entry = { ticker: s.meta.ticker, meta: s.meta, periodEnd: revGrowthLeg(s)?.periodEnd || null };
+      }
+      const key = issuerKeyLoose({ meta: entry.meta });
+      if (key) { if (!_heldByIssuer.has(key)) _heldByIssuer.set(key, []); _heldByIssuer.get(key).push(entry); }
+    }
+    for (const [key, group] of _heldByIssuer) if (!group.some(e => e.periodEnd)) _heldByIssuer.delete(key);
+  }
+  const key = meta ? issuerKeyLoose({ meta }) : null;
+  const group = key && _heldByIssuer.get(key);
+  if (!group) return null;
+  // The production issuer grouping over the whole loose group decides; the shown line enters with its own meta.
+  const entries = [{ ticker, snapshot: { meta } }, ...group.filter(e => e.ticker !== ticker).map(e => ({ ticker: e.ticker, snapshot: { meta: e.meta }, held: e }))];
+  const own = issuerDedupGroups(entries).find(g => g.includes(entries[0])) || [];
+  return own.map(e => e.held).filter(h => h && h.periodEnd && h.periodEnd > shownEnd)
+    .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
+}
+
+// Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
+const AUTO_HINT_CODES = new Set(['aktuell-gross', 'vorjahr-klein', 'quartalssumme', 'aelteres-quartalspaar']);
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
   const wert = out.revGrowthYoYPct;
@@ -417,7 +529,11 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     out.g31Shadow = derivations.g31Shadow;
     out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
     // P267 rule 1: review hint for a newly admitted B1 pair, only where this snapshot reproduces the shown growth.
-    out.g31Hinweis = (passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null;
+    // Codex R08 P3 (04.11.): a checked definition says more than an automatic diagnosis, which would otherwise hide it
+    // (BURE.ST with an empty revenueQ[1]); the diagnosis stays as an added sentence. A checked pair entry still wins.
+    const pair = passt ? derivations.g31Hinweis : null, def = DEFINITION_HINTS.get(out.ticker) ?? null;
+    out.g31Hinweis = def && pair && pair.code.split('+').every(c => AUTO_HINT_CODES.has(c))
+      ? { code: def.code, reason: `${def.reason} Zusätzlich: ${pair.reason}` } : pair ?? def ?? null;
   }
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
@@ -425,6 +541,14 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
   out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
   out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
+  out.revAccelerationBasis = derivations.revAccelerationBasis; // display only, from the same snapshot as the growth label
+  // A sibling listing of this firm with newer figures is held by the stale-price gate: the shown row says so, naming both.
+  const neuer = passt && leg.periodEnd && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' ? heldNewerSibling(derivations.meta, out.ticker, leg.periodEnd) : null;
+  if (neuer) {
+    const tag = d => d.slice(0, 10).split('-').reverse().join('.');
+    const reason = `Die Notierung ${neuer.ticker} derselben Firma hat neuere Zahlen bis ${tag(neuer.periodEnd)}, ihr Börsenwert ist wegen einer alten Kursmeldung von Yahoo zurückgehalten. Gezeigt werden die Zahlen von ${out.ticker} bis ${tag(leg.periodEnd)}.`;
+    out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${reason}` } : { code: 'gehaltene-notierung-neuer', reason };
+  }
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
   // null, like an unlabelled row). Display only: no score, rank or membership reads them.
@@ -481,8 +605,8 @@ function overviewPeriodFor(kind, period) {
 // exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
 // re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
 const { norm } = require('../src/scoring/snapshot.js');
-const { annualPeriodEnds } = require('../lib/annual-pairs.js');
-const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'grundNichtImDatenstand']);
+const { annualPeriodEnds, staleReason } = require('../lib/annual-pairs.js');
+const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'jahreVeraltet', 'grundNichtImDatenstand']);
 const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
 const tagDe = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 const gjBis = (iso) => (iso ? `das Geschäftsjahr bis ${tagDe(iso)}` : 'ein Geschäftsjahr ohne gespeichertes Periodenende');
@@ -514,6 +638,8 @@ function ffoGrund(s) {
     out = { code: 'nurEinJahr', reason: `${FFO_VORNE}, weil Jahresüberschuss und Abschreibungen nur für ${gjBis(ends[newer])} zusammen vorliegen; ein Vorjahr zum Vergleich fehlt.` };
   } else if (values[older] <= 0) {
     out = { code: 'vorjahrNichtPositiv', reason: `${FFO_VORNE}, weil der Vorjahreswert für ${gjBis(ends[older])} nicht positiv ist; gegen einen Wert von null oder darunter lässt sich für ${gjBis(ends[newer])} kein Wachstum rechnen.` };
+  } else if (metric.valuePresent === false && staleReason('year', ends[newer])) {
+    out = { code: 'jahreVeraltet', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} mehr als 550 Tage vor dem Datenstand endet; Periodenstand veraltet.` };
   } else if (metric.valuePresent === false) {
     out = { code: 'jahreNichtHintereinander', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} und ${gjBis(ends[older])}, die beiden jüngsten Jahre mit beiden Werten, nicht direkt aufeinander folgen.` };
   } else {
@@ -625,11 +751,16 @@ function belegPunkte(timeseries) {
   // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
   const roh = Array.isArray(timeseries.revenueQ) ? timeseries.revenueQ : null;
   const wert = (x) => (x && typeof x === 'object' && 'value' in x ? x.value : x);
+  // Codex R22 (04.11.2026): quarters kept only as the proof that a firm has revenue (lib/annual-pairs.js, no annual revenue)
+  // are no evidence points once the series is past the age limit; the same decision as growth and acceleration.
+  const endsRoh = Array.isArray(timeseries.revenueQEnds) ? timeseries.revenueQEnds : [];
+  const neuestes = roh === null ? null : endsRoh.filter((d, i) => typeof d === 'string' && Number.isFinite(wert(roh[i]))).sort().at(-1);
+  if (neuestes && staleReason('quarter', neuestes)) return { qPunkte: 0, qSpanTage: null };
   const qPunkte = roh === null ? null : roh.filter((x) => Number.isFinite(wert(x))).length;
   const ends = Array.isArray(timeseries.revenueQEnds)
     ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
     : [];
-  const qSpanTage = ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
+  const qSpanTage = qPunkte !== 0 && ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
   return { qPunkte, qSpanTage };
 }
 
@@ -1333,8 +1464,8 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
@@ -1379,6 +1510,7 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     boardStatus: idx.boardStatus,
     counts: idx.counts,
     excluded: idx.excluded,
+    withheldMarketCaps: smallcapWithheldMarketCaps(), // additive: the named rows behind the counters above
     coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
     coverageFloorLive: idx.coverageFloorLive ?? null, // p10 of this run next to the fixed floor; decides nothing
     reference: idx.reference ?? null, // version, drift and renewal state of the fixed reference
@@ -1386,6 +1518,18 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
     namedReasons: smallcapNamedReasons(idx.coverageFloor),
   };
+}
+
+// A row the market-cap guard withholds (stale Yahoo quote message or hand hold) only raises a counter in index.excluded,
+// so its reason would reach nobody. The main store has excluded.json for this; here the names stand next to the counters.
+// Same reader as the scoring pass, so both agree on which rows are withheld. null = no small-cap store (the pass then
+// ran on the main store, and excluded.json names its rows).
+function smallcapWithheldMarketCaps(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
+  const universe = require('../src/scoring/run-screener.js').loadSmallcapUniverse(snapDir, watchlistPath);
+  if (!universe) return null;
+  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))
+    .map(s => ({ ticker: s.meta.ticker, name: s.meta.name ?? null, reasonDe: s.meta.marketCapReason }))
+    .sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
 }
 
 // Identische Frische-Regel wie qualityExportMode (F-CGPT-024) — der Small-Cap-Pass
@@ -1452,7 +1596,9 @@ function loadCoverage(file = COVERAGE) {
     n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
     n_failed: m.n_failed ?? null,
     // P316 finding 1: firms whose statements stay empty, with deadline and owner; the run check turns an overdue row into Karl's alarm.
-    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null };
+    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null,
+    // Codex R09 (04.11.): a missing shard may hold a further firm; the run check needs this to say a filled list may be incomplete.
+    manifest_partial: typeof m.manifest_partial === 'boolean' ? m.manifest_partial : null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
@@ -1500,6 +1646,9 @@ function build(seam = {}) {
   // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
   // stumm die halbe Groessenspalte fehlt.
   const bilanz = waehrungsWaechterAbschluss();
+  const undatiert = undatedAxisWarning(_undatedAxisTickers);
+  if (undatiert) console.warn(undatiert);
+  if (ageRuleOffWarning()) console.warn(ageRuleOffWarning());
   if (_wachstumOhneEtikett > 0) {
     console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
       + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
@@ -1731,6 +1880,16 @@ function checkOverviewPeriods(r, where, errs) {
     if ((value ?? null) === null && p.basis !== 'none' && !p.reason) errs.push(`${where}: ${key} Zeitraum ohne Wert und ohne Grund`);
   }
 }
+function checkRevAccelerationBasis(r, where, errs) {
+  if (!('revAccelerationBasis' in r) || r.revAccelerationBasis === null) return;
+  const v = r.revAccelerationBasis;
+  if (typeof v !== 'object' || Array.isArray(v) || !REV_ACCELERATION_BASES.includes(v.basis)
+      || !Number.isInteger(v.quarterComparisons) || v.quarterComparisons < 0 || typeof v.newestQuarterStale !== 'boolean'
+      || Object.keys(v).length !== 3) { errs.push(`${where}: revAccelerationBasis=${JSON.stringify(v)} keine Basisangabe`); return; }
+  if (v.basis === 'quarter' && (v.quarterComparisons < 2 || v.newestQuarterStale)) {
+    errs.push(`${where}: revAccelerationBasis quarter mit ${v.quarterComparisons} Vergleichen${v.newestQuarterStale ? ', jüngstes veraltet' : ''}`);
+  }
+}
 function checkRevGrowthBasis(r, where, errs) {
   const alt = Object.entries(REV_GROWTH_LEGACY).filter(([, k]) => k in r);
   if (alt.length && alt.length !== 4) errs.push(`${where}: revGrowth*Legacy nur teilweise vorhanden`);
@@ -1835,6 +1994,7 @@ function validateGeo(r, where, errs) {
   checkOptionalNumOrNull(r, 'overviewValueLegacy', where, errs);   // G31 switch 18.10. additiv OPTIONAL
   checkOverviewPeriods(r, where, errs);                             // P267 additiv OPTIONAL
   checkRevGrowthBasis(r, where, errs);                             // 01.10. additiv OPTIONAL
+  checkRevAccelerationBasis(r, where, errs);                       // 07.11. additiv OPTIONAL
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
@@ -2224,6 +2384,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
   checkFeldHomogen(alleZeilen, 'revGrowthBasis', kind, errs);
+  checkFeldHomogen(alleZeilen, 'revAccelerationBasis', kind, errs);
   checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
@@ -2379,6 +2540,8 @@ function validateSmallcapIndex(mk, errs) {
   }
   if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
   if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+  // Optional, additive: a named row says who and why; null means no small-cap store.
+  if (mk.withheldMarketCaps != null && (!Array.isArray(mk.withheldMarketCaps) || mk.withheldMarketCaps.some(r => !r?.ticker || typeof r.reasonDe !== 'string' || !r.reasonDe.trim() || !(r.name === null || typeof r.name === 'string')))) errs.push(`${kind}: withheldMarketCaps`);
   // 5.2 Auflage 3: coverageFloor ist Pflicht (nullable) — der Beleg-Wert des data-abgeleiteten
   // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
   if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
@@ -2406,7 +2569,7 @@ function validateSmallcapIndex(mk, errs) {
 }
 
 // F-CGPT-040, identisch zu validateQualityExport.
-function validateSmallcapExport(scoutDir = SCOUT_DIR) {
+function validateSmallcapExport(scoutDir = SCOUT_DIR, snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
   const raw = [];
   const idxPath = path.join(scoutDir, 'index.json');
   const idx = readJSONOrNull(idxPath);
@@ -2415,6 +2578,15 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR) {
     return raw; // smallcap/ absent -> optional, no breach
   }
   validateSmallcapIndex(idx, raw);
+  // The names must be exactly the withheld rows of the store: a row dropped from the list, or the whole list, would vanish without a trace.
+  const withheld = smallcapWithheldMarketCaps(snapDir, watchlistPath);
+  const nameList = rows => (Array.isArray(rows) ? rows : []).map(r => r?.ticker).join(' ');
+  if (withheld && nameList(withheld) !== nameList(idx.withheldMarketCaps)) raw.push(`smallcap/index: withheldMarketCaps names [${nameList(idx.withheldMarketCaps)}], the store withholds [${nameList(withheld)}]`);
+  // Each named reason is the one the prepared snapshot carries, not just any text.
+  const named = new Map((Array.isArray(idx.withheldMarketCaps) ? idx.withheldMarketCaps : []).map(r => [r?.ticker, r]));
+  for (const r of withheld || []) if (named.has(r.ticker) && named.get(r.ticker)?.reasonDe !== r.reasonDe) raw.push(`smallcap/index: withheldMarketCaps reason of ${r.ticker} differs from the store`);
+  // So is each name (Codex R29 P3: a wrong company name beside the right ticker passed).
+  for (const r of (withheld || []).filter(w => named.has(w.ticker))) if ((named.get(r.ticker)?.name ?? null) !== r.name) raw.push(`smallcap/index: withheldMarketCaps name of ${r.ticker} differs from the store`);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^smallcap-/, '');
@@ -2651,12 +2823,15 @@ if (require.main === module) {
     console.log('findash-export/v1 schema OK.');
     process.exit(0);
   }
+  // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+  require('../lib/annual-pairs.js').requireDataDay();
   const r = build();
   console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, revAccelerationBasisForSnapshot, checkRevAccelerationBasis, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, ageRuleOffWarning, buildSmallcapBoard,
+  undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
@@ -2690,5 +2865,5 @@ module.exports = {
   ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
   // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
   profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
-  buildIndex, buildSmallcapIndex,
+  buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps, heldNewerSibling,
 };

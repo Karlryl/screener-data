@@ -25,7 +25,7 @@
 
 const { norm, firstPresent, periodEnds, jahresFensterAusgerichtet } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
-const { annualPeriodEnds, _tagesnummer, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../../lib/annual-pairs.js');
+const { annualPeriodEnds, _tagesnummer, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS, annualPairGateReason, periodGateReason } = require('../../lib/annual-pairs.js');
 const { quarterCandidate, g31Shadow, currenciesMatch, g31Variant } = require('../../lib/g31-recency.js');
 
 function periodOf(leg) {
@@ -43,13 +43,24 @@ const OVERVIEW_YEARS_NOT_ADJACENT_TEXT = 'Jahreswachstum nicht belegt, Jahre lie
 // Annual field names request annual-only growth; badge kinds select TTM/FFO inputs.
 function growthVerdict(s, field, shadow = false) {
   if (field === 'gp') {
-    const quarter = shadow ? quarterCandidate(s, 'grossProfitQ') : null;
-    const annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
-    if (shadow && quarter.pct !== null && quarter.sourcePeriodEnd
+    // A sourced pair replaces only the annual candidate; a newer quarter still wins.
+    // Preserve the pre-G31 comparison arm and all unconfigured rows.
+    const sourced = shadow || g31Variant() ? require('../../lib/sourced-annual-years.js').resolveSourcedAnnualYear(s) : null;
+    let annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
+    if (sourced?.status === 'available' && sourced.record.priorGrossProfit > 0) {
+      const r = sourced.record;
+      annual = { value: r.grossProfit / r.priorGrossProfit - 1, withheld: false,
+        period: { basis: 'year', periodEnd: r.end, priorPeriodEnd: r.priorEnd,
+          sourcePeriodEnd: r.end, sourcePriorPeriodEnd: r.priorEnd,
+          label: `Geschäftsjahr bis ${r.end.slice(8, 10)}.${r.end.slice(5, 7)}.${r.end.slice(0, 4)}`,
+          reason: `Geprüfter Abschluss ${r.end.slice(0, 4)} gegen ${r.priorEnd.slice(0, 4)}; die Jahresreihe des Anbieters endet noch im Vorjahr.` } };
+    }
+    const quarter = annual ? quarterCandidate(s, 'grossProfitQ') : null;
+    if (quarter && quarter.pct !== null && quarter.sourcePeriodEnd
         && (annual.value === null || !annual.period?.sourcePeriodEnd || quarter.sourcePeriodEnd >= annual.period.sourcePeriodEnd)) {
       return { value: quarter.current / quarter.prior - 1, withheld: false, period: periodOf(quarter) };
     }
-    if (shadow && annual.value !== null && annual.period?.sourcePeriodEnd) return annual;
+    if (annual && annual.value !== null && annual.period?.sourcePeriodEnd) return annual;
     // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
     // growthYoYComponents in score.js:162-171). presentValues() komprimiert
     // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster
@@ -69,10 +80,12 @@ function growthVerdict(s, field, shadow = false) {
       const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
       const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
       const ends = periodEnds(s, 'grossProfitQ'), end = ends[0], priorEnd = ends[4];
-      if (ttmOld > 0) return { value: ttmNew / ttmOld - 1, withheld: false,
+      // Period gate (30.10.2026): G31 arms only; the legacy comparison keeps its pre-G31 values by design.
+      const gate = g31Variant() ? periodGateReason('ttm', end, priorEnd) : null;
+      if (ttmOld > 0) return { value: gate ? null : ttmNew / ttmOld - 1, withheld: false, gate,
         period: { basis: 'ttm', periodEnd: end, priorPeriodEnd: priorEnd, sourcePeriodEnd: end,
           sourcePriorPeriodEnd: priorEnd, label: end ? `Vier Quartale bis ${end.slice(8, 10)}.${end.slice(5, 7)}.${end.slice(0, 4)}`
-            : 'Vier Quartale, Periodenende unbekannt', reason: end && priorEnd ? null : 'Periodenenden fehlen.' } };
+            : 'Vier Quartale, Periodenende unbekannt', reason: gate || (end && priorEnd ? null : 'Periodenenden fehlen.') } };
     }
     field = 'annualGP';
   }
@@ -103,10 +116,12 @@ function growthVerdict(s, field, shadow = false) {
   const withheld = older !== newer + 1 || (newEnd !== null && oldEnd !== null
     && (newEnd - oldEnd < ANNUAL_PAIR_MIN_DAYS || newEnd - oldEnd > ANNUAL_PAIR_MAX_DAYS));
   const end = newEnd === null ? null : ends[newer], priorEnd = oldEnd === null ? null : ends[older];
-  return { value: withheld ? null : values[newer] / values[older] - 1, withheld,
+  // Period gate (30.10.2026): a missing end or a prior year that is not a full year empties the value (G31 arms only).
+  const gate = !withheld && g31Variant() ? annualPairGateReason(s, field, newer, older) : null;
+  return { value: withheld || gate ? null : values[newer] / values[older] - 1, withheld, gate,
     period: { basis: 'year', periodEnd: end, priorPeriodEnd: priorEnd, sourcePeriodEnd: end, sourcePriorPeriodEnd: priorEnd,
       label: end ? `Geschäftsjahr bis ${end.slice(8, 10)}.${end.slice(5, 7)}.${end.slice(0, 4)}` : 'Geschäftsjahr, Periodenende unbekannt',
-      reason: withheld ? OVERVIEW_YEARS_NOT_ADJACENT_TEXT : end && priorEnd ? null : 'Periodenenden fehlen.' } };
+      reason: withheld ? OVERVIEW_YEARS_NOT_ADJACENT_TEXT : gate || (end && priorEnd ? null : 'Periodenenden fehlen.') } };
 }
 
 // YoY-Wachstum einer {value}-Jahres-/Quartalsserie via norm()-Feldname.
@@ -177,20 +192,20 @@ function overviewMetric(s, opts = {}) {
   if (g31Variant() && kind !== 'ffo-badge') {
     const { value, period } = overviewShadow(s, kind);
     const metric = { kind, value, companion, period: overviewPeriodExport(period) };
-    // P158's marker stays: an empty value whose only annual pair is non-adjacent says so.
-    if (value === null && (period.reason === OVERVIEW_YEARS_NOT_ADJACENT_TEXT
-        || growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind).withheld)) {
+    // P158's marker stays: an empty value whose only annual pair is non-adjacent says so; the period gate names its own.
+    const verdict = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
+    if (value === null && (period.reason === OVERVIEW_YEARS_NOT_ADJACENT_TEXT || verdict.withheld || verdict.gate)) {
       metric.valuePresent = false;
-      metric.reason = OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
+      metric.reason = verdict.gate || OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
     }
     return metric;
   }
-  const { value, withheld, period } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
+  const { value, withheld, gate, period } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
   const metric = { kind, value, companion };
   if (kind !== 'ffo-badge') metric.period = overviewPeriodExport(period);
-  if (withheld) {
+  if (withheld || gate) {
     metric.valuePresent = false;
-    metric.reason = OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
+    metric.reason = gate || OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
   }
   return metric;
 }

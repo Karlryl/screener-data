@@ -29,9 +29,11 @@
 const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx,
   histOpInc } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
-const { g31Variant, g31Shadow } = require('../../lib/g31-recency.js');
+const { g31Variant, g31Shadow, quarterDurations } = require('../../lib/g31-recency.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration } = require('../../lib/annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot, staleReason,
+  annualPeriodEnds, periodGateReason } = require('../../lib/annual-pairs.js');
+const { resolveSourcedAnnualYear } = require('../../lib/sourced-annual-years.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -233,35 +235,85 @@ function quarterQoQRates(s, bounds) {
 // traeger (reagiert ein Jahr spaeter).
 // F-4: der Jahrespartner je Position kommt aus dem Enddatum (jahresVergleichIdx), nicht
 // mehr aus i+4. Ohne Enden liefert die Auswahl i+4 zurueck -> byte-identisch zu vorher.
-function revAcceleration(s, bounds) {
+function revAcceleration(s, bounds, onBasis) {
   const rq = norm(s, 'revenueQ');
   const yoy = [];
+  let newest = null;
   for (let i = 0; i < rq.length; i++) {
     const v = jahresVergleichIdx(s, 'revenueQ', i);
     if (v === null || v.idx >= rq.length) continue; // kein Jahrespartner -> kein Paar
+    if (v.quelle === 'position' && !sealedEraSnapshot(s)) continue; // Period gate (30.10.2026): no end, no pair
+    if (quarterDurations(s, 'revenueQ', i, v.idx).reason) continue; // Period gate (30.10.2026): unequal stored durations
     const a = rq[i], b = rq[v.idx];
     if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
-    if (a > 0 && b > 0) yoy.push(clampWinsor(a / b - 1, bounds));
+    if (a > 0 && b > 0) { if (newest === null) newest = i; yoy.push(clampWinsor(a / b - 1, bounds)); }
   }
-  if (yoy.length >= 2) return yoy[0] - yoy[yoy.length - 1];
+  // P286 (Codex R16, 04.11.2026): the newest pair actually used is judged for age like a shown quarter pair. A stale one leaves
+  // the quarterly branch to the annual fallback and its own anchor check; the older comparison pair is old by nature.
+  const stale = newest !== null && !sealedEraSnapshot(s) && staleReason('quarter', (s.timeseries || {}).revenueQEnds?.[newest]);
+  // Basis label (07.11.2026, export only): the count of usable year-ago quarter comparisons and the age verdict, before the branch.
+  if (onBasis) onBasis(null, yoy.length, Boolean(stale));
+  if (yoy.length >= 2 && !stale) {
+    if (onBasis) onBasis('quarter');
+    return yoy[0] - yoy[yoy.length - 1];
+  }
+
+  // Sourced newer year: exactly two adjacent stored years behind the filed one.
+  // Local operands only; all positional series and every other axis stay unchanged.
+  const sourced = resolveSourcedAnnualYear(s);
+  if (sourced.status === 'available') {
+    const r = sourced.record, ar = norm(s, 'annualRev');
+    // A restated prior cannot be compared with an unverified older vendor scope.
+    if (r.priorRestated) {
+      if (onBasis) onBasis('sourcedYearRestatedPrior');
+      return null;
+    }
+    if (!(ar[0] > 0) || !(ar[1] > 0)) return null;
+    // The older pair is old by construction; only the sourced anchor is age-tested.
+    const ends = annualPeriodEnds(s, 'annualRev');
+    if (periodGateReason('year', ends[0], ends[1])) return null;
+    if (onBasis) onBasis('sourcedYear');
+    return clampWinsor(r.revenue / r.priorRevenue - 1, bounds)
+      - clampWinsor(ar[0] / ar[1] - 1, bounds);
+  }
 
   // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
   const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
   if (ar.length >= 3) {
     if (annualPairRuleEnabled('acceleration') && !annualPairPasses(checkAnnualAcceleration(s))) return null;
+    // Period gate (30.10.2026): the same test as growth on both pairs; a blocked pair drops the axis (renorm-on-drop).
+    if (!annualAccelerationGatePasses(s)) return null;
     const neu = clampWinsor(ar[0] / ar[1] - 1, bounds);
     const alt = clampWinsor(ar[1] / ar[2] - 1, bounds);
-    if (Number.isFinite(neu) && Number.isFinite(alt)) return neu - alt;
+    if (Number.isFinite(neu) && Number.isFinite(alt)) {
+      if (onBasis) onBasis('year');
+      return neu - alt;
+    }
   }
   return null;
 }
 
 // --- 3. Bruttogewinn-Wachstum + GM-Trajektorie ------------------------------
 function gpGrowth(s) {
+  const sourced = resolveSourcedAnnualYear(s);
+  if (sourced.status === 'available') {
+    const r = sourced.record;
+    if (!(r.priorGrossProfit > 0)) return null;
+    // Shift the existing margin window by one year without changing either series.
+    // Restated scope cannot evidence an older vendor margin: hold only the tilt.
+    const gmWindow = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev')).slice(0, -1);
+    const gmOld = r.priorRestated ? null : lastPresent(gmWindow
+      .map(v => v !== null && v >= 0 && v <= 1 ? v : null));
+    const gmNew = r.grossProfit / r.revenue;
+    const tilt = gmOld !== null && gmNew >= 0 && gmNew <= 1 ? gmNew - gmOld : 0;
+    return r.grossProfit / r.priorGrossProfit - 1 + tilt;
+  }
   const gp = norm(s, 'annualGP');
   const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
   if (annualPairRuleEnabled('growth') && !annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;
+  // Period gate (lib/annual-pairs.js): a pair whose own ends are missing or not one year apart drops the axis (renorm-on-drop).
+  if (axisPairBlocked(s, 'annualGP', 0, 1)) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
   // audit/fix (Court Fall 1, F9): gm-Endpunkte gegen physikalisch unmoegliche Werte guarden.
@@ -400,6 +452,8 @@ function capitalEfficiency(s) {
   const aTwo = adjacentTwoPresent(assets);
   const rTwo = adjacentTwoPresent(norm(s, 'annualRev'));
   if (aTwo && aTwo[1] > 0 && rTwo && rTwo[1] > 0) {
+    // Period gate (30.10.2026): a penalty of 0 on a blocked revenue pair would reward it (T2), so the axis drops.
+    if (axisPairBlocked(s, 'annualRev', 0, 1)) return null;
     const assetGrowth = aTwo[0] / aTwo[1] - 1;
     const revGrowth = rTwo[0] / rTwo[1] - 1;
     penalty = Math.max(0, assetGrowth - revGrowth);

@@ -7,8 +7,9 @@ const path = require('node:path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
-const { correctedBelowFloor, table: marketCapCases } = require('../lib/market-cap-guard.js');
+const { correctedBelowFloor, table: marketCapCases, priceAge, STALE_PRICE_SOURCE, STALE_PRICE_RETURN, STALE_PRICE_WEEKDAYS } = require('../lib/market-cap-guard.js');
 const { norm, metricVal } = require('../src/scoring/snapshot.js');
+const { annualPeriodEnds, staleReason, _tagesnummer } = require('../lib/annual-pairs.js');
 const { normalizeCountry } = require('../src/scoring/country.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { revGrowthLevel, ruleOfX } = require('../src/scoring/axes.js');
@@ -56,8 +57,12 @@ const snapshotFiles = dir => fs.readdirSync(dir).filter(f => f.endsWith('.json')
  */
 function growth3(snapshot) {
   const revenue = norm(snapshot, 'annualRev');
-  const ends = snapshot.annual?.annualRevEnds;
-  if (ends?.[0] && ends?.[3] && new Date(ends[0]).getUTCFullYear() - new Date(ends[3]).getUTCFullYear() !== 3) return null;
+  const ends = annualPeriodEnds(snapshot, 'annualRev');
+  // Period gate (30.10.2026): the ends must lie three years apart, within a month. A calendar-year difference passed
+  // Daifuku's 31.12.2025 against 31.03.2022 (3.75 years); a missing end proves no span at all.
+  const days = _tagesnummer(ends[0]) - _tagesnummer(ends[3]);
+  if (!ends[0] || !ends[3] || Math.abs(days - 3 * 365) > 30) return null;
+  if (staleReason('year', ends[0])) return null; // P286: same limit as the shown annual figure
   return revenue[0] > 0 && revenue[3] > 0 ? round((Math.cbrt(revenue[0] / revenue[3]) - 1) * 100) : null;
 }
 
@@ -220,6 +225,24 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     const gmBad = finite(grossMargin) && Math.abs(round(grossMargin)) > GM_MAX_ABS_PCT;
     // Only a negative payout or a unit error is withheld; the vendor yield, not the payout, is the broken field (000059.SZ).
     const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0);
+    // Stale-price hold: P/E, forward P/E, dividend yield and the distance to the 52-week high are Yahoo values on the same
+    // old quote message as the withheld market cap, so none is shown while the hold lasts, each with its own hint. The
+    // distance to the all-time high rests on the project's own daily closes and stays while its newest close is current.
+    // A held stale quote also counts on a side line the class sum emptied (#113); a hand-table hold keeps its old behaviour,
+    // because its stalePriceHold is never cleared while its market cap stays empty.
+    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (snapshot.marketCap?.source === 'class-sum' && !!meta.stalePriceHold && !finite(snapshot.marketCap?.value));
+    // Short on purpose: about 2,100 such hints on 03.11. sit in a file with a 6 MB ceiling (5.6 MB before them).
+    const meldung = meta.stalePriceHold?.priceDay ? `die Kursmeldung von Yahoo vom ${meta.stalePriceHold.priceDay.split('-').reverse().join('.')}` : 'die Kursmeldung von Yahoo';
+    const zeige = (label, value) => {
+      if (!kursAlt || value === null || value === undefined) return value;
+      aus.push(`${label} wird nicht gezeigt, ${meldung} ist zu alt.`);
+      return null;
+    };
+    const athAlt = kursAlt && ath && !(priceAge({ marketCap: { value: 1, regularMarketTime: ath.lastDate } })?.age <= STALE_PRICE_WEEKDAYS);
+    if (athAlt && finite(ath.distancePct)) aus.push(`Abstand zum Allzeithoch wird nicht gezeigt, weil der letzte eigene Tageskurs vom ${String(ath.lastDate).slice(0, 10).split('-').reverse().join('.')} älter als ${STALE_PRICE_WEEKDAYS} Wochentage ist.`);
+    // The payout placeholder rule reads the vendor's own yield status, not the hidden one: a 0 payout of a paying firm stays missing (T2).
+    const zahlt = div.dySt === 'zahlt';
+    if (kursAlt && div.dy !== null && zeige('Dividendenrendite', div.dy) === null) Object.assign(div, { dy: null, dySt: 'unbekannt' });
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
     if (poBad) aus.push('po-implausible');
@@ -229,18 +252,19 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       c: text(board?.country ?? geo.country), rg: text(board?.region ?? geo.region), s: text(board?.sector ?? meta.sector),
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
-      g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
+      // G2, PR #72 review: a quarantined packet has no comparable year and its reason says so (PRN.L -8.86, 402340.KS +967); no growth from it.
+      g: board ? round(board.revGrowthYoYPct) : meta.financialDataIssue ? null : round(revGrowthLevel(snapshot)), g3: meta.financialDataIssue ? null : growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
-      pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
-      fpe: fpeBad ? null : fpe,
-      ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
+      ...(peShown => ({ pe: peShown, peSt: mixed ? 'waehrung' : peShown !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt' }))(zeige('P/E', pe)),
+      fpe: zeige('Forward P/E', fpeBad ? null : fpe),
+      ...div, po: poBad || (payout === 0 && (zahlt || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
       r40: eligible.has(snapshot) ? round(ruleOfX(snapshot, 1, true, growthBounds)) : null,
       gm: grossMargin === 0 || gmBad ? null : round(grossMargin),
       // A slightly newer price may exceed the high; implausible scale differences stay missing.
-      d52: highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null,
-      ath: round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
+      d52: zeige('Abstand zum 52-Wochen-Hoch', highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null),
+      ath: athAlt ? null : round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
       aus: [...new Set(aus)],
     }).filter(([, value]) => value !== null));
   }).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t, 'en'));
@@ -298,6 +322,8 @@ function validateUniverse(feed, bytes) {
     if (row.aus.includes('ev-negativ') && row.evs != null) errors.push(where + ': inconsistent ev reason');
     if (row.d52 != null && (row.d52 < -100 || row.d52 > 0)) errors.push(where + ': invalid d52');
     if (row.aus.includes('d52-implausible') && row.d52 != null) errors.push(where + ': inconsistent d52 reason');
+    // A stale-price hold empties every value that rests on the same Yahoo quote message.
+    if (row.aus.some(a => a.endsWith(STALE_PRICE_RETURN)) && ['pe', 'fpe', 'dy', 'd52'].some(k => row[k] != null)) errors.push(where + ': price-dependent value beside a stale quote hold');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
     if (row.r40 != null && (row.g == null || row.fcf == null)) errors.push(where + ': incomplete rule of 40');
   }
@@ -386,5 +412,6 @@ function main(argv) {
   } catch (error) { console.error('[filter] ' + error.message); return 1; }
 }
 
-if (require.main === module) process.exitCode = main(process.argv.slice(2));
+// Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
 module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

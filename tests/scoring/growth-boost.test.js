@@ -8,10 +8,11 @@
  * Usage:  node tests/scoring/growth-boost.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
+const { datedApi } = require('../helpers/dated-series.js');
 const {
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl,
   GROWTH_BOOST_K,
-} = require('../../src/scoring/score.js');
+} = datedApi(require('../../src/scoring/score.js'));
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }
@@ -38,8 +39,11 @@ test('growthYoYComponents: annual-lag1 200/100-1=1.0; nur 1 present -> kein annu
 test('quartal-lag4: 5 lueckenlose -> 0.2; interne Luecke ODER len<5 -> Bein faellt weg', () => {
   const c = growthYoYComponents(snap(null, [120, 110, 105, 102, 100]));
   assert.equal(c.length, 1); assert.ok(Math.abs(c[0] - 0.2) < 1e-12, 'q-lag4 = 120/100-1 ~ 0.2, got ' + c[0]);
-  assert.deepEqual(growthYoYComponents(snap(null, [120, null, null, null, 100])), []);  // interne Luecken -> DROP (nicht 0.2!)
-  assert.deepEqual(growthYoYComponents(snap(null, [120, 110, null, 108, 100, 95])), []); // interne Luecke idx2 -> DROP
+  // Without the helper: the subject here is the undated series. Period gate round 2 (30.10.2026): no ends, no pair at all.
+  const undatedComponents = require('../../src/scoring/score.js').growthYoYComponents;
+  assert.deepEqual(undatedComponents(snap(null, [120, 110, 105, 102, 100])), []);
+  assert.deepEqual(undatedComponents(snap(null, [120, null, null, null, 100])), []);  // interne Luecken -> DROP (nicht 0.2!)
+  assert.deepEqual(undatedComponents(snap(null, [120, 110, null, 108, 100, 95])), []); // interne Luecke idx2 -> DROP
   assert.deepEqual(growthYoYComponents(snap(null, [120, 110, 105, 102])), []);           // len 4 -> kein Index 4
 });
 
