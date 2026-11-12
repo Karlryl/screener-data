@@ -192,6 +192,43 @@ test('Codex R2 on #116 (12.11.2026): stored fills, duplicate dates and short sta
   assert.notEqual(g31Shadow(hs).v1.periodEnd, '2026-09-30');
 });
 
+test('Codex R3 on #116 (12.11.2026): a stored fill is re-checked (stored cell, statement periods, public date) before it is kept', () => {
+  const odds = [{ currency: 'EUR' }, { currencyUnit: 'EUR' }, { unit: 'shares' }, { multiplier: 1000 }, { periodType: '6M' }, { source: 'sec' }];
+  // 1: a correct fill whose stored cell later carries another context is withheld, with an event.
+  for (const t of ['601211.SS', '360ONE.NS']) {
+    const s = apply(pkt(t)), i = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+    for (const odd of odds) {
+      const p = structuredClone(s); Object.assign(p.timeseries.revenueQ[i], odd);
+      const r = H.applyFinancialCases(p, { table: active }), o = r.snapshot.timeseries.revenueQ[i];
+      assert.deepEqual([value(o), o.financialMissing?.reasonCode], [null, 'context-changed'], t + ' ' + JSON.stringify(odd));
+      assert.ok(r.events.some(e => e.period === '2025-09-30' && e.reasonCode === 'context-changed'), t + ' event ' + JSON.stringify(odd));
+    }
+  }
+  // 2: Chennai stored by the earlier code with a short revenue period list (cut to 3, or cut to 4 and extended to 5) and a 6M
+  // on the newest quarter: the stored inserted quarter is held, so the half year is never paired with it.
+  const full = apply(pkt('CHENNPETRO.NS')), k = full.timeseries.revenueQEnds.indexOf('2025-09-30');
+  for (const keep of [[0, 1, 2], [0, 1, 2, 3, 4]]) {
+    const p = structuredClone(full); p.meta.statementPeriods.revenueQ = keep.map(x => ({ ...full.meta.statementPeriods.revenueQ[x] }));
+    p.meta.statementPeriods.revenueQ[0].duration = '6M';
+    const r = H.applyFinancialCases(p, { table: active });
+    assert.deepEqual([value(r.snapshot.timeseries.revenueQ[k]), r.snapshot.timeseries.revenueQ[k]?.financialMissing?.reasonCode], [null, 'context-changed'], 'periods ' + keep.length);
+    assert.ok(r.events.some(e => e.period === '2025-09-30' && e.reasonCode === 'context-changed'), 'periods ' + keep.length + ': event');
+    assert.notEqual(g31Shadow(r.snapshot).v1.periodEnd, '2026-09-30', 'periods ' + keep.length);
+  }
+  // 3: a stored fill whose source is now dated after the fetch day is withheld, with a reason; the correct table keeps it.
+  const later = structuredClone(active);
+  for (const c of later.cases.filter(c => c.vendorGap)) c.sources = c.sources.map(x => ({ ...x, ...(x.filed ? { filed: '2026-11-30' } : { published: '2026-11-30' }) }));
+  for (const t of ['601211.SS', '360ONE.NS', 'CHENNPETRO.NS']) {
+    const s = apply(pkt(t)), i = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+    const r = H.applyFinancialCases(structuredClone(s), { table: later }), o = r.snapshot.timeseries.revenueQ[i];
+    assert.deepEqual([value(o), o?.financialMissing?.reasonCode], [null, 'not-public-at-fetch'], t);
+    assert.equal(o.financialMissing.reason, H.MISSING_REASONS['not-public-at-fetch'], t);
+    assert.ok(r.events.some(e => e.period === '2025-09-30' && e.reasonCode === 'not-public-at-fetch'), t + ': event');
+    const back = H.applyFinancialCases(structuredClone(r.snapshot), { table: active }).snapshot;
+    assert.ok(value(back.timeseries.revenueQ[i]) > 0, t + ': refilled once the date is admissible again');
+  }
+});
+
 test('the live files are unchanged by this test', () => {
   assert.deepEqual(liveHashes(), beforeHashes);
 });
