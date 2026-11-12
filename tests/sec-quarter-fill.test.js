@@ -139,8 +139,11 @@ test('policy switch off and shadow mode change nothing', () => {
 // ── Derivation ───────────────────────────────────────────────────────────────
 const fact = (start, end, val, filed, form = '10-Q', accn = 'a') => ({ start, end, val, filed, form, accn });
 test('single quarters: reported three months win over a cumulative difference', () => {
-  const q = pitSingleQuarters([fact('2026-01-01', '2026-06-30', 300, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-01-01', '2026-03-31', 100, '2026-05-01')]);
+  const q = pitSingleQuarters([fact('2026-01-01', '2026-06-30', 250, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-01-01', '2026-03-31', 100, '2026-05-01')]);
   assert.deepEqual(q.map(x => [x.end, x.val, x.derivation]), [['2026-06-30', 150, 'reported-3M'], ['2026-03-31', 100, 'reported-3M']]);
+  // Codex R2 on #85 (P1-1): when the cumulative difference contradicts the reported quarter (300 - 100 = 200, not 150) the end stays open.
+  const bad = pitSingleQuarters([fact('2026-01-01', '2026-06-30', 300, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-01-01', '2026-03-31', 100, '2026-05-01')]);
+  assert.equal(bad.find(x => x.end === '2026-06-30').derivation, 'restatement-conflict');
 });
 test('single quarters: cumulative minus the earlier cumulative with the same start says so', () => {
   const q = pitSingleQuarters([fact('2026-01-01', '2026-06-30', 300, '2026-09-21'), fact('2026-01-01', '2026-03-31', 100, '2026-05-01')]);
@@ -157,8 +160,10 @@ test('single quarters: year minus nine months, then year minus three quarters', 
   assert.deepEqual([three[0].end, three[0].val, three[0].derivation, three[0].filed], ['2025-12-31', 110, 'year-minus-three-quarters', '2026-02-20']);
 });
 test('single quarters: later filing wins, a filing after asOf is unknown, other forms are ignored', () => {
-  const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-04-01', '2026-06-30', 151, '2026-09-01', '10-Q/A'), fact('2026-04-01', '2026-06-30', 999, '2026-09-02', '8-K')];
-  assert.equal(pitSingleQuarters(rows)[0].val, 151);
+  // Codex R2 on #85: no latest-filing-wins any more; a 10-Q/A with another figure (151 against 150) opens the period.
+  const rows = [fact('2026-04-01', '2026-06-30', 150, '2026-07-31'), fact('2026-04-01', '2026-06-30', 150.5, '2026-09-01', '10-Q/A'), fact('2026-04-01', '2026-06-30', 999, '2026-09-02', '8-K')];
+  assert.deepEqual([pitSingleQuarters(rows)[0].val, pitSingleQuarters(rows)[0].derivation, pitSingleQuarters(rows)[0].filed], [150, 'reported-3M', '2026-07-31'], 'an amendment within 0.5 % is the same figure, dated by its first filing');
+  assert.equal(pitSingleQuarters([...rows, fact('2026-04-01', '2026-06-30', 151, '2026-09-03', '10-Q/A')])[0].derivation, 'restatement-conflict');
   // Codex R1 on #85 (3): filed Friday 31.07.2026, known from Monday 03.08. (the first trading day after filing).
   assert.equal(pitSingleQuarters(rows, { asOf: '2026-08-03' })[0].val, 150);
   assert.deepEqual(pitSingleQuarters(rows, { asOf: '2026-08-01' }), [], 'a Saturday after a Friday filing');
@@ -179,7 +184,7 @@ test('Codex R1 (1) a later amendment of any part of a derivation opens the perio
   const q4 = rows => pitSingleQuarters(rows).find(x => x.end === '2025-12-31');
   assert.equal(q4(year).derivation, 'reported-3M', 'consistent year: the reported quarter stays');
   const amended = q4([...year, fact('2025-01-01', '2025-12-31', 550, '2026-04-01', '10-K/A')]);
-  assert.deepEqual([amended.derivation, amended.conflictsWith.val], ['restatement-conflict', 100]);
+  assert.equal(amended.derivation, 'restatement-conflict');
   // amendedShorterOperand: a 10-Q/A raises Q1 from 100 to 200; H1 250 and Q2 reported at 150 are older.
   const half = [fact('2026-01-01', '2026-03-31', 100, '2026-05-01'), fact('2026-04-01', '2026-06-30', 150, '2026-08-01'), fact('2026-01-01', '2026-06-30', 250, '2026-08-01')];
   const q2 = rows => pitSingleQuarters(rows).find(x => x.end === '2026-06-30');
@@ -474,11 +479,11 @@ test('candidates: no vendor quarter for more than 91 days counts without a newer
   assert.equal(await ask('2026-07-01T13:47:00Z'), 1, '92 days');
 });
 
-test('candidates: a US listing of a firm seated abroad is asked, its foreign listing is not (sd-us-kern 12.11.2026)', async () => {
+test('candidates: a firm seated abroad is not asked, also through a US listing (Codex R2 on #85, P2-2: a named gap)', async () => {
   const { base, calls } = tempStoreRun();
   addSnap(base, 'MELIX.json', usSnap('MELIX', { country: 'Uruguay' }));
   await main({ ...base, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, 'ABROAD.DE': { cik: '0000000099' }, MELIX: { cik: '0000000007' } }) });
-  assert.deepEqual([...calls].sort(), ['0000000007', '0001018724']);
+  assert.deepEqual([...calls].sort(), ['0001018724']);
 });
 test('queue: over several days a firm off the boards is asked while board firms fill the rest of the cap (Codex R1 on #85, 5)', async () => {
   const { base } = tempStoreRun();
@@ -666,7 +671,9 @@ test('R21-1 real APLD: a narrower concept is not the whole revenue (services 262
   const st = { schemaVersion: 1, market: 'US', currency: 'USD', sources: { s: { fetchedAt: '2026-10-31T10:00:00Z' } }, companies: { [s.meta.ticker]: company } };
   const r = X.applyExchangeCheck(s, { mode: 'fill-only', usFill: true, context: { stores: { us: st }, baseline: { rows: new Map() } } });
   assert.equal(r.snapshot.meta.secQuarterFill, undefined);
-  assert.equal(r.result.why, 'part-of-revenue');
+  // Codex R2 on #85: APLD restated its contract-revenue quarters, so under the fail-closed derivation those periods are open and
+  // too few quarters agree before the part-of-revenue rule is reached; that rule keeps its own synthetic test above.
+  assert.ok(['part-of-revenue', 'too-few-agreeing-quarters'].includes(r.result.why), r.result.why);
 });
 test('R21-1 a larger concept that measurably is another definition than the vendor (disagrees twice) does not block', () => {
   const bigger = {};
@@ -692,7 +699,7 @@ test('R21-2 single quarters: a later 10-Q/A cumulative figure that contradicts t
   const rows = [fact('2026-01-01', '2026-03-31', 100, '2026-05-01'), fact('2026-04-01', '2026-06-30', 150, '2026-08-01'),
     fact('2026-01-01', '2026-06-30', 250, '2026-08-01'), fact('2026-01-01', '2026-06-30', 350, '2026-09-15', '10-Q/A')];
   const q2 = pitSingleQuarters(rows).find(x => x.end === '2026-06-30');
-  assert.deepEqual([q2.derivation, q2.val, q2.conflictsWith.val], ['restatement-conflict', 250, 150]);
+  assert.equal(q2.derivation, 'restatement-conflict');
   assert.equal(pitSingleQuarters(rows.slice(0, 3)).find(x => x.end === '2026-06-30').derivation, 'reported-3M', 'a consistent cumulative changes nothing');
   assert.equal(whyOf(snapshot(), store(quarters({ '2026-06-30': obs(250, '2026-09-15', { derivation: 'restatement-conflict' }) }))), 'restatement-open');
 });
@@ -708,8 +715,9 @@ test('R21-3 another listing of the same firm reads its entry when three quarters
   const twoFirms = store();
   twoFirms.companies.TWIN = { cik: '0000000001', RevenueFromContractWithCustomerExcludingAssessedTax: quarters() };
   assert.equal(run(other(), twoFirms).result, null, 'two CIKs match: no link');
-  // Codex R1 on #85 (4): the seat no longer gates the link (MELI.VI, SEDG.VI read the entry of their US listing); the figures do.
-  assert.equal(run(other({ country: 'Uruguay' })).result.fill.aliasOf, 'AMZNX');
+  // Codex R2 on #85 (P2-2): figures alone prove no identity, so only listings of US-seated firms link (an issuer seated abroad
+  // with the same three quarters stays unlinked).
+  assert.equal(run(other({ country: 'Uruguay' })).result, null);
 });
 test('R21-4 cap: the queue runs oldest read first, so the firm left out yesterday is asked today', async () => {
   const { base } = tempStoreRun();
@@ -745,7 +753,9 @@ test('blind review N1: a reported quarter in open restatement is no operand of a
     fact('2025-04-01', '2025-06-30', 100, '2025-08-01'), fact('2025-01-01', '2025-06-30', 190, '2025-08-01'), fact('2025-01-01', '2025-06-30', 230, '2025-09-20', '10-Q/A'),
     fact('2025-07-01', '2025-09-30', 110, '2025-11-01')]);
   assert.equal(q.find(x => x.end === '2025-06-30').derivation, 'restatement-conflict');
-  assert.equal(q.find(x => x.end === '2025-12-31'), undefined);
+  // Codex R2 on #85 (P1-2): the dependent fourth quarter carries a conflict marker of its own (not just no value), so a store
+  // that already holds an older derived figure for it leaves it open from the newest filing on.
+  assert.deepEqual([q.find(x => x.end === '2025-12-31').derivation, q.find(x => x.end === '2025-12-31').filed], ['restatement-conflict', '2026-02-01'], 'dated by the newest filing involved (the 10-K)');
 });
 test('blind review N1: two agreeing vendor quarters do not link another listing (three needed)', () => {
   const two = snapshot({ meta: { ticker: 'AMZNX.SW', country: 'United States' } });

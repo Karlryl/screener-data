@@ -426,8 +426,9 @@ function usCandidates(dirs, today) {
       if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       filesRead[d] += 1;
       const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), m = s.meta || {};
-      // sd-us-kern 12.11.2026: a US listing (no exchange suffix) of a firm seated abroad files 10-Q too (MELI, ENB, TEAM).
-      if (!m.ticker || (m.country !== 'United States' && m.ticker.includes('.')) || out.has(m.ticker)) continue;
+      // Codex R2 on #85 (P2-2): US seat only. Firms seated abroad with a US listing (MELI, TEAM) would fill one listing while
+      // their foreign listings keep the vendor figure, and a link by figures alone is no proof of identity: a named gap.
+      if (!m.ticker || m.country !== 'United States' || out.has(m.ticker)) continue;
       if ((m.fxConverted === true ? m.reportingCurrencyOriginal : m.reportingCurrency) !== 'USD' || (m.fxConverted === true && m.fxRateApplied !== 1)) continue;
       const ends = s.timeseries?.revenueQEnds || [], rows = s.timeseries?.revenueQ || [];
       const newest = ends.filter((e, i) => Number.isFinite(rows[i] && typeof rows[i] === 'object' ? rows[i].value : rows[i])).sort().pop();
@@ -454,7 +455,7 @@ async function runUs(ctx) {
   // Today's SEC list first (a listing younger than the committed map), the committed map for firms that left the list.
   const cikMap = { ...ctx.cikMap, ...await ctx.secTickers() };
   const cikOf = (t) => cikMap[t]?.cik || cikMap[t.replace(/-/g, '.')]?.cik || cikMap[t.replace(/\./g, '-')]?.cik || null;
-  const st = { candidates: 0, due: 0, calls: 0, ok: 0, noCik: 0, noFacts: 0, failed: 0, skippedCap: 0 };
+  const st = { candidates: 0, due: 0, calls: 0, offBoardCalls: 0, ok: 0, noCik: 0, noFacts: 0, failed: 0, skippedCap: 0 };
   const failures = [];
   let inARow = 0;
   st.candidates = all.length;
@@ -472,16 +473,19 @@ async function runUs(ctx) {
   // a fifth of the calls (SEC_OFF_BOARD_SHARE) stays for the other firms, oldest read first, so none of them waits forever.
   const lastRead = (tk) => next.companies[tk]?.noData?.readAt || '';
   const byAge = (x, y) => (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1);
-  const board = due.filter((x) => ctx.usBoard.has(x.ticker)).sort(byAge), others = due.filter((x) => !ctx.usBoard.has(x.ticker)).sort(byAge);
+  // Codex R2 on #85 (P2-1): only firms with a CIK can use a call, so the reserve is counted among those; firms without one come last.
+  const callable = due.filter((x) => cikOf(x.ticker)), uncallable = due.filter((x) => !cikOf(x.ticker));
+  const board = callable.filter((x) => ctx.usBoard.has(x.ticker)).sort(byAge), others = callable.filter((x) => !ctx.usBoard.has(x.ticker)).sort(byAge);
   const reserve = Math.min(others.length, Math.max(1, Math.floor(ctx.secCap * SEC_OFF_BOARD_SHARE)));
   const lead = board.slice(0, Math.max(0, ctx.secCap - reserve));
-  due.splice(0, due.length, ...lead, ...others.slice(0, reserve), ...board.slice(lead.length), ...others.slice(reserve));
+  due.splice(0, due.length, ...lead, ...others.slice(0, reserve), ...board.slice(lead.length), ...others.slice(reserve), ...uncallable);
   st.due = due.length;
   for (const { ticker } of due) {
     if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
     const cik = cikOf(ticker);
     if (!cik) { st.noCik += 1; continue; }
     st.calls += 1;
+    if (!ctx.usBoard.has(ticker)) st.offBoardCalls += 1;
     let facts;
     try { facts = await ctx.secFacts(cik); inARow = 0; }
     catch (e) {
@@ -503,7 +507,7 @@ async function runUs(ctx) {
       }
     }
   }
-  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (board firms go first, a fifth of the calls goes to the others; each group runs oldest read first).');
+  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run; ' + st.offBoardCalls + ' of ' + st.calls + ' calls went to firms off the boards (board firms first, up to a fifth of the calls kept for the others with a CIK; each group oldest read first).');
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
   next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
