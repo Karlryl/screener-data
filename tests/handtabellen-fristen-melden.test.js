@@ -54,6 +54,17 @@ test('a missing filter feed is named as not checkable, exit 0, no all-clear', ()
   assert.doesNotMatch(r.out, /Keine Frist/);
 });
 
+test('valid JSON with the wrong shape is named as not checkable, never as "no deadline"', () => {
+  fs.writeFileSync(path.join(tmp, 'u3.json'), JSON.stringify({ rows: [] }));
+  for (const [name, table] of [['null', null], ['array', []], ['primitive-row', { ACME: 5 }], ['bad-holds', { _holds: [] }]]) {
+    fs.writeFileSync(path.join(tmp, `t-${name}.json`), JSON.stringify(table));
+    const r = run(['--tabelle', path.join(tmp, `t-${name}.json`), '--universum', path.join(tmp, 'u3.json'), '--datum', '2026-11-13']);
+    assert.equal(r.code, 0, name);
+    assert.match(r.out, /nicht prüfbar .*keine Entwarnung/, name);
+    assert.doesNotMatch(r.out, /Keine Frist/, name);
+  }
+});
+
 test('the scoring job runs the report after the filter universe and before the deploy, and it can never fail the run', () => {
   const yml = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8').replace(/\r\n/g, '\n');
   const scoring = yml.slice(yml.indexOf('\n  scoring:\n'), yml.indexOf('\n  druckenmiller-guard:\n'));
@@ -64,4 +75,7 @@ test('the scoring job runs the report after the filter universe and before the d
   const stepStart = scoring.lastIndexOf('\n      - name:', iStep);
   const step = scoring.slice(stepStart, scoring.indexOf('\n      - name:', iStep));
   assert.match(step, /continue-on-error: true/);
+  // A hanging report must not eat the job's time budget before the deploy (Codex review round 1).
+  const limit = /timeout-minutes: (\d+)/.exec(step);
+  assert.ok(limit && Number(limit[1]) <= 5, 'the step has its own short timeout');
 });

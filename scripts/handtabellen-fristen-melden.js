@@ -36,6 +36,11 @@ function melden(argv, env) {
     universum = read(arg(argv, 'universum') || DEFAULTS.universum).rows;
     if (!Array.isArray(universum)) throw new Error('filter/universum.json ohne rows');
     tabelle = read(arg(argv, 'tabelle') || DEFAULTS.tabelle);
+    // Codex review round 1: valid JSON with the wrong shape must not read as "no deadline".
+    if (!tabelle || typeof tabelle !== 'object' || Array.isArray(tabelle)) throw new Error('Handtabelle ist kein Objekt');
+    const kaputt = Object.entries(tabelle).filter(([k, v]) => !k.startsWith('_') && (!v || typeof v !== 'object' || Array.isArray(v))).map(([k]) => k);
+    if (kaputt.length) throw new Error(`Handtabelle mit ungültigen Zeilen: ${kaputt.slice(0, 5).join(', ')}`);
+    if (tabelle._holds !== undefined && (!tabelle._holds || typeof tabelle._holds !== 'object' || Array.isArray(tabelle._holds))) throw new Error('Handtabelle mit ungültigem _holds');
   } catch (err) {
     return { lines: [`::warning title=Handtabelle Fristen::Die Fristen der Aktienzahl-Handtabelle sind heute nicht prüfbar (${err.message}); das ist keine Entwarnung.`], faellt: 0 };
   }

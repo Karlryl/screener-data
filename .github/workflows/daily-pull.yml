@@ -2271,6 +2271,7 @@ jobs:
       # deadline within 30 days as a warning and in the step summary. Reporting only, never blocks the run.
       - name: Report hand-table deadlines (reporting only)
         continue-on-error: true
+        timeout-minutes: 2
         run: node scripts/handtabellen-fristen-melden.js
 
       # A5/S2 (private research tab): raw valuation ratios per ticker next to filter/universum.json.
