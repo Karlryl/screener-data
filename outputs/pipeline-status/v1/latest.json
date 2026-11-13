@@ -1,12 +1,12 @@
 {
   "schema": "screener-pipeline-status/v1",
   "status": "failure",
-  "attempt_run_id": "43194801899",
+  "attempt_run_id": "43401776901",
   "run_attempt": 1,
-  "head_sha": "395784f048531215479f1d6074b8d3d47075c8c1",
-  "started_at": "2026-11-12T09:49:23Z",
-  "completed_at": "2026-11-12T11:27:00Z",
-  "failed_job": "jahres-ausreisser-waechter",
-  "reason": "prep=success,quarter-candidates=success,quarter-selection=success,pull=success,prices=success,merge=success,scoring=success,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=failure,druckenmiller-guard=success,feed-fill-waechter=failure",
+  "head_sha": "2395b9ae4e10a52998ad5a2c254f0cc22aae9483",
+  "started_at": "2026-11-13T09:29:49Z",
+  "completed_at": "2026-11-13T11:09:47Z",
+  "failed_job": "scoring",
+  "reason": "prep=success,quarter-candidates=success,quarter-selection=success,pull=success,prices=success,merge=success,scoring=failure,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=success,druckenmiller-guard=skipped,feed-fill-waechter=skipped",
   "last_success_at": "2026-11-07T10:18:01Z"
 }
