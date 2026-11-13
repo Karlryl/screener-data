@@ -57,8 +57,10 @@ function run(loop, scenario) {
     'rcof() { local list=($1); local n=$ATT; [ $n -gt ${#list[@]} ] && n=${#list[@]}; echo ${list[$((n-1))]}; }',
     'git() {',
     '  case "$1" in',
-    `    fetch) log fetch; return $(rcof "${scenario.fetch.join(' ')}") ;;`,
-    `    ls-remote) log ls-remote; return ${scenario.lsRemote} ;;`,
+    // Master's Opus review (13.11.): the stub follows real git for the arguments. A fetch of another ref fails like a
+    // missing remote ref; `ls-remote --exit-code` for another pattern returns 2 (no match), without --exit-code 0.
+    `    fetch) log fetch; [ "$*" = "fetch origin gh-pages" ] || return 128; return $(rcof "${scenario.fetch.join(' ')}") ;;`,
+    `    ls-remote) log ls-remote; case " $* " in *" --exit-code "*) ;; *) return 0 ;; esac; [ "\${@: -2:1} \${@: -1}" = "origin gh-pages" ] || return 2; return ${scenario.lsRemote} ;;`,
     `    rev-parse) log rev-parse; return ${scenario.localRef ? 0 : 1} ;;`,
     '    reset) log reset; return 0 ;;',
     '    diff) log diff; return 1 ;;',
@@ -129,6 +131,11 @@ test('every gh-pages force-push loop: a failed fetch never pushes a stale clone;
     assert.deepEqual(violations(ok, okScenario), []);
     const absent = run(loop, { name: 'branch-absent', fetch: [1, 1, 1], lsRemote: 2, localRef: false, push: [0] });
     assert.ok(Object.values(absent.byAttempt).some(c => c.includes('push')) && absent.code === 0, `${loop.file}:${loop.line}: a proven-absent branch is created`);
+    // The exit-2 branch on a retry (master's Opus review L1): push 1 fails, the retry's fetch fails, ls-remote proves the
+    // branch absent, so the retry pushes and the step ends green.
+    const absentRetry = run(loop, { name: 'branch-absent-retry', fetch: [1, 1, 1], lsRemote: 2, localRef: false, push: [1, 0, 0] });
+    assert.ok(Object.entries(absentRetry.byAttempt).some(([a, c]) => Number(a) >= 2 && c.includes('ls-remote') && c.includes('push')) && absentRetry.code === 0,
+      `${loop.file}:${loop.line}: on a retry a proven-absent branch is created: ${JSON.stringify(absentRetry.byAttempt)}`);
   }
 });
 
