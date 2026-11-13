@@ -135,11 +135,9 @@ test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R
   const kept = routedEntries.filter((e) => !losers.has(e));
   // Diskriminanz-Schutz: nur wenn der Dedup wirklich Verlierer entfernt, unterscheiden sich pre-/post-Bounds.
   assert.ok(routedEntries.length - kept.length > 0, `Dedup muss Verlierer entfernen (routed=${routedEntries.length}, kept=${kept.length})`);
-  // Parity with production itself (Daylauf 17): the routed legs the reference drops are exactly the routed legs
-  // scoreUniverse marks dup-issuer. A reference that builds its entries differently from production fails here first.
-  const routedTickers = new Set(routedEntries.map((e) => e.ticker));
-  const prodLosers = scoreUniverse(universe, formulas).filter((e) => e.reason === 'dup-issuer' && routedTickers.has(e.ticker)).map((e) => e.ticker).sort();
-  assert.deepEqual([...losers].map((e) => e.ticker).sort(), prodLosers, 'reference dedup losers = production dup-issuer losers among routed legs');
+  // No extra comparison against scoreUniverse here (Codex review 13.11.): production dedups route AND survival legs, this
+  // reference only route legs (calibrate semantics), so a route leg that loses to a survival leg in production would be a
+  // false alarm. Drift in the entry construction is caught by the two bounds assertions below, as on 13.11.2026.
   const refWinsor = learnWinsorBounds(kept.map((e) => e.snapshot));
   const growthSamples = [];
   for (const e of kept) for (const v of growthYoYComponents(e.snapshot)) growthSamples.push(v);
