@@ -28,14 +28,23 @@ test('a withholdUnverified row inside the window becomes a GitHub warning naming
   assert.doesNotMatch(r.out, /KEEP/);
 });
 
-test('the committed table: the three rows of 30.11.2026 are reported on data day 13.11.2026', () => {
-  const universum = { rows: ['3018.TW', '7911.T', 'JOJO.BO'].map((t, i) => ({ t, n: 'Firm ' + t, b: 'industrials', rk: i + 1, mc: 1e9 })) };
+test('the committed table: every withholdUnverified row of the next deadline is reported as a warning (default inputs)', () => {
+  // Derived from the table, so re-verifying a row (new reviewBy) does not break the test. On 13.11.2026 this is
+  // 3018.TW, 7911.T and JOJO.BO with reviewBy 30.11.2026.
+  const table = JSON.parse(fs.readFileSync(path.join(ROOT, 'configs', 'share-count-hand-table.json'), 'utf8'));
+  const rows = Object.entries(table).filter(([k, v]) => !k.startsWith('_') && v && v.withholdUnverified === true && /^\d{4}-\d{2}-\d{2}$/.test(v.reviewBy || ''));
+  if (!rows.length) return; // no such row left: nothing can expire
+  const next = rows.map(([, v]) => v.reviewBy).sort()[0];
+  const due = rows.filter(([, v]) => v.reviewBy === next).map(([t]) => t);
+  const datum = new Date(Date.parse(next + 'T00:00:00Z') - 10 * 86400000).toISOString().slice(0, 10);
+  const universum = { rows: due.map((t, i) => ({ t, n: 'Firm ' + t, b: 'industrials', rk: i + 1, mc: 1e9 })) };
   fs.writeFileSync(path.join(tmp, 'u2.json'), JSON.stringify(universum));
-  const r = run(['--universum', path.join(tmp, 'u2.json')], { RUN_DATE_UTC: '2026-11-13' });
+  const r = run(['--universum', path.join(tmp, 'u2.json')], { RUN_DATE_UTC: datum });
   assert.equal(r.code, 0);
-  const line = r.out.split('\n').find(l => l.includes('Frist 30.11.2026'));
+  const tag = next.split('-').reverse().join('.');
+  const line = r.out.split('\n').find(l => l.includes(`Frist ${tag} (in 10 Tagen)`));
   assert.ok(line && line.startsWith('::warning'), r.out);
-  for (const t of ['3018.TW', '7911.T', 'JOJO.BO']) assert.ok(line.includes(t), t);
+  for (const t of due) assert.ok(line.includes(t), t);
 });
 
 test('a missing filter feed is named as not checkable, exit 0, no all-clear', () => {
