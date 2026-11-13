@@ -1695,10 +1695,19 @@ jobs:
           # anwenden — dasselbe fetch-vor-jedem-Versuch-Prinzip wie der bestehende
           # retry-rebase-Loop im "Commit Snapshots"-Schritt oben, hier ohne rebase
           # (gh-pages ist ein reiner Datei-Snapshot-Branch, kein Merge-Ziel).
+          # Untangle F003 (13.11.2026): the T568-F5 split of the board-history deploy below, here too. A failed
+          # fetch used to skip the reset and force-push this job's older clone; now a failed fetch with an
+          # existing origin/gh-pages goes to the next attempt. Guard: tests/ghpages-deploy-loops.test.js.
           for i in 1 2 3; do
             if [ "$i" -gt 1 ]; then
-              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
-                git reset --hard origin/gh-pages
+              if git fetch origin gh-pages; then
+                if git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                  git reset --hard origin/gh-pages
+                fi
+              elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                echo "::warning::git fetch origin gh-pages fehlgeschlagen (Versuch $i), origin/gh-pages existiert aber — kein Force-Push vom alten Klon, naechster Versuch."
+                sleep $((5 * i))
+                continue
               fi
             fi
             mkdir -p outputs
@@ -2401,10 +2410,17 @@ jobs:
           # vor jedem weiteren Push-Versuch neu vom Remote holen, sonst ueberschreibt der
           # spaeter fertige von zwei parallelen Laeufen (manuell + geplant, seit Zeile
           # 48-50 gleichzeitig moeglich) den anderen blind.
+          # Untangle F003 (13.11.2026): same T568-F5 split as the merge deploy above; guard tests/ghpages-deploy-loops.test.js.
           for i in 1 2 3; do
             if [ "$i" -gt 1 ]; then
-              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
-                git reset --hard origin/gh-pages
+              if git fetch origin gh-pages; then
+                if git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                  git reset --hard origin/gh-pages
+                fi
+              elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                echo "::warning::git fetch origin gh-pages fehlgeschlagen (Versuch $i), origin/gh-pages existiert aber — kein Force-Push vom alten Klon, naechster Versuch."
+                sleep $((5 * i))
+                continue
               fi
             fi
             mkdir -p outputs/hypergrowth
