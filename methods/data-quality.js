@@ -11,10 +11,12 @@
  *   A+: ≤ 20% fehlend — vollständige Bewertung möglich
  *   A:  20–40% fehlend — vollständige Bewertung möglich
  *   B:  40–60% fehlend — vollständige Bewertung möglich (kein Tier-Cap)
- *   C:  60–85% fehlend — Picks nur als NEAR_MISS
- *   D:  > 85% fehlend  — Aus Picks ausgeschlossen (REJECT)
+ *   C:  60–85% fehlend
+ *   D:  > 85% fehlend, oder marketCap / metrics.revenueTTM fehlt (criticalMissing)
  *
- * Score-Integration: src/scoring/score.js nimmt Snapshots mit Grade D aus dem Ranking (Grade live neu gerechnet).
+ * Score-Integration: nur das data-suspect-Gate in src/scoring/score.js liest den Grade (live neu gerechnet), und nur für
+ * geroutete Namen: D aus Sparsity oder ohne marketCap wird ausgeschlossen; D nur wegen fehlendem revenueTTM bleibt, wenn
+ * ein aktueller Umsatz vorhanden ist. Einen Tier-Cap für C gibt es nicht.
  */
 
 // Tag 232c-4 (audit F-DQ-001 CRITICAL): extended CRITICAL_FIELDS to cover the
@@ -101,7 +103,7 @@ const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);
 // Tag 232c-4 (audit F-DQ-003): C upper bound tightened from 1.00 to 0.85
 // so D is actually reachable (the prior 1.00 made D mathematically impossible
 // because max nanRatio = 1.0 satisfied ≤1.00, falling into C). Now >85%
-// missing → D (excluded from the ranking by score.js). C still wide (60-85%) so
+// missing → D (a routed name with sparsity D is excluded by score.js). C still wide (60-85%) so
 // realistic mid-quality snapshots don't get rejected outright.
 const GRADE_THRESHOLDS = {
   Aplus: 0.20,  // ≤20% missing → A+
@@ -183,8 +185,8 @@ function gradeSnapshot(snapshot) {
   // audit/fix: critical-field floor — empty/garbage snapshot must not grade above D (was pure nanRatio, no hard gate)
   // marketCap and metrics.revenueTTM are the load-bearing identity/valuation fields;
   // if either is absent/null/non-finite, the snapshot is unusable regardless of how
-  // many secondary fields happen to be present, so floor the grade to 'D' (excluded
-  // from the ranking by score.js). When both are present, behaviour
+  // many secondary fields happen to be present, so floor the grade to 'D' (score.js excludes
+  // a routed name without marketCap; without revenueTTM only if no current revenue exists). When both are present, behaviour
   // is UNCHANGED. NB: `price` is NOT floored — the full-pull mapYahooToCanonical never
   // builds snapshot.price (it exists only on the price-only fast-path, see pull-yahoo.js
   // ~line 343), so gating on it would force every full-pull snapshot to D.
@@ -203,7 +205,7 @@ function gradeSnapshot(snapshot) {
 }
 
 // Untangle F205 (13.11.2026): tierCapForGrade and the DATAQUALITY_ENFORCE opt-in it served were removed; nothing read
-// either. The live use of the grade is the D exclusion in src/scoring/score.js (gradeSnapshot, recomputed live).
+// either. The live use of the grade is the data-suspect gate in src/scoring/score.js (routed names only, see the header).
 module.exports = {
   gradeSnapshot,
   CRITICAL_FIELDS,
