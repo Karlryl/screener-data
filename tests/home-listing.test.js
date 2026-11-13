@@ -13,6 +13,7 @@ const path = require('node:path');
 const { issuerDedupComparator, issuerDedupComparatorOld, issuerDedupGroups } = require('../src/scoring/score.js');
 const { homeListingRank, shownGrowthMonth, loadHomeListingTable, NOT_HOME, SECONDARY_BOARD, SOURCED_HOME } = require('../lib/home-listing.js');
 const { buildExcludedList, homeListingWarning } = require('../scripts/write-excluded-list.js');
+const { comparisonShown } = require('../lib/comparison-ends.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -228,7 +229,8 @@ test('excluded.json names the fallback, its reason and the old rule', () => {
   const results = [row(home, 'exclude', 'dup-issuer'), row(other, 'route'), row(us, 'route'), row(usAbroad, 'exclude', 'dup-issuer'), row(sw, 'route'), row(de, 'exclude', 'dup-issuer')];
   const { homeListing } = buildExcludedList(results, universe, []);
   assert.deepEqual(homeListing.fallbacks, [{ issuer: 'Firm N.V.', shown: '1ASML.MI', home: 'ASML.AS', reason: 'aeltererZeitraum', shownMonth: '2026-09', homeMonth: '2026-06' }]);
-  assert.deepEqual(homeListing.oldRuleDiffers, [{ shown: 'NESN.SW', oldRule: 'NESR.DE' }]);
+  // The old-rule comparison ends by data day (lib/comparison-ends.js, arm p290OldRule; both sides: tests/comparison-ends.test.js).
+  assert.deepEqual(homeListing.oldRuleDiffers, comparisonShown('p290OldRule') ? [{ shown: 'NESN.SW', oldRule: 'NESR.DE' }] : []);
 });
 
 test('excluded.json names a home listing that never reached the contest', () => {
@@ -272,7 +274,7 @@ test('the old-rule comparison counts only listings that reached the contest', ()
   const home = leg('FOO.DE', 'Germany', 1e9), other = leg('FOO.VI', 'Germany', 2e9), dropped = leg('FOO.PA', 'Germany', 9e9);
   const results = [{ ticker: 'FOO.DE', action: 'route', score: null, lamps: [] }, { ticker: 'FOO.VI', action: 'exclude', reason: 'dup-issuer', score: null, lamps: [] }, { ticker: 'FOO.PA', action: 'exclude', reason: 'data-suspect', score: null, lamps: [] }];
   const { homeListing } = buildExcludedList(results, [home.snapshot, other.snapshot, dropped.snapshot], []);
-  assert.deepEqual(homeListing.oldRuleDiffers, [{ shown: 'FOO.DE', oldRule: 'FOO.VI' }]);
+  assert.deepEqual(homeListing.oldRuleDiffers, comparisonShown('p290OldRule') ? [{ shown: 'FOO.DE', oldRule: 'FOO.VI' }] : []);
 });
 
 test('the table fails loud when it is malformed, and the committed one loads', () => {

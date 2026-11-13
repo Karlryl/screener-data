@@ -23,6 +23,7 @@ const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { overviewMetric, overviewShadow, OVERVIEW_YEARS_NOT_ADJACENT_TEXT } = require('../src/scoring/overview.js');
 const { produceRankings, robustG } = require('../src/scoring/score.js');
 const W = require('../scripts/write-findash-export.js');
+const { comparisonShown } = require('../lib/comparison-ends.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const fixture = require('./fixtures/g31-switch/cases.json');
@@ -200,13 +201,15 @@ test('display-only: changing only the overview value changes no score, rank or m
   assert.deepEqual(now.map(r => [r.ticker, r.score]), old.map(r => [r.ticker, r.score]));
   assert.notDeepEqual(now.map(r => r.overview.value), old.map(r => r.overview.value), 'the probe really changes the display');
   const rows = now.map((r, i) => W.mapBoardRow(r, i, 'main'));
+  // The comparison ends by data day (lib/comparison-ends.js, arm g31Legacy; both sides: tests/comparison-ends.test.js).
+  const shown = comparisonShown('g31Legacy');
   rows.forEach((row, i) => {
     assert.equal(row.rank, i + 1); assert.equal(row.score, now[i].score);
-    assert.equal(row.overviewValueLegacy, old[i].overview.value, row.ticker + ': comparison field = pre-G31 value');
+    assert.equal(row.overviewValueLegacy, shown ? old[i].overview.value : null, row.ticker + ': comparison field = pre-G31 value');
     assert.equal(row.revGrowthBasis, revGrowthLeg(snaps.find(s => s.meta.ticker === row.ticker)).basis);
   });
   const dave = rows.find(r => r.ticker === '_G31_DAVE');
-  assert.deepEqual([dave.overview.value, dave.overviewValueLegacy], [0.299, 0.704]);
+  assert.deepEqual([dave.overview.value, dave.overviewValueLegacy], [0.299, shown ? 0.704 : null]);
   assert.deepEqual(dave.g31OverviewShadow.period, { basis: 'quarter', periodEnd: '2026-06-30' });
   const errs = []; for (const row of rows) W.validateBoardRow(row, row.ticker, errs);
   assert.deepEqual(errs.filter(e => /Legacy|revGrowth/.test(e)), []);

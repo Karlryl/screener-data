@@ -72,6 +72,7 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { g31Variant, g31Shadow, g31Export, g31Last, withG31Variant } = require('../lib/g31-recency.js');
+const { comparisonShown } = require('../lib/comparison-ends.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
@@ -604,8 +605,9 @@ function sammleKandidaten(opts = {}) {
     // derselbe Zweig wie revGrowthLevel). Nur wenn es exakt dieselbe Zahl liefert, gilt das Etikett.
     const bein = revGrowthLeg(snapshot);
     const wachstumBein = bein.pct === wachstumRoh ? bein : null;
-    // G31 comparison export (at most four weeks): the pre-G31 leg from the same snapshot; display only.
-    const wachstumLegacy = withG31Variant('legacy', () => revGrowthLeg(snapshot));
+    // G31 comparison export (at most four weeks): the pre-G31 leg from the same snapshot; display only. Null from the
+    // end in lib/comparison-ends.js (arm g31Legacy).
+    const wachstumLegacy = comparisonShown('g31Legacy') ? withG31Variant('legacy', () => revGrowthLeg(snapshot)) : null;
 
     if (meta.fcfMarginTTMSuppressed) { abgewiesen.fcfUnterdrueckt++; continue; }
     const fcf = metricVal(snapshot, 'fcfMarginTTM');
