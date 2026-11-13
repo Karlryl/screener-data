@@ -15,7 +15,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { isMetadataSnapshot } = require('../../lib/snapshot-fs.js');
-const { scoreUniverse, rankBy, isDataSuspect, issuerDedupGroups, issuerDedupComparator, learnWinsorBounds, winsorTailBounds, growthYoYComponents } = require('../../src/scoring/score.js');
+const { scoreUniverse, rankBy, isDataSuspect, issuerDedupGroups, issuerDedupComparator, learnWinsorBounds, winsorTailBounds, growthYoYComponents, routeEntry } = require('../../src/scoring/score.js');
 const { buildCalibMatrix, rankCohort, weightsObj, withWeights, productionCohortRanking } = require('../../src/scoring/calibrate.js');
 const { route } = require('../../src/scoring/router.js');
 const { evaluateLamps } = require('../../src/scoring/lamps.js');
@@ -105,6 +105,11 @@ test('withWeights überschreibt Gewichte immutabel und verändert das Produktion
 test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R2.8, winsor UND growth)', () => {
   const matrix = buildCalibMatrix(universe, formulas);
   // route-only Population exakt wie buildCalibMatrix: route -> Formel vorhanden -> nicht data-suspect.
+  // Daylauf 17 (13.11.2026): the entries come from routeEntry(), the builder scoreUniverse uses. Since P290 (#89) the
+  // issuer-dedup comparator reads formula, track and lamps of each leg (dedupCoverage: rank capability, covered axes).
+  // The former slim {snapshot, ticker} entries made every leg count as fully covered, so on the universe of run
+  // 43401776901 three issuer groups (22Z.DE/ZEAL.CO, 601066.SS/6066.HK, TVSHLTD.NS/TVSHLTD.BO) got another winner
+  // here than in production and calibration, and the reference bounds drifted (opMargin p1 -3.4558 vs -3.4533).
   const routedEntries = [];
   for (const s of universe) {
     const r = route(s);
@@ -112,7 +117,9 @@ test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R
     if (!formulas[r.formulaId]) continue;
     const lamps = evaluateLamps(s).active;
     if (isDataSuspect(s, lamps, 'route')) continue;
-    routedEntries.push({ snapshot: s, ticker: (s.meta && s.meta.ticker) || '?' });
+    const entry = routeEntry(s, formulas);
+    assert.equal(entry.action, 'route', `routeEntry agrees with route() on ${entry.ticker}`);
+    routedEntries.push(entry);
   }
   // Issuer-Dedup mit derselben Gruppierung wie Produktion und Kalibrierung; Verlierer entfernen.
   // ⚠ Kreuz-Review 27.07., Befund P1: hier stand eine DRITTE Kopie der Gruppierung (strenger
@@ -128,6 +135,11 @@ test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R
   const kept = routedEntries.filter((e) => !losers.has(e));
   // Diskriminanz-Schutz: nur wenn der Dedup wirklich Verlierer entfernt, unterscheiden sich pre-/post-Bounds.
   assert.ok(routedEntries.length - kept.length > 0, `Dedup muss Verlierer entfernen (routed=${routedEntries.length}, kept=${kept.length})`);
+  // Parity with production itself (Daylauf 17): the routed legs the reference drops are exactly the routed legs
+  // scoreUniverse marks dup-issuer. A reference that builds its entries differently from production fails here first.
+  const routedTickers = new Set(routedEntries.map((e) => e.ticker));
+  const prodLosers = scoreUniverse(universe, formulas).filter((e) => e.reason === 'dup-issuer' && routedTickers.has(e.ticker)).map((e) => e.ticker).sort();
+  assert.deepEqual([...losers].map((e) => e.ticker).sort(), prodLosers, 'reference dedup losers = production dup-issuer losers among routed legs');
   const refWinsor = learnWinsorBounds(kept.map((e) => e.snapshot));
   const growthSamples = [];
   for (const e of kept) for (const v of growthYoYComponents(e.snapshot)) growthSamples.push(v);
