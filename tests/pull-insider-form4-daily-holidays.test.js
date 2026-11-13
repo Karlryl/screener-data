@@ -11,6 +11,19 @@ test('calendar maintenance: current year is covered and next year is ready by De
   assertEdgarCalendarReady(JSON.parse(fs.readFileSync(CALENDAR, 'utf8')), new Date());
 });
 
+test('the committed calendar is ready for the next deadline (fixed clock 2026-12-01 UTC)', () => {
+  // Untangle finding F001 (13.11.2026): without 2027 the wall-clock check above turns the blocking pre-pull gate red on
+  // 2026-12-01 and stops the daily board run, although the insider pull feeds no board.
+  const calendar = JSON.parse(fs.readFileSync(CALENDAR, 'utf8'));
+  assert.doesNotThrow(() => assertEdgarCalendarReady(calendar, new Date('2026-12-01T00:00:00Z')));
+  // OPM federal holidays 2027 (the SEC page lists no 2027 dates yet); 31.12.2027 is New Year's Day 2028 observed.
+  assert.deepEqual(calendar.years['2027'], [
+    '20270101', '20270118', '20270215', '20270531', '20270618', '20270705',
+    '20270906', '20271011', '20271111', '20271125', '20271224', '20271231',
+  ]);
+  for (const year of Object.keys(calendar.years)) assert.match(calendar.yearSources?.[year] || '', /https:\/\/www\.(sec|opm)\.gov\//, 'every year names its official source: ' + year);
+});
+
 test('calendar readiness enforces December and January boundaries with a fixed clock', () => {
   // Reuse sourced historical dates so this fixture never invents future SEC holidays.
   const dates2026 = JSON.parse(fs.readFileSync(CALENDAR, 'utf8')).years['2026'];
@@ -102,18 +115,19 @@ test('non-calendar 404 handling retains both sides of the existing age threshold
 });
 
 test('unlisted future year retains weekday planning, 403 errors and 404 handling', async () => {
-  const scenario = { now: '2027-09-08T07:00:00Z', cursor: '20270903' };
+  // 2028 is the first unlisted year since 2027 was added (13.11.2026); Monday 04.09.2028 is Labor Day.
+  const scenario = { now: '2028-09-06T07:00:00Z', cursor: '20280901' };
   const loader = loadDaily(scenario);
-  assert.deepEqual(Array.from(loader.api.targetDates(scenario.cursor)), ['20270907', '20270906']);
-  const error = await loadDaily({ ...scenario, responses: { '20270906': 403 } }).run();
-  assert.equal(error.cursor, '20270903');
-  assert.deepEqual(error.indexDates, ['20270906', '20270907']);
+  assert.deepEqual(Array.from(loader.api.targetDates(scenario.cursor)), ['20280905', '20280904']);
+  const error = await loadDaily({ ...scenario, responses: { '20280904': 403 } }).run();
+  assert.equal(error.cursor, '20280901');
+  assert.deepEqual(error.indexDates, ['20280904', '20280905']);
   assert.match(error.logs.join('\n'), /HTTP 403/);
-  const recent = await loadDaily({ ...scenario, responses: { '20270906': 404 } }).run();
-  assert.equal(recent.cursor, '20270903');
-  const old = await loadDaily({ ...scenario, now: '2027-09-10T07:00:00Z',
-    env: { DATE: '20270906' }, responses: { '20270906': 404 } }).run();
-  assert.equal(old.cursor, '20270906');
+  const recent = await loadDaily({ ...scenario, responses: { '20280904': 404 } }).run();
+  assert.equal(recent.cursor, '20280901');
+  const old = await loadDaily({ ...scenario, now: '2028-09-08T07:00:00Z',
+    env: { DATE: '20280904' }, responses: { '20280904': 404 } }).run();
+  assert.equal(old.cursor, '20280904');
 });
 
 test('explicit holiday backfill never regresses a newer persisted cursor', async () => {
@@ -124,13 +138,13 @@ test('explicit holiday backfill never regresses a newer persisted cursor', async
 });
 
 test('missing target year warns once while keeping the existing fetch and cursor behavior', async () => {
-  const result = await loadDaily({ now: '2027-01-06T07:00:00Z', cursor: '20261231',
-    responses: { '20270101': 403 } }).run();
-  const warnings = result.logs.filter(line => /^::warning::.*EDGAR.*2027/.test(line));
+  const result = await loadDaily({ now: '2028-01-06T07:00:00Z', cursor: '20271231',
+    responses: { '20280103': 403 } }).run();
+  const warnings = result.logs.filter(line => /^::warning::.*EDGAR.*2028/.test(line));
   assert.equal(warnings.length, 1, 'missing calendar year must be visible without daily warning spam');
   assert.match(warnings[0], /configs\/edgar-holidays\.json/);
-  assert.deepEqual(result.indexDates, ['20270101', '20270104', '20270105']);
-  assert.equal(result.cursor, '20261231');
+  assert.deepEqual(result.indexDates, ['20280103', '20280104', '20280105']);
+  assert.equal(result.cursor, '20271231');
   assert.equal(result.exit, 0);
   const known = await loadDaily({ now: '2026-09-08T07:00:00Z' }).run();
   assert.ok(!known.logs.some(line => /^::warning::.*EDGAR/.test(line)));
