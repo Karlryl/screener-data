@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { onDay, G31_LEGACY_SHOWN_DAY } = require('./helpers/comparison-day.js'); // G31 legacy arm ends 16.11.2026 (lib/comparison-ends.js)
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -334,7 +335,7 @@ test('all nested G31 keys are registered and an unknown delivery key makes the g
   assert.equal(hash(), before);
 });
 
-test('shadow failures leave every legacy mapper field intact; smallcap hand-table errors stay swallowed', () => {
+test('shadow failures leave every legacy mapper field intact; smallcap hand-table errors stay swallowed', () => onDay(G31_LEGACY_SHOWN_DAY, () => {
   const gfile = path.resolve(__dirname, '../lib/g31-recency.js'), wfile = path.resolve(__dirname, '../scripts/write-findash-export.js');
   const files = [gfile, wfile], hashes = () => files.map(file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
   const before = hashes(), gs = fs.readFileSync(gfile, 'utf8'), ws = fs.readFileSync(wfile, 'utf8');
@@ -375,7 +376,7 @@ test('shadow failures leave every legacy mapper field intact; smallcap hand-tabl
     assert.equal(held.g31Shadow.v1.pct, null); assert.ok(held.g31Shadow.v1.reason);
   }
   assert.deepEqual(hashes(), before);
-});
+}));
 
 test('shadow scope restores after throws, nesting and rejected async calls', () => {
   // G31 switch 18.10.2026: the production arm is v1; 'legacy' is the only way to the pre-G31 calculation.
