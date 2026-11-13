@@ -17,7 +17,8 @@ const { spawnSync } = require('node:child_process');
 const DIR = path.resolve(__dirname, '..', '.github', 'workflows');
 const PUSH = /git push (--force|-f)\b[^\n]*\bgh-pages\b/;
 
-/** Every `for <var> in ...; do` loop (up to the `done` at the same indentation) that force-pushes gh-pages. */
+/** Every `for <var> in ...; do` loop that force-pushes gh-pages, with the lines after its `done` at the same indentation
+ * (the real failure ending, e.g. `echo ...; exit 1`), up to a blank line or a dedent. */
 function forcePushLoops(text, file) {
   const lines = text.split('\n'), loops = [];
   lines.forEach((line, i) => {
@@ -25,8 +26,11 @@ function forcePushLoops(text, file) {
     if (!m) return;
     const end = lines.findIndex((l, j) => j > i && l === m[1] + 'done');
     assert.ok(end > i, `${file}:${i + 1}: loop without a matching done`);
-    const block = lines.slice(i, end + 1);
-    if (block.some(l => !/^\s*#/.test(l) && PUSH.test(l))) loops.push({ file, line: i + 1, variable: m[2], script: block.map(l => l.slice(m[1].length)).join('\n') });
+    let tail = end + 1;
+    while (tail < lines.length && tail <= end + 6 && lines[tail].trim() && lines[tail].startsWith(m[1]) && !/^\s/.test(lines[tail].slice(m[1].length))) tail++;
+    const block = lines.slice(i, tail);
+    const iterations = line.replace(/^.* in /, '').replace(/; do\s*$/, '').trim().split(/\s+/).length;
+    if (block.some(l => !/^\s*#/.test(l) && PUSH.test(l))) loops.push({ file, line: i + 1, variable: m[2], iterations, script: block.map(l => l.slice(m[1].length)).join('\n') });
   });
   return loops;
 }
@@ -42,8 +46,8 @@ const BASH = BASH_CANDIDATES.filter(Boolean).find(b => spawnSync(b, ['-c', 'exit
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ghpages-loops-'));
 /**
  * Runs one loop in bash (-eo pipefail like GitHub Actions) with stubbed git and file commands.
- * scenario: fetch rc per attempt, ls-remote rc, push rc per attempt. Exit 7 after the loop marks "all attempts used up";
- * a successful push leaves the loop through the body's own exit 0. Returns the exit code and the call log per attempt.
+ * scenario: fetch rc per attempt, ls-remote rc, push rc per attempt. The workflow's own ending after the loop runs as is
+ * (Codex review round 3). Returns the exit code, the number of attempts started and the call log per attempt.
  */
 function run(loop, scenario) {
   const log = path.join(tmp, `log-${loop.line}-${scenario.name}.txt`).split(path.sep).join('/');
@@ -66,18 +70,18 @@ function run(loop, scenario) {
   ].join('\n');
   // The attempt counter follows the loop variable; GitHub expressions are replaced by a placeholder.
   const body = loop.script.replace(/\$\{\{[^}]*\}\}/g, 'X')
-    .replace(new RegExp(`^(for ${loop.variable} in [^;]+; do)$`, 'm'), '$1\nATT=$((ATT+1))');
-  const r = spawnSync(BASH, ['-eo', 'pipefail', '-c', stub + '\n' + body + '\nexit 7'], { encoding: 'utf8', cwd: tmp });
+    .replace(new RegExp(`^(for ${loop.variable} in [^;]+; do)$`, 'm'), '$1\nATT=$((ATT+1)); log start');
+  const r = spawnSync(BASH, ['-eo', 'pipefail', '-c', stub + '\n' + body], { encoding: 'utf8', cwd: tmp });
   const calls = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean) : [];
   const byAttempt = {};
-  for (const c of calls) { const [a, what] = c.split(' '); (byAttempt[a] = byAttempt[a] || []).push(what); }
-  return { code: r.status, byAttempt, stderr: r.stderr };
+  for (const c of calls) { const [a, what] = c.split(' '); if (what !== 'start') (byAttempt[a] = byAttempt[a] || []).push(what); }
+  return { code: r.status, attempts: calls.filter(c => c.endsWith(' start')).length, iterations: loop.iterations || 3, byAttempt, stderr: r.stderr };
 }
 
 /**
  * Behaviour violations of one executed loop: a retry (attempt 2+) that pushes without a fetch before the push, a push in an
  * attempt whose fetch failed while ls-remote did not prove the branch absent, and (when every fetch fails on a present
- * branch and the first push fails) a loop that leaves early instead of using up its attempts.
+ * branch and the first push fails) a loop that does not start every attempt or does not end red.
  */
 function violations(result, scenario) {
   const out = [];
@@ -88,7 +92,8 @@ function violations(result, scenario) {
     if (iFetch >= 0 && fetchRc !== 0 && scenario.lsRemote !== 2 && iPush >= 0) out.push(`attempt ${n}: push after a failed fetch`);
   }
   const allFail = scenario.fetch.every(x => x !== 0) && scenario.lsRemote !== 2 && scenario.push[0] !== 0;
-  if (allFail && result.code !== 7) out.push(`loop left early with exit ${result.code} instead of using up its attempts`);
+  if (allFail && result.attempts !== result.iterations) out.push(`only ${result.attempts} of ${result.iterations} attempts started`);
+  if (allFail && result.code === 0) out.push('the step ends green although nothing was published');
   return out;
 }
 
@@ -127,30 +132,30 @@ test('every gh-pages force-push loop: a failed fetch never pushes a stale clone;
   }
 });
 
-test('break-once on test data: inert fetch, early exit, unreachable continue, local-ref-only and the pre-fix shape are caught', () => {
+test('break-once on test data: inert fetch, early exit, break, green ending, unreachable continue, local-ref-only and the pre-fix shape are caught', () => {
   assert.ok(BASH, 'bash required');
   const s = { name: 'mutant', fetch: [1, 1, 1], lsRemote: 0, localRef: true, push: [1, 0, 0] };
   const lsRemote = '  elif ls_rc=0; git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1 || ls_rc=$?; [ "$ls_rc" -ne 2 ]; then';
   const push = '  if git push --force origin gh-pages; then exit 0; fi';
+  const ending = ['done', 'echo "publish failed after 3 attempts"', 'exit 1'];
+  const head = ['for i in 1 2 3; do', '  if git fetch origin gh-pages; then', '    git reset --hard origin/gh-pages'];
   const shapes = {
     preFix: ['for i in 1 2 3; do', '  if [ "$i" -gt 1 ]; then',
       '    if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then',
-      '      git reset --hard origin/gh-pages', '    fi', '  fi', push, 'done'],
-    unreachableContinue: ['for i in 1 2 3; do', '  if git fetch origin gh-pages; then', '    git reset --hard origin/gh-pages',
-      '  elif false; then', '    continue', '  fi', push, 'done'],
-    localRefOnly: ['for i in 1 2 3; do', '  if git fetch origin gh-pages; then', '    git reset --hard origin/gh-pages',
-      '  elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then', '    continue', '  fi', push, 'done'],
+      '      git reset --hard origin/gh-pages', '    fi', '  fi', push, ...ending],
+    unreachableContinue: [...head, '  elif false; then', '    continue', '  fi', push, ...ending],
+    localRefOnly: [...head, '  elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then', '    continue', '  fi', push, ...ending],
     inertFetch: ['for i in 1 2 3; do', '  if : git fetch origin gh-pages; then', '    git reset --hard origin/gh-pages',
-      lsRemote, '    continue', '  fi', push, 'done'],
-    earlyExit: ['for i in 1 2 3; do', '  if git fetch origin gh-pages; then', '    git reset --hard origin/gh-pages',
-      lsRemote, '    exit 0', '  fi', push, 'done'],
+      lsRemote, '    continue', '  fi', push, ...ending],
+    earlyExit: [...head, lsRemote, '    exit 0', '  fi', push, ...ending],
+    breakInsteadOfContinue: [...head, lsRemote, '    break', '  fi', push, ...ending],
+    greenEnding: [...head, lsRemote, '    continue', '  fi', push, 'done', 'echo "publish failed after 3 attempts"', 'exit 0'],
   };
   for (const [name, lines] of Object.entries(shapes)) {
-    const loop = { file: 'test', line: name, variable: 'i', script: lines.join('\n') };
+    const loop = { file: 'test', line: name, variable: 'i', iterations: 3, script: lines.join('\n') };
     const scenario = name === 'localRefOnly' ? { ...s, localRef: false } : s;
     assert.ok(violations(run(loop, scenario), scenario).length > 0, name + ' must be caught');
   }
-  const fixed = { file: 'test', line: 'fixed', variable: 'i', script: ['for i in 1 2 3; do', '  if git fetch origin gh-pages; then',
-    '    git reset --hard origin/gh-pages', lsRemote, '    continue', '  fi', push, 'done'].join('\n') };
+  const fixed = { file: 'test', line: 'fixed', variable: 'i', iterations: 3, script: [...head, lsRemote, '    continue', '  fi', push, ...ending].join('\n') };
   assert.deepEqual(violations(run(fixed, s), s), [], 'the fixed shape passes');
 });
