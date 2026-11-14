@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 483,
+    "count": 480,
     "partial": false
   },
   "stocks": [
@@ -217,14 +217,6 @@
       "yahoo_symbol": "BALY",
       "name": "Bally's Corporation Common Stock",
       "marketCapUsd": 704862656,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "ONT",
-      "yahoo_symbol": "ONT",
-      "name": "Onterris, Inc. Common Stock",
-      "marketCapUsd": 701462400,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -665,14 +657,6 @@
       "yahoo_symbol": "TECX",
       "name": "Tectonic Therapeutic, Inc. - Common Stock",
       "marketCapUsd": 618909312,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "RGR",
-      "yahoo_symbol": "RGR",
-      "name": "Sturm, Ruger & Company, Inc. Common Stock",
-      "marketCapUsd": 618318080,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1657,14 +1641,6 @@
       "yahoo_symbol": "ADV",
       "name": "Advantage Solutions Inc.  - Class A Common Stock",
       "marketCapUsd": 492590112,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "DCBO",
-      "yahoo_symbol": "DCBO",
-      "name": "Docebo Inc. - Common Shares",
-      "marketCapUsd": 491408160,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3877,22 +3853,22 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-11-07T12:47:41.416Z",
+  "lastReconcile": "2026-11-14T13:17:03.067Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "HELE",
+      "ticker": "ONT",
       "grund": "band-austritt-oben",
-      "mcap": 875511488
+      "mcap": 811257088
     },
     {
-      "ticker": "TASK",
+      "ticker": "RGR",
       "grund": "band-austritt-oben",
-      "mcap": 833840896
+      "mcap": 806103040
     },
     {
-      "ticker": "ENHA",
+      "ticker": "DCBO",
       "grund": "band-austritt-oben",
-      "mcap": 2280988928
+      "mcap": 810725248
     }
   ]
 }
