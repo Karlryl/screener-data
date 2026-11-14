@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { onDay, G31_LEGACY_SHOWN_DAY } = require('./helpers/comparison-day.js'); // G31 legacy arm ends 16.11.2026 (lib/comparison-ends.js)
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
@@ -65,7 +66,7 @@ test('P134: Rule40 check rejects either one-sided source pair, accepts both or n
   assert.equal(hash(), before, 'the deliberate red probe leaves the original export unchanged');
 });
 
-test('G31 B1: a dated pair across an empty quarter row and its missing-row twin give the same Rule40 row', () => {
+test('G31 B1: a dated pair across an empty quarter row and its missing-row twin give the same Rule40 row', () => onDay(G31_LEGACY_SHOWN_DAY, () => {
   const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'];
   const rows = [];
   for (const twin of [false, true]) {
@@ -83,6 +84,6 @@ test('G31 B1: a dated pair across an empty quarter row and its missing-row twin 
   assert.deepEqual([rows[0].revGrowthBasis, rows[0].revGrowthPeriodEnd, rows[0].revGrowthYoYPct], ['quarter', '2026-06-30', 15.8]);
   // Comparison fields: the legacy arm fell back to the fiscal year only for the row with the empty quarter.
   assert.deepEqual([rows[0].revGrowthBasisLegacy, rows[1].revGrowthBasisLegacy], ['year', 'quarter']);
-});
+}));
 
 bilanz('tests/rule40-source-ends.test.js');

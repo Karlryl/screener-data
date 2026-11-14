@@ -72,6 +72,7 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { g31Variant, g31Shadow, g31Export, g31Last, withG31Variant } = require('../lib/g31-recency.js');
+const { comparisonShown } = require('../lib/comparison-ends.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
@@ -604,8 +605,9 @@ function sammleKandidaten(opts = {}) {
     // derselbe Zweig wie revGrowthLevel). Nur wenn es exakt dieselbe Zahl liefert, gilt das Etikett.
     const bein = revGrowthLeg(snapshot);
     const wachstumBein = bein.pct === wachstumRoh ? bein : null;
-    // G31 comparison export (at most four weeks): the pre-G31 leg from the same snapshot; display only.
-    const wachstumLegacy = withG31Variant('legacy', () => revGrowthLeg(snapshot));
+    // G31 comparison export (at most four weeks): the pre-G31 leg from the same snapshot; display only. Null from the
+    // end in lib/comparison-ends.js (arm g31Legacy).
+    const wachstumLegacy = comparisonShown('g31Legacy') ? withG31Variant('legacy', () => revGrowthLeg(snapshot)) : null;
 
     if (meta.fcfMarginTTMSuppressed) { abgewiesen.fcfUnterdrueckt++; continue; }
     const fcf = metricVal(snapshot, 'fcfMarginTTM');
@@ -823,15 +825,17 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.revGrowthSourcePriorPeriodEnd = k.wachstumBein ? k.wachstumBein.sourcePriorPeriodEnd ?? null : null;
       // G31 comparison fields (docs/findash-export-v1.md, G31 switch): the pre-G31 growth of the same
       // snapshot and, on board names, the board row's pre-G31 overview value. Never read for r40 or rank.
-      const alt = k.wachstumLegacy || null;
+      // From the end in lib/comparison-ends.js (arm g31Legacy) all six fields are null here, whatever the inputs carry.
+      const shown = comparisonShown('g31Legacy');
+      const alt = shown ? k.wachstumLegacy || null : null;
       zeile.revGrowthYoYPctLegacy = alt && istZahl(alt.pct) ? round1(alt.pct) : null;
       zeile.revGrowthBasisLegacy = alt ? alt.basis : null;
       zeile.revGrowthPeriodEndLegacy = alt ? alt.periodEnd : null;
       zeile.revGrowthPriorPeriodEndLegacy = alt ? alt.priorPeriodEnd : null;
-      zeile.overviewValueLegacy = istZahl(row.overviewValueLegacy) ? row.overviewValueLegacy : null;
+      zeile.overviewValueLegacy = shown && istZahl(row.overviewValueLegacy) ? row.overviewValueLegacy : null;
       // P267: the board row's label of its overview value and of the comparison value, never re-derived here.
       zeile.overviewPeriod = row.overviewPeriod ?? null;
-      zeile.overviewPeriodLegacy = row.overviewPeriodLegacy ?? null;
+      zeile.overviewPeriodLegacy = shown ? row.overviewPeriodLegacy ?? null : null;
       // P267 rule 1: review hint for a newly admitted B1 pair, only where this row's growth is the labelled leg.
       zeile.g31Hinweis = k.wachstumBein ? k.g31Hinweis ?? null : null;
       // Tag 1401: marks only, never changes a value. On-board names carry the flags of their
