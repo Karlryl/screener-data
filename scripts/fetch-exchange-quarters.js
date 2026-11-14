@@ -11,7 +11,8 @@
  *            row 營業收入合計 (general) or 收益合計 (securities/futures)
  *            -> external-data/exchange-quarters/tw.json
  *
- * NOTHING READS THE STORE YET. No board number can change through this script.
+ * lib/exchange-quarter-check.js reads the stores at read time (configs/exchange-quarter-policy.json), so what this
+ * script writes can move a board number in the next daily run.
  *
  * Precedent and owner decision: scripts/build-cnannual.js lines 19-21 (Eastmoney, owner decision of
  * 19.08.2026 "voll nutzen wie jede andere Quelle"). Only the columns and periods the guard and the
@@ -43,6 +44,11 @@
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
  *
+ *   USA      SEC companyfacts, one request per firm whose vendor series misses a newer quarter (usCandidates),
+ *            read by the SEC quarter fill in lib/exchange-quarter-check.js -> external-data/exchange-quarters/us.json.
+ *            Only on --market=us; 10 failures in a row, or at least 5 failures that are more than 20 % of the calls -> abort.
+ *            A run that read no snapshot file at all aborts too (exit 1): a missing fill is otherwise invisible.
+ *
  *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, current and previous two years DFP)
  *            plus FCA valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
  *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). A pass is
@@ -53,7 +59,7 @@
  *            while the store holds no document of that file for a company mapped now; any other failure, a missing zip entry or column,
  *            a CSV row with the wrong field count or no document at all aborts the market and br.json is not written.
  *
- * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw,br] [--dry-run] [--force-cn] [--force-br] [--tw-cap=600]
+ * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw,us,br] [--dry-run] [--force-cn] [--force-br] [--tw-cap=600]
  *   --dry-run   fetch and check everything, write nothing (branch runs of the workflow)
  *   --force-cn  run the China pass even when the weekly cadence would skip it
  * Env EXCHANGE_QUARTERS_DIR overrides the store directory (tests).
@@ -66,6 +72,10 @@ const { fetchJson, fetchBuffer } = require(path.join(ROOT, 'lib/fetch-retry.js')
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 const { holeBericht, secucodeFuerYahoo, istEchterACode } = require(path.join(ROOT, 'scripts/build-cnannual.js'));
 const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
+const { pitSingleQuarters, openStore, REV_CONCEPTS } = require(path.join(ROOT, 'lib/sec-pit.js'));
+const { assertSecContact } = require(path.join(ROOT, 'lib/sec-user-agent.js'));
+const { RATE_DELAY_MS } = require(path.join(ROOT, 'lib/sec-rate-limit.js'));
+const { isMetadataSnapshot } = require(path.join(ROOT, 'lib/snapshot-fs.js'));
 
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
@@ -141,6 +151,18 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 function watchlistTickers(file) {
   const w = JSON.parse(fs.readFileSync(file, 'utf8'));
   return (w.stocks || []).map((s) => (typeof s === 'string' ? s : s.ticker)).filter(Boolean);
+}
+
+/** Latest board-history day: every ticker in a board cohort (US queue order). @param {string} boardRoot @returns {Set<string>} */
+function boardTickers(boardRoot) {
+  const out = new Set();
+  const days = fs.existsSync(boardRoot) ? fs.readdirSync(boardRoot).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort() : [];
+  if (!days.length) return out;
+  const dir = path.join(boardRoot, days[days.length - 1]);
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.json'))) {
+    for (const rows of Object.values(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).cohort || {})) for (const r of rows || []) if (r && r.ticker) out.add(r.ticker);
+  }
+  return out;
 }
 
 /** Latest board-history day: rank and quarter gaps of the Taiwan cohort rows (queue order). */
@@ -381,6 +403,130 @@ async function runTaiwan(ctx) {
   ctx.log('TW: ' + JSON.stringify(summary));
   if (failures.length) ctx.log('TW failures: ' + failures.slice(0, 20).join(' | '));
   return summary;
+}
+
+// ── United States (SEC quarter fill) ──────────────────────────────────────────
+const SEC_CONCEPTS = [...REV_CONCEPTS, 'RevenuesNetOfInterestExpense'];
+const SEC_CAP = 600;                      // SEC requests per run; the measured queue on 31.10.2026 is 273 firms
+const SEC_OFF_BOARD_SHARE = 0.2;          // part of the cap kept for firms off the boards (at least one call when such a firm is due)
+const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week ...
+const SEC_DAILY_AFTER_DAYS = 91;          // ... and every day once that quarter ended longer ago than this: a new filing can then exist
+const SEC_KEEP_DAYS = 820;                // nine quarters: the shown pair plus the vendor's five for the agreement check
+const SEC_ABOUT = 'Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q, 10-K, 10-KT and their amendments), one group per concept. '
+  + 'Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose '
+  + 'vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.';
+const dayOf = (iso) => Date.parse(tag(iso) + 'T00:00:00Z') / DAY_MS;
+
+/** US firms in USD whose vendor series probably misses a filed quarter. @param {string[]} dirs snapshot folders @param {string} today YYYY-MM-DD @returns {{list:Array<{ticker:string,mrq:string|null}>,filesRead:number[]}} candidates and the snapshot files read per folder */
+function usCandidates(dirs, today) {
+  const out = new Map();
+  const filesRead = dirs.map(() => 0);
+  for (const [d, dir] of dirs.entries()) {
+    for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).sort() : []) {
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+      filesRead[d] += 1;
+      const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), m = s.meta || {};
+      // Codex R2 on #85 (P2-2): US seat only. Firms seated abroad with a US listing (MELI, TEAM) would fill one listing while
+      // their foreign listings keep the vendor figure, and a link by figures alone is no proof of identity: a named gap.
+      if (!m.ticker || m.country !== 'United States' || out.has(m.ticker)) continue;
+      if ((m.fxConverted === true ? m.reportingCurrencyOriginal : m.reportingCurrency) !== 'USD' || (m.fxConverted === true && m.fxRateApplied !== 1)) continue;
+      const ends = s.timeseries?.revenueQEnds || [], rows = s.timeseries?.revenueQ || [];
+      const newest = ends.filter((e, i) => Number.isFinite(rows[i] && typeof rows[i] === 'object' ? rows[i].value : rows[i])).sort().pop();
+      if (!newest) continue;
+      const mrq = tag(m.mostRecentQuarter) || null;
+      // sd-us-kern 12.11.2026: in the filing season the vendor's mostRecentQuarter lags with its own series (11.11.2026: 431 stale
+      // US board rows named no newer quarter), so a newest quarter older than SEC_DAILY_AFTER_DAYS is a candidate by itself.
+      if ((mrq && dayOf(mrq) - dayOf(newest) > 15) || dayOf(today) - dayOf(newest) > SEC_DAILY_AFTER_DAYS) out.set(m.ticker, { ticker: m.ticker, mrq });
+    }
+  }
+  return { list: [...out.values()], filesRead };
+}
+
+async function runUs(ctx) {
+  const file = path.join(ctx.dir, 'us.json');
+  const prev = loadStore(file, 'US');
+  const next = prev ? clone(prev) : { schemaVersion: 1, market: 'US', currency: 'USD', unit: 1, about: SEC_ABOUT, sources: {}, companies: {} };
+  const now = ctx.now(), fetchedAt = now.toISOString(), today = fetchedAt.slice(0, 10), src = 'sec-' + stamp(fetchedAt);
+  const cutoff = new Date(now.getTime() - SEC_KEEP_DAYS * DAY_MS).toISOString().slice(0, 10);
+  const { list: all, filesRead } = usCandidates(ctx.snapshotDirs, today);
+  // No snapshot means no candidate: the fill would fall asleep and the boards fall back to the older vendor quarter without a word.
+  if (!filesRead.some(Boolean)) throw new Error('no snapshot file read in ' + ctx.snapshotDirs.join(', ') + ': the snapshot artifacts are missing, no firm could be checked against SEC');
+  ctx.snapshotDirs.forEach((dir, d) => { if (!filesRead[d]) ctx.log('::warning::exchange-quarters US: no snapshot file in ' + dir + ', its firms were not checked'); });
+  // Today's SEC list first (a listing younger than the committed map), the committed map for firms that left the list.
+  const cikMap = { ...ctx.cikMap, ...await ctx.secTickers() };
+  const cikOf = (t) => cikMap[t]?.cik || cikMap[t.replace(/-/g, '.')]?.cik || cikMap[t.replace(/\./g, '-')]?.cik || null;
+  const st = { candidates: 0, due: 0, calls: 0, offBoardCalls: 0, ok: 0, noCik: 0, noFacts: 0, failed: 0, skippedCap: 0 };
+  const failures = [];
+  let inARow = 0;
+  st.candidates = all.length;
+  const due = all.filter(({ ticker, mrq }) => {
+    const c = next.companies[ticker];
+    if (!c) return true;
+    const newest = Object.values(c).filter((g) => g && typeof g === 'object').flatMap((g) => Object.keys(g)).filter((k) => /^\d{4}-/.test(k)).sort().pop();
+    const holdsMrq = !mrq || (newest && dayOf(mrq) - dayOf(newest) <= 15);
+    const readAt = c.noData?.readAt || 0;
+    const readRecently = newest && dayOf(today) - dayOf(newest) > SEC_DAILY_AFTER_DAYS ? tag(readAt) === today : now.getTime() - Date.parse(readAt) < SEC_REREAD_MS;
+    return !(holdsMrq && readRecently);
+  });
+  // Codex R21 (4): never read or read longest ago first, so a cap never starves the same firms day after day.
+  // sd-us-kern 12.11.2026: firms on the latest boards go first, so the cap never starves what the boards show. Codex R1 on #85 (5):
+  // a fifth of the calls (SEC_OFF_BOARD_SHARE) stays for the other firms, oldest read first, so none of them waits forever.
+  const lastRead = (tk) => next.companies[tk]?.noData?.readAt || '';
+  const byAge = (x, y) => (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1);
+  // Codex R2 on #85 (P2-1): only firms with a CIK can use a call, so the reserve is counted among those; firms without one come last.
+  const callable = due.filter((x) => cikOf(x.ticker)), uncallable = due.filter((x) => !cikOf(x.ticker));
+  const board = callable.filter((x) => ctx.usBoard.has(x.ticker)).sort(byAge), others = callable.filter((x) => !ctx.usBoard.has(x.ticker)).sort(byAge);
+  const reserve = Math.min(others.length, Math.max(1, Math.floor(ctx.secCap * SEC_OFF_BOARD_SHARE)));
+  const lead = board.slice(0, Math.max(0, ctx.secCap - reserve));
+  due.splice(0, due.length, ...lead, ...others.slice(0, reserve), ...board.slice(lead.length), ...others.slice(reserve), ...uncallable);
+  st.due = due.length;
+  for (const { ticker } of due) {
+    if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
+    const cik = cikOf(ticker);
+    if (!cik) { st.noCik += 1; continue; }
+    st.calls += 1;
+    if (!ctx.usBoard.has(ticker)) st.offBoardCalls += 1;
+    let facts;
+    try { facts = await ctx.secFacts(cik); inARow = 0; }
+    catch (e) {
+      st.failed += 1; inARow += 1; failures.push(ticker + ': ' + e.message);
+      if (inARow >= 10) throw new Error('SEC: 10 failures in a row (last: ' + failures.slice(-3).join(' | ') + ')');
+      continue;
+    }
+    const c = next.companies[ticker] || (next.companies[ticker] = { cik });
+    c.noData = { readAt: fetchedAt };
+    if (!facts) { st.noFacts += 1; continue; }
+    st.ok += 1;
+    for (const concept of SEC_CONCEPTS) {
+      const rows = facts.facts?.['us-gaap']?.[concept]?.units?.USD;
+      for (const q of pitSingleQuarters(rows, { asOf: today })) {
+        if (q.end < cutoff) break;
+        const { end, ...fresh } = q;
+        const group = c[concept] || (c[concept] = {});
+        S.mergeObservation(group[end] || (group[end] = []), fresh, { src, fetchedAt, updateDate: q.filed });
+      }
+    }
+  }
+  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run; ' + st.offBoardCalls + ' of ' + st.calls + ' calls went to firms off the boards (board firms first, up to a fifth of the calls kept for the others with a CIK; each group oldest read first).');
+  if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
+  // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
+  next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
+  S.assertAppendOnly(prev, next);
+  const text = S.serialiseStore(next);
+  if (!ctx.dryRun) writeFileAtomic(file, text);
+  const summary = { market: 'US', src, filesRead, ...st, companies: Object.keys(next.companies).length, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
+  ctx.log('US: ' + JSON.stringify(summary));
+  if (failures.length) ctx.log('US failures: ' + failures.slice(0, 20).join(' | '));
+  return summary;
+}
+
+// SEC identity and pace come from the project's own settings; the contact is read from the environment at request time.
+function secFactsFetcher(fetcher) {
+  return async (cik) => {
+    const url = 'https://data.sec.gov/api/xbrl/companyfacts/CIK' + cik + '.json';
+    try { return await fetcher(url, { headers: { 'User-Agent': assertSecContact(), Accept: 'application/json' }, pauseMs: RATE_DELAY_MS }); }
+    catch (e) { if (/HTTP 404/.test(e.message)) return null; throw e; }
+  };
 }
 
 // ── Brazil (CVM) ──────────────────────────────────────────────────────────────
@@ -633,17 +779,24 @@ async function main(opts = {}) {
     dir: opts.dir || process.env.EXCHANGE_QUARTERS_DIR || path.join(ROOT, 'external-data', 'exchange-quarters'),
     tickers: opts.tickers || watchlistTickers(path.join(ROOT, 'watchlist.json')),
     priority: opts.priority || boardPriority(path.join(ROOT, 'board-history')),
+    usBoard: opts.usBoard || boardTickers(path.join(ROOT, 'board-history')),
     dryRun: !!opts.dryRun,
     forceCn: !!opts.forceCn,
     cnCap: opts.cnCap || CN_CAP,
     twCap: opts.twCap || TW_CAP,
+    secCap: opts.secCap || SEC_CAP,
+    snapshotDirs: opts.snapshotDirs || [path.join(ROOT, 'snapshots'), path.join(ROOT, 'snapshots-smallcap')],
+    cikMap: opts.cikMap || (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'external-data', 'sec-ticker-cik-map.json'), 'utf8')).byTicker; } catch (_) { return null; } })(),
+    secFacts: opts.secFacts || secFactsFetcher(opts.fetchJson || fetchJson),
+    secEndpoint: opts.secEndpoint || 'https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json',
+    secTickers: opts.secTickers || (async () => Object.fromEntries(await require(path.join(ROOT, 'discovery/sec-tickers.js')).fetchSecTickers())),
     log: opts.log || ((m) => console.log(m)),
   };
   const markets = opts.markets || ['cn', 'tw', 'br'];
   if (!ctx.dryRun) fs.mkdirSync(ctx.dir, { recursive: true });
   const results = [];
   let exitCode = 0;
-  const run = { cn: runChina, tw: runTaiwan, br: runBrazil };
+  const run = { cn: runChina, tw: runTaiwan, us: runUs, br: runBrazil };
   for (const m of markets) {
     try {
       if (!run[m]) throw new Error('unknown market ' + m);
@@ -660,7 +813,13 @@ async function main(opts = {}) {
 
 if (require.main === module) {
   const arg = (name) => { const a = process.argv.find((x) => x.startsWith('--' + name + '=')); return a ? a.split('=')[1] : null; };
+  // --sec-zip with --cik-file reads local SEC files instead of asking SEC (backfill, before/after); --now fixes the clock of that read.
+  const zip = arg('sec-zip') ? openStore(arg('sec-zip')) : null;
   main({
+    ...(zip ? { secFacts: async (cik) => zip.factsForCik(Number(cik)), secEndpoint: 'companyfacts.zip',
+      secTickers: async () => Object.fromEntries(Object.values(JSON.parse(fs.readFileSync(arg('cik-file'), 'utf8'))).map((r) => [String(r.ticker).toUpperCase(), { cik: String(r.cik_str).padStart(10, '0') }])) } : {}),
+    ...(arg('now') ? { now: () => new Date(arg('now')) } : {}),
+    ...(arg('snapshots') ? { snapshotDirs: arg('snapshots').split(',') } : {}),
     markets: arg('market') ? arg('market').split(',') : undefined,
     dryRun: process.argv.includes('--dry-run'),
     forceCn: process.argv.includes('--force-cn'),
@@ -669,4 +828,4 @@ if (require.main === module) {
   }).then((r) => process.exit(r.exitCode), (e) => { console.error('::error::' + e.message); process.exit(1); });
 }
 
-module.exports = { main, taiwanQueue, boardPriority, brTickerMap, brObservations, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };
+module.exports = { main, taiwanQueue, boardPriority, boardTickers, brTickerMap, brObservations, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };
