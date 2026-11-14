@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-13T21:35:42.703Z",
+  "generated_at": "2026-11-14T10:37:45.709Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70,
-    "generated_at": "2026-11-13T21:24:06.829Z",
-    "honest_coverage_pct": 88.4,
-    "n_addressable": 18230,
-    "n_ok": 16113,
-    "n_total": 23005,
-    "n_failed": 1289,
+    "coverage_pct": 70.3,
+    "generated_at": "2026-11-14T10:26:52.953Z",
+    "honest_coverage_pct": 88.8,
+    "n_addressable": 18135,
+    "n_ok": 16096,
+    "n_total": 22911,
+    "n_failed": 1265,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -39,7 +39,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2532106974.626631,
+      "marketCap": 2533533892.7182183,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -90,21 +90,21 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 0.9161281159008716,
+      "revGrowthYoYPct": 0.9161281159008494,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -51.8,
+        "distancePct": -50.5,
         "athDate": "2021-09-15",
         "monthsAgo": 62,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -121,7 +121,7 @@
         "priorPeriodEnd": "2025-06-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 0.9161281159008716,
+      "revGrowthYoYPctLegacy": 0.9161281159008494,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-06-30",
       "revGrowthPriorPeriodEndLegacy": "2025-06-30",
@@ -135,13 +135,13 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 0.9161281159008716,
+          "pct": 0.9161281159008494,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.09556668872294183,
+        "value": 0.0955666887229416,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -168,7 +168,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1914834828.0771706,
+      "marketCap": 1914631658.385572,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -228,7 +228,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -295,7 +295,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 39581129766.55378,
+      "marketCap": 39576930090.524345,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -355,7 +355,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -407,8 +407,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "IOS.DE",
-      "score": 79.6,
-      "scoreCycleLegacy": 79.6,
+      "score": 79.5,
+      "scoreCycleLegacy": 79.5,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -422,7 +422,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 5606113070.020404,
+      "marketCap": 5607349679.932416,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -433,8 +433,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 80.1,
-      "scoreShrunk": 79.6,
+      "scoreBase": 80,
+      "scoreShrunk": 79.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -464,7 +464,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 38.6,
+          "pct": 37.8,
           "weight": 0.8
         },
         {
@@ -491,7 +491,7 @@
         "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 1.423,7 Mio. EUR noch einschließlich AdTech neben dem ohne AdTech neu ausgewiesenen Jahr 2024; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -558,7 +558,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2138505540.5563738,
+      "marketCap": 2140114189.0840168,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -618,7 +618,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -685,7 +685,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1541371972.9672847,
+      "marketCap": 1537986045.2297933,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -745,7 +745,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -812,7 +812,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Technology",
-      "marketCap": 13028960091.326054,
+      "marketCap": 13032778898.99643,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -872,7 +872,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.2664606,
+      "tradingFxRateApplied": 0.2665387,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -939,7 +939,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1671078002.21774,
+      "marketCap": 1672019704.7041328,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -999,7 +999,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -1064,7 +1064,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 9535513257.585016,
+      "marketCap": 9534501511.162102,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1124,7 +1124,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -1188,7 +1188,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 11062293504,
+      "marketCap": 10835547136,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1321,7 +1321,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 92535180465.52077,
+      "marketCap": 92525362206.6289,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1381,7 +1381,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -1450,7 +1450,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Technology",
-      "marketCap": 1562247584.9789953,
+      "marketCap": 1561083596.3980799,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1461,7 +1461,7 @@
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 77.7,
+      "scoreBase": 77.6,
       "scoreShrunk": 73.5,
       "factors": {
         "burn": 1,
@@ -1492,7 +1492,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 44.3,
+          "pct": 43.5,
           "weight": 0.8
         },
         {
@@ -1510,7 +1510,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.6779201,
+      "tradingFxRateApplied": 0.677415,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -1575,7 +1575,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1349545686.962248,
+      "marketCap": 1350306196.362304,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1635,7 +1635,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -1702,7 +1702,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 10485519533.120224,
+      "marketCap": 10484406988.19543,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1762,7 +1762,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -1829,7 +1829,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 12361498624,
+      "marketCap": 12369156096,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1964,7 +1964,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 4803939107.759247,
+      "marketCap": 4806646271.276601,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2024,7 +2024,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -2091,7 +2091,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 967595732.2829823,
+      "marketCap": 967671093.9655373,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2151,7 +2151,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -2218,7 +2218,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1109133234.008781,
+      "marketCap": 1109016856.025093,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2278,7 +2278,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2345,7 +2345,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 6523120640,
+      "marketCap": 6521612800,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2465,8 +2465,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NRO.PA",
-      "score": 67.2,
-      "scoreCycleLegacy": 67.2,
+      "score": 67.1,
+      "scoreCycleLegacy": 67.1,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -2480,7 +2480,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 1084345405.8269696,
+      "marketCap": 1084584593.3460479,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2491,8 +2491,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 67.4,
-      "scoreShrunk": 67.2,
+      "scoreBase": 67.3,
+      "scoreShrunk": 67.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2522,7 +2522,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 39.4,
+          "pct": 38.6,
           "weight": 0.8
         },
         {
@@ -2540,7 +2540,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -2607,7 +2607,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 3189706788.101128,
+      "marketCap": 3198414321.117594,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2667,7 +2667,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2734,7 +2734,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1031363469.9152458,
+      "marketCap": 1031944674.1096071,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2794,7 +2794,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -2845,6 +2845,130 @@
       "rank": 23,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "AMS.MC",
+      "score": 65,
+      "scoreCycleLegacy": 65,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.104,
+        "companion": 31.3
+      },
+      "name": "Amadeus IT Group, S.A.",
+      "country": "Spain",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 28789915755.29472,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 127,
+      "cohortFallback": false,
+      "scoreBase": 67.5,
+      "scoreShrunk": 65,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 79.9,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 52.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 44.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 6.445300556472833,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1.102779,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 6.445300556472833,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
+      "overviewValueLegacy": 0.08,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 6.445300556472833,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.1037067320795857,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      }
+    },
+    {
+      "rank": 24,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "ATEA.OL",
       "score": 64.7,
       "scoreCycleLegacy": 64.7,
@@ -2861,7 +2985,7 @@
       "country": "Norway",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 1981059770.1161778,
+      "marketCap": 1979857723.1942246,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2921,7 +3045,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.10450424,
+      "tradingFxRateApplied": 0.10444083,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2969,7 +3093,7 @@
       }
     },
     {
-      "rank": 24,
+      "rank": 25,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TASK",
@@ -2986,7 +3110,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 837510144,
+      "marketCap": 844848704,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2997,7 +3121,7 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 64.9,
+      "scoreBase": 64.8,
       "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
@@ -3028,7 +3152,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 37,
+          "pct": 36.2,
           "weight": 0.8
         },
         {
@@ -3091,7 +3215,7 @@
       }
     },
     {
-      "rank": 25,
+      "rank": 26,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MPHASIS.NS",
@@ -3110,7 +3234,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 4976787456.445186,
+      "marketCap": 4976259404.438897,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3170,7 +3294,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3218,7 +3342,7 @@
       }
     },
     {
-      "rank": 26,
+      "rank": 27,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "REY.MI",
@@ -3237,7 +3361,7 @@
       "country": "Italy",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 5407179342.682727,
+      "marketCap": 5408372071.314432,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3297,7 +3421,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3345,7 +3469,7 @@
       }
     },
     {
-      "rank": 27,
+      "rank": 28,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LTTS.NS",
@@ -3364,7 +3488,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 4781976959.44278,
+      "marketCap": 4773363809.321451,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3424,7 +3548,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3469,130 +3593,6 @@
       }
     },
     {
-      "rank": 28,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "AMS.MC",
-      "score": 62.9,
-      "scoreCycleLegacy": 62.9,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.054,
-        "companion": 47.6
-      },
-      "name": "Amadeus IT Group, S.A.",
-      "country": "Spain",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 28783566606.905346,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 127,
-      "cohortFallback": false,
-      "scoreBase": 65,
-      "scoreShrunk": 62.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 79.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 52.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 22.4,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 1.505098906499569,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 1.505098906499569,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.08,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 1.505098906499569,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.05373256767842505,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
       "rank": 29,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -3612,7 +3612,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 3514503021.912444,
+      "marketCap": 3516483549.589655,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -3672,7 +3672,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -3740,7 +3740,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 21075306015.8646,
+      "marketCap": 21087182581.800056,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3797,15 +3797,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -7.6,
+        "distancePct": -5.1,
         "athDate": "2025-11-21",
         "monthsAgo": 12,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3873,7 +3873,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 18349588069.13607,
+      "marketCap": 18347641123.063072,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3933,7 +3933,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4000,7 +4000,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 12107834368,
+      "marketCap": 12121081856,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4120,8 +4120,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MAQ.AX",
-      "score": 60.1,
-      "scoreCycleLegacy": 60.1,
+      "score": 60,
+      "scoreCycleLegacy": 60,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4139,7 +4139,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Technology",
-      "marketCap": 908571643.2304512,
+      "marketCap": 907894690.98048,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4150,8 +4150,8 @@
       "coverageWeight": 0.67,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 64.3,
-      "scoreShrunk": 60.1,
+      "scoreBase": 64.2,
+      "scoreShrunk": 60,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4181,7 +4181,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 37.8,
+          "pct": 37,
           "weight": 0.8
         },
         {
@@ -4199,7 +4199,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.6779201,
+      "tradingFxRateApplied": 0.677415,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4265,7 +4265,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 13392863404.771114,
+      "marketCap": 13391442381.98227,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4325,7 +4325,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4392,7 +4392,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 49066160207.002335,
+      "marketCap": 49060954140.92759,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4452,7 +4452,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -4518,18 +4518,18 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1813250480.6350849,
+      "marketCap": 1813060221.7659187,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2019,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 60.1,
+      "scoreBase": 60,
       "scoreShrunk": 58.7,
       "factors": {
         "burn": 1,
@@ -4560,7 +4560,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 40.2,
+          "pct": 39.4,
           "weight": 0.8
         },
         {
@@ -4578,7 +4578,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4645,7 +4645,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1337206004.7456338,
+      "marketCap": 1337959560.36531,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4705,7 +4705,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4769,7 +4769,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 6763364754.789171,
+      "marketCap": 6762203164.337766,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4833,7 +4833,7 @@
         "Quartalsbruttogewinn fehlt: Die neueste Zahl dieser Reihe endet am 30.06.2019, mehr als 365 Tage vor dem Datenstand; Periodenstand veraltet."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.013211261,
+      "tradingFxRateApplied": 0.013208992,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -4902,7 +4902,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 4542303718.269203,
+      "marketCap": 4544863442.411205,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4962,7 +4962,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5029,7 +5029,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 890161587.5086079,
+      "marketCap": 890435774.7001089,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5089,7 +5089,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.2503737,
+      "tradingFxRateApplied": 0.25045082,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5138,8 +5138,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CTSH",
-      "score": 57.9,
-      "scoreCycleLegacy": 57.9,
+      "score": 57.8,
+      "scoreCycleLegacy": 57.8,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -5153,7 +5153,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 28187504640,
+      "marketCap": 28167387136,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5165,7 +5165,7 @@
       "cohortN": 127,
       "cohortFallback": false,
       "scoreBase": 58,
-      "scoreShrunk": 57.9,
+      "scoreShrunk": 57.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5195,7 +5195,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 32.9,
+          "pct": 32.1,
           "weight": 0.8
         },
         {
@@ -5273,8 +5273,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BR",
-      "score": 57.6,
-      "scoreCycleLegacy": 57.6,
+      "score": 57.5,
+      "scoreCycleLegacy": 57.5,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -5288,7 +5288,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 21740150784,
+      "marketCap": 21767294976,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5299,8 +5299,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 57.7,
-      "scoreShrunk": 57.6,
+      "scoreBase": 57.6,
+      "scoreShrunk": 57.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5330,7 +5330,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 36.2,
+          "pct": 35.4,
           "weight": 0.8
         },
         {
@@ -5420,13 +5420,13 @@
       "overview": {
         "kind": "gp",
         "value": 2.133,
-        "companion": 353.2
+        "companion": 353.3
       },
       "name": "Mega Fortune Company Limited",
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1608749952,
+      "marketCap": 1622499968,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5489,7 +5489,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -17.7,
+        "distancePct": -17,
         "athDate": "2026-05-13",
         "monthsAgo": 6,
         "lastDate": "2026-11-13"
@@ -5497,7 +5497,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
+      "tradingFxRateApplied": null,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-09-30",
       "revGrowthPriorPeriodEnd": "2024-09-30",
@@ -5566,7 +5566,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1677200401.8356225,
+      "marketCap": 1677024418.2882712,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5626,7 +5626,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5693,7 +5693,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 1076602817.3004673,
+      "marketCap": 1076840296.940736,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5744,7 +5744,7 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 0.15080801346158967,
+      "revGrowthYoYPct": 0.15080801346161188,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -5753,7 +5753,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5770,7 +5770,7 @@
         "priorPeriodEnd": "2025-06-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 0.15080801346158967,
+      "revGrowthYoYPctLegacy": 0.15080801346161188,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-06-30",
       "revGrowthPriorPeriodEndLegacy": "2025-06-30",
@@ -5784,7 +5784,7 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 0.15080801346158967,
+          "pct": 0.15080801346161188,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
@@ -5818,11 +5818,11 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Technology",
-      "marketCap": 2108769154.2930431,
+      "marketCap": 2109387237.6830466,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2019,
       "coverageAxes": "4/5",
@@ -5878,7 +5878,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.2664606,
+      "tradingFxRateApplied": 0.2665387,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5945,7 +5945,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 1219036928,
+      "marketCap": 1219208832,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6083,7 +6083,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1482462494.2770832,
+      "marketCap": 1482327215.6088321,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -6143,7 +6143,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.030421026,
+      "tradingFxRateApplied": 0.03041825,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -6210,7 +6210,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 5660359567.35253,
+      "marketCap": 5663549349.440127,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6270,7 +6270,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -6338,7 +6338,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 21351131136,
+      "marketCap": 21423519744,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6474,7 +6474,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 37163526428.59506,
+      "marketCap": 37184469188.41506,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6531,15 +6531,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -22.6,
+        "distancePct": -24.7,
         "athDate": "2026-01-15",
         "monthsAgo": 10,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -6590,138 +6590,6 @@
       "rank": 52,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "688631.SS",
-      "score": 53.8,
-      "scoreCycleLegacy": 53.8,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "lowRoic",
-        "arDivergence",
-        "fcfArtefact",
-        "einmalertrag",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.135,
-        "companion": -70.8
-      },
-      "name": "Nanjing LES Information Technology Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Technology",
-      "marketCap": 830522183.3544705,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "1/5",
-      "coverageWeight": 0.27,
-      "cohortN": 127,
-      "cohortFallback": false,
-      "scoreBase": 59.4,
-      "scoreShrunk": 53.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 59.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": -30.767693009271035,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 457,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -20.890223002559583,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2025-12-31",
-      "revGrowthPriorPeriodEndLegacy": "2024-12-31",
-      "overviewValueLegacy": -0.135,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": {
-        "code": "aelteres-quartalspaar",
-        "reason": "Gezeigt wird der ältere Quartalsvergleich bis 30.06.2026. Für das neuere gespeicherte Quartal bis 30.09.2026 fehlt in den Anbieterdaten ein gültiger Vorjahresvergleich."
-      },
-      "g31Shadow": {
-        "v1": {
-          "pct": -30.767693009271035,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.13466173364913359,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2025-12-31"
-        }
-      }
-    },
-    {
-      "rank": 53,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "SOP.PA",
       "score": 53.8,
       "scoreCycleLegacy": 53.8,
@@ -6738,7 +6606,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 4224018504.259277,
+      "marketCap": 4224950248.425984,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6798,7 +6666,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -6846,6 +6714,138 @@
       }
     },
     {
+      "rank": 53,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "688631.SS",
+      "score": 53.7,
+      "scoreCycleLegacy": 53.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "arDivergence",
+        "fcfArtefact",
+        "einmalertrag",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.135,
+        "companion": -70.8
+      },
+      "name": "Nanjing LES Information Technology Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Technology",
+      "marketCap": 830435039.1826586,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "1/5",
+      "coverageWeight": 0.27,
+      "cohortN": 127,
+      "cohortFallback": false,
+      "scoreBase": 59.4,
+      "scoreShrunk": 53.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 59.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": -30.767693009271035,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.14989807,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -20.890223002559583,
+      "revGrowthBasisLegacy": "year",
+      "revGrowthPeriodEndLegacy": "2025-12-31",
+      "revGrowthPriorPeriodEndLegacy": "2024-12-31",
+      "overviewValueLegacy": -0.135,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": {
+        "code": "aelteres-quartalspaar",
+        "reason": "Gezeigt wird der ältere Quartalsvergleich bis 30.06.2026. Für das neuere gespeicherte Quartal bis 30.09.2026 fehlt in den Anbieterdaten ein gültiger Vorjahresvergleich."
+      },
+      "g31Shadow": {
+        "v1": {
+          "pct": -30.767693009271035,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.13466173364913359,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      }
+    },
+    {
       "rank": 54,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -6865,7 +6865,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1150668701.3676777,
+      "marketCap": 1151317137.631966,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6925,7 +6925,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -6993,7 +6993,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1567912730.2131548,
+      "marketCap": 1562149488.726098,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7056,7 +7056,7 @@
         "Quartalswert fehlt: Anbieterwert weicht vom geprüften Stand ab; nicht gegen Primärquelle geprüft. Das betrifft die Periode mit Ende 30.06.2026."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -7105,8 +7105,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "6701.T",
-      "score": 53.6,
-      "scoreCycleLegacy": 53.6,
+      "score": 53.5,
+      "scoreCycleLegacy": 53.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -7122,7 +7122,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 35849429846.33065,
+      "marketCap": 35869632073.38244,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7133,8 +7133,8 @@
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 54,
-      "scoreShrunk": 53.6,
+      "scoreBase": 53.9,
+      "scoreShrunk": 53.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7164,7 +7164,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 33.7,
+          "pct": 32.9,
           "weight": 0.8
         },
         {
@@ -7179,15 +7179,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -25.7,
+        "distancePct": -28.6,
         "athDate": "2025-11-21",
         "monthsAgo": 12,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -7256,7 +7256,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 838532240.9844818,
+      "marketCap": 838398217.2225976,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -7316,7 +7316,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.099292144,
+      "tradingFxRateApplied": 0.099276274,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7383,7 +7383,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2901268247.2908225,
+      "marketCap": 2903448959.9773083,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7443,7 +7443,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7510,7 +7510,7 @@
       "country": "Denmark",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 2357567640.0943513,
+      "marketCap": 2357425510.445281,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7570,7 +7570,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14746238,
+      "tradingFxRateApplied": 0.14745349,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7637,7 +7637,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 8890494932.519014,
+      "marketCap": 8895504992.595266,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7694,15 +7694,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -18.1,
+        "distancePct": -16.9,
         "athDate": "2026-10-26",
         "monthsAgo": 1,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -7769,7 +7769,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2333594151.7340674,
+      "marketCap": 2333349294.782894,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7832,7 +7832,7 @@
         "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 29.10.2025)."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -7881,8 +7881,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MLPT.JK",
-      "score": 52,
-      "scoreCycleLegacy": 52,
+      "score": 51.9,
+      "scoreCycleLegacy": 51.9,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -7907,8 +7907,8 @@
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 52,
-      "scoreShrunk": 52,
+      "scoreBase": 51.9,
+      "scoreShrunk": 51.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7938,7 +7938,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 31.3,
+          "pct": 30.5,
           "weight": 0.8
         },
         {
@@ -8008,8 +8008,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ACN",
-      "score": 51.9,
-      "scoreCycleLegacy": 51.9,
+      "score": 51.8,
+      "scoreCycleLegacy": 51.8,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -8023,7 +8023,7 @@
       "country": "Ireland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 148162871296,
+      "marketCap": 147973832704,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8035,7 +8035,7 @@
       "cohortN": 127,
       "cohortFallback": false,
       "scoreBase": 51.9,
-      "scoreShrunk": 51.9,
+      "scoreShrunk": 51.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8065,7 +8065,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 42.7,
+          "pct": 41.9,
           "weight": 0.8
         },
         {
@@ -8143,8 +8143,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "IBM",
-      "score": 51.8,
-      "scoreCycleLegacy": 51.8,
+      "score": 51.7,
+      "scoreCycleLegacy": 51.7,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -8158,7 +8158,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 233718923264,
+      "marketCap": 233567715328,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mega",
@@ -8169,8 +8169,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 51.8,
-      "scoreShrunk": 51.8,
+      "scoreBase": 51.7,
+      "scoreShrunk": 51.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8200,7 +8200,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 34.6,
+          "pct": 33.7,
           "weight": 0.8
         },
         {
@@ -8295,7 +8295,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 8322718333.108225,
+      "marketCap": 8321845055.535513,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -8355,7 +8355,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -8404,8 +8404,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "300170.SZ",
-      "score": 50.8,
-      "scoreCycleLegacy": 50.8,
+      "score": 50.7,
+      "scoreCycleLegacy": 50.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -8420,7 +8420,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2198115443.598131,
+      "marketCap": 2197884802.0165834,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -8431,8 +8431,8 @@
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 50.7,
-      "scoreShrunk": 50.8,
+      "scoreBase": 50.6,
+      "scoreShrunk": 50.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8462,7 +8462,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 41.9,
+          "pct": 41.1,
           "weight": 0.8
         },
         {
@@ -8483,7 +8483,7 @@
         "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 27.10.2025)."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -8548,7 +8548,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2585963446.5218563,
+      "marketCap": 2585692109.2265983,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -8611,7 +8611,7 @@
         "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 25.10.2025)."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -8676,7 +8676,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 963535028.5907639,
+      "marketCap": 964323187.8202983,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -8736,7 +8736,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -8803,7 +8803,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 33670936694.749187,
+      "marketCap": 33678363910.99392,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8863,7 +8863,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -8927,7 +8927,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2951885867.572999,
+      "marketCap": 2953549343.638959,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -8987,7 +8987,7 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -9054,7 +9054,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 6526792704,
+      "marketCap": 6509613568,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9117,7 +9117,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -10.1,
+        "distancePct": -10.2,
         "athDate": "2026-06-02",
         "monthsAgo": 5,
         "lastDate": "2026-11-13"
@@ -9192,7 +9192,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 835733504,
+      "marketCap": 849995200,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -9328,7 +9328,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 15193485312,
+      "marketCap": 15226991616,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -9445,132 +9445,6 @@
     },
     {
       "rank": 74,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "DTC.JO",
-      "score": 45.4,
-      "scoreCycleLegacy": 45.4,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.096,
-        "companion": 12.4
-      },
-      "name": "Datatec Limited",
-      "country": "South Africa",
-      "region": "Africa",
-      "sector": "Technology",
-      "marketCap": 1185126567.5376232,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 127,
-      "cohortFallback": false,
-      "scoreBase": 45.4,
-      "scoreShrunk": 45.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 13.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 40.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 83.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 86.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 28,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 3.3251124737467386,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 0,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.00059078258,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2026-02-28",
-      "revGrowthPriorPeriodEnd": "2025-02-28",
-      "revGrowthSourcePeriodEnd": "2026-02-28",
-      "revGrowthSourcePriorPeriodEnd": "2025-02-28",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 0,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2026-02-28",
-        "priorPeriodEnd": "2025-02-28",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 3.3251124737467386,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2026-02-28",
-      "revGrowthPriorPeriodEndLegacy": "2025-02-28",
-      "overviewValueLegacy": 0.096,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2026-02-28",
-        "priorPeriodEnd": "2025-02-28",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 3.3251124737467386,
-          "basis": "year",
-          "periodEnd": "2026-02-28"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.09610367354740479,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2026-02-28"
-        }
-      }
-    },
-    {
-      "rank": 75,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FORTY",
@@ -9700,6 +9574,132 @@
       }
     },
     {
+      "rank": 75,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "DTC.JO",
+      "score": 45.3,
+      "scoreCycleLegacy": 45.3,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.096,
+        "companion": 12.4
+      },
+      "name": "Datatec Limited",
+      "country": "South Africa",
+      "region": "Africa",
+      "sector": "Technology",
+      "marketCap": 1185364723.2159743,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 127,
+      "cohortFallback": false,
+      "scoreBase": 45.3,
+      "scoreShrunk": 45.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 13.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 40.6,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 83.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 86.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 27.2,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 3.3251124737467386,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 0,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.0005909013,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2026-02-28",
+      "revGrowthPriorPeriodEnd": "2025-02-28",
+      "revGrowthSourcePeriodEnd": "2026-02-28",
+      "revGrowthSourcePriorPeriodEnd": "2025-02-28",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 0,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "year",
+        "periodEnd": "2026-02-28",
+        "priorPeriodEnd": "2025-02-28",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 3.3251124737467386,
+      "revGrowthBasisLegacy": "year",
+      "revGrowthPeriodEndLegacy": "2026-02-28",
+      "revGrowthPriorPeriodEndLegacy": "2025-02-28",
+      "overviewValueLegacy": 0.096,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2026-02-28",
+        "priorPeriodEnd": "2025-02-28",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.3251124737467386,
+          "basis": "year",
+          "periodEnd": "2026-02-28"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.09610367354740479,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2026-02-28"
+        }
+      }
+    },
+    {
       "rank": 76,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -9719,7 +9719,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 20432373928.803562,
+      "marketCap": 20430205992.933132,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -9779,7 +9779,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -9831,8 +9831,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LDOS",
-      "score": 44.9,
-      "scoreCycleLegacy": 44.9,
+      "score": 44.8,
+      "scoreCycleLegacy": 44.8,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -9847,7 +9847,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 15860530176,
+      "marketCap": 15923968000,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -9858,8 +9858,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 44.8,
-      "scoreShrunk": 44.9,
+      "scoreBase": 44.7,
+      "scoreShrunk": 44.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -9889,7 +9889,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 28.9,
+          "pct": 28,
           "weight": 0.8
         },
         {
@@ -9982,11 +9982,11 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 5858334614.524873,
+      "marketCap": 5859562600.695596,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2019,
       "coverageAxes": "4/5",
@@ -10042,7 +10042,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.00074823416,
+      "tradingFxRateApplied": 0.000748391,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -10106,7 +10106,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1324663808.1192098,
+      "marketCap": 1327897589.2852736,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -10166,7 +10166,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -10233,7 +10233,7 @@
       "country": "Italy",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 1543756444.139469,
+      "marketCap": 1544096969.650944,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -10293,7 +10293,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-07-31",
       "revGrowthPriorPeriodEnd": "2025-07-31",
@@ -10361,7 +10361,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 982700895.4365953,
+      "marketCap": 982597783.6144333,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -10421,7 +10421,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -10489,7 +10489,7 @@
       "country": "Bermuda",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 7306983424,
+      "marketCap": 7292769280,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -10552,7 +10552,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -19.8,
+        "distancePct": -19.7,
         "athDate": "2025-02-13",
         "monthsAgo": 21,
         "lastDate": "2026-11-13"
@@ -10629,7 +10629,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 2873828864,
+      "marketCap": 2870804224,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -10764,7 +10764,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 8429565440,
+      "marketCap": 8324456960,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -10806,7 +10806,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 26.4,
+          "pct": 25.6,
           "weight": 0.8
         },
         {
@@ -10899,7 +10899,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1344936655.1390107,
+      "marketCap": 1344953854.6311169,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -10959,7 +10959,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.12745997,
+      "tradingFxRateApplied": 0.1274616,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -11028,7 +11028,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 3474258099.0323715,
+      "marketCap": 3474302528.9871364,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -11085,15 +11085,15 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -59.7,
+        "distancePct": -60,
         "athDate": "2018-01-11",
         "monthsAgo": 106,
-        "lastDate": "2026-11-12"
+        "lastDate": "2026-11-13"
       },
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.12745997,
+      "tradingFxRateApplied": 0.1274616,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -11160,7 +11160,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1573826830.1393921,
+      "marketCap": 1573661693.2671487,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -11220,7 +11220,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -11290,7 +11290,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1466136969.0970113,
+      "marketCap": 1465983131.7950156,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -11350,7 +11350,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -11402,8 +11402,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NABL",
-      "score": 41.1,
-      "scoreCycleLegacy": 41.1,
+      "score": 41,
+      "scoreCycleLegacy": 41,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -11418,7 +11418,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 849137280,
+      "marketCap": 860624064,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -11429,8 +11429,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 40.9,
-      "scoreShrunk": 41.1,
+      "scoreBase": 40.8,
+      "scoreShrunk": 41,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -11460,7 +11460,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 35.4,
+          "pct": 34.6,
           "weight": 0.8
         },
         {
@@ -11549,7 +11549,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1887210897.609933,
+      "marketCap": 1887012878.2987058,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -11612,7 +11612,7 @@
         "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 28.10.2025)."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -11661,8 +11661,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "GIB",
-      "score": 40.2,
-      "scoreCycleLegacy": 40.2,
+      "score": 40.1,
+      "scoreCycleLegacy": 40.1,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -11676,7 +11676,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 16732895232,
+      "marketCap": 16694114304,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -11688,7 +11688,7 @@
       "cohortN": 127,
       "cohortFallback": false,
       "scoreBase": 40,
-      "scoreShrunk": 40.2,
+      "scoreShrunk": 40.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -11718,7 +11718,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 29.7,
+          "pct": 28.9,
           "weight": 0.8
         },
         {
@@ -11806,7 +11806,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 11327590405.667841,
+      "marketCap": 11330089072.819199,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -11866,7 +11866,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -11934,7 +11934,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 4703814706.250292,
+      "marketCap": 4704852285.017856,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -11985,7 +11985,7 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 16.475499234119905,
+      "revGrowthYoYPct": 16.47549923411993,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -11994,7 +11994,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -12011,7 +12011,7 @@
         "priorPeriodEnd": "2025-06-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 16.475499234119905,
+      "revGrowthYoYPctLegacy": 16.47549923411993,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-06-30",
       "revGrowthPriorPeriodEndLegacy": "2025-06-30",
@@ -12025,7 +12025,7 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 16.475499234119905,
+          "pct": 16.47549923411993,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
@@ -12061,7 +12061,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 1108620121.0472448,
+      "marketCap": 1108503796.9029427,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -12121,7 +12121,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.1499138,
+      "tradingFxRateApplied": 0.14989807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -12173,8 +12173,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "9715.T",
-      "score": 37.4,
-      "scoreCycleLegacy": 37.4,
+      "score": 37.3,
+      "scoreCycleLegacy": 37.3,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -12188,7 +12188,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 827898685.3048255,
+      "marketCap": 828365231.0013149,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -12199,8 +12199,8 @@
       "coverageWeight": 0.86,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 34.7,
-      "scoreShrunk": 37.4,
+      "scoreBase": 34.6,
+      "scoreShrunk": 37.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -12230,7 +12230,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 32.1,
+          "pct": 31.3,
           "weight": 0.8
         },
         {
@@ -12248,7 +12248,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0062587624,
+      "tradingFxRateApplied": 0.0062622894,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -12312,7 +12312,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2881963886.7550697,
+      "marketCap": 2878426503.952384,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -12372,7 +12372,7 @@
       "qPunkte": 5,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010612331,
+      "tradingFxRateApplied": 0.010611205,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -12423,130 +12423,6 @@
       "rank": 97,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "ATE.PA",
-      "score": 37.1,
-      "scoreCycleLegacy": 37.1,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.069,
-        "companion": 15.5
-      },
-      "name": "Alten S.A.",
-      "country": "France",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 3296231629.661901,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 127,
-      "cohortFallback": false,
-      "scoreBase": 36.9,
-      "scoreShrunk": 37.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 63.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 13.8,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 4.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 68,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 27.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 3.267782017415133,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 3.267782017415133,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": -0.069,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 3.267782017415133,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.0694551691523676,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2025-12-31"
-        }
-      }
-    },
-    {
-      "rank": 98,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "CLVT",
       "score": 37.1,
       "scoreCycleLegacy": 37.1,
@@ -12564,7 +12440,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 1481368576,
+      "marketCap": 1490967040,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -12680,12 +12556,136 @@
       }
     },
     {
+      "rank": 98,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ATE.PA",
+      "score": 37,
+      "scoreCycleLegacy": 37,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.069,
+        "companion": 15.5
+      },
+      "name": "Alten S.A.",
+      "country": "France",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 3296958720.367104,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 127,
+      "cohortFallback": false,
+      "scoreBase": 36.8,
+      "scoreShrunk": 37,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 63.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 13.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 4.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 68,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 26.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 3.267782017415133,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1.102779,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 3.267782017415133,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": -0.069,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.267782017415133,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.0694551691523676,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      }
+    },
+    {
       "rank": 99,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "WAVE.PA",
-      "score": 36.7,
-      "scoreCycleLegacy": 36.7,
+      "score": 36.6,
+      "scoreCycleLegacy": 36.6,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -12699,7 +12699,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 957646719.36448,
+      "marketCap": 957857959.3823999,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -12710,8 +12710,8 @@
       "coverageWeight": 1,
       "cohortN": 127,
       "cohortFallback": false,
-      "scoreBase": 36.5,
-      "scoreShrunk": 36.7,
+      "scoreBase": 36.4,
+      "scoreShrunk": 36.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -12741,7 +12741,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 24,
+          "pct": 23.2,
           "weight": 0.8
         },
         {
@@ -12759,7 +12759,7 @@
       "qPunkte": 4,
       "qSpanTage": 457,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1025358,
+      "tradingFxRateApplied": 1.102779,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-09-30",
       "revGrowthPriorPeriodEnd": "2025-09-30",
@@ -12825,7 +12825,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 3947439104,
+      "marketCap": 3969480448,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "mid",
