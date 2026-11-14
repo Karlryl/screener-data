@@ -3,6 +3,10 @@
   "asOf": "2026-09-27",
   "sourceLastReviewed": "2026-04-28",
   "description": "Official EDGAR non-filing dates, including observed holidays. Unlisted years retain the existing weekday and HTTP handling; do not extrapolate exchange holidays.",
+  "yearSources": {
+    "2026": "https://www.sec.gov/submit-filings/filer-support-resources/edgar-calendar, 'Federal Holidays in 2026'.",
+    "2027": "The SEC EDGAR calendar (source above, last updated Oct. 20, 2026, read 2026-11-13) lists no 2027 holidays yet; it states that EDGAR 'will not receive, process, or accept filings in observance of the following federal holidays'. Dates from OPM, https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/ (read 2026-11-13): '2027 Holiday Schedule' (Jan 01, Jan 18, Feb 15, May 31, Jun 18, Jul 05, Sep 06, Oct 11, Nov 11, Nov 25, Dec 24) plus 'Friday, December 31' from the '2028 Holiday Schedule' (New Year's Day 2028 observed). Re-check against the SEC page once it lists 2027."
+  },
   "years": {
     "2026": [
       "20260101",
@@ -16,6 +20,20 @@
       "20261111",
       "20261126",
       "20261225"
+    ],
+    "2027": [
+      "20270101",
+      "20270118",
+      "20270215",
+      "20270531",
+      "20270618",
+      "20270705",
+      "20270906",
+      "20271011",
+      "20271111",
+      "20271125",
+      "20271224",
+      "20271231"
     ]
   }
 }
