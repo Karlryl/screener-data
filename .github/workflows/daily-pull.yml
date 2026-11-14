@@ -2266,6 +2266,14 @@ jobs:
             node -e "const fs=require('node:fs'); const {isMetadataSnapshot}=require('./lib/snapshot-fs.js'); const n=fs.readdirSync(process.env.FINDASH_SNAPSHOTS_DIR||'snapshots').filter(f=>f.endsWith('.json')&&!isMetadataSnapshot(f)).length; const f=JSON.parse(fs.readFileSync('outputs/findash-export/v1/filter/universum.json','utf8')); if(n<1||f.snapshotCount!==n||f.rows.length!==n) throw new Error('Filter snapshot count mismatch'); console.log('[filter] snapshot count OK: '+n);"
           } || { rm -rf outputs/findash-export/v1/filter; echo "::warning::Filter-Universum konnte nicht erstellt oder geprueft werden; die taeglichen Boards werden trotzdem bereitgestellt."; false; } || true
 
+      # Untangle F002 (13.11.2026): share-count hand-table rows with withholdUnverified stop applying after their reviewBy and
+      # the market cap goes empty (lib/market-cap-guard.js). The deadline report ran in no workflow; here it surfaces every
+      # deadline within 30 days as a warning and in the step summary. Reporting only, never blocks the run.
+      - name: Report hand-table deadlines (reporting only)
+        continue-on-error: true
+        timeout-minutes: 2
+        run: node scripts/handtabellen-fristen-melden.js
+
       # A5/S2 (private research tab): raw valuation ratios per ticker next to filter/universum.json.
       # Display only, no rank, percentile, score or signal. FAIL-SOFT like the filter step: on any
       # failure only this file (and a leftover .tmp of it) is removed; universum.json, the boards and
