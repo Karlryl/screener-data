@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-14T10:37:46.441Z",
+  "generated_at": "2026-11-17T12:15:47.365Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.3,
-    "generated_at": "2026-11-14T10:26:52.953Z",
-    "honest_coverage_pct": 88.8,
-    "n_addressable": 18135,
-    "n_ok": 16096,
-    "n_total": 22911,
-    "n_failed": 1265,
+    "coverage_pct": 69.4,
+    "generated_at": "2026-11-17T11:59:55.931Z",
+    "honest_coverage_pct": 88.9,
+    "n_addressable": 17956,
+    "n_ok": 15961,
+    "n_total": 22991,
+    "n_failed": 1255,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -23,13 +23,12 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VINP",
-      "score": 75.4,
-      "scoreCycleLegacy": 75.4,
+      "score": 76,
+      "scoreCycleLegacy": 76,
       "track": "profitable",
       "lamps": [
         "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -40,9 +39,9 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 578387712,
+      "marketCap": 571822528,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
@@ -51,8 +50,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 78.5,
-      "scoreShrunk": 75.4,
+      "scoreBase": 79.2,
+      "scoreShrunk": 76,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -67,7 +66,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.5,
+          "pct": 90.6,
           "weight": 2.7
         },
         {
@@ -87,12 +86,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 57.1,
+          "pct": 64.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 42.9,
+          "pct": 28.6,
           "weight": 0.9
         }
       ],
@@ -100,10 +99,7 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 2.1,
-        "pctl": 0.75
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -145,7 +141,7 @@
         }
       },
       "g31OverviewShadow": {
-        "value": 0.1893018274241256,
+        "value": 0.18930182742412538,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -157,8 +153,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NOAH",
-      "score": 61.2,
-      "scoreCycleLegacy": 61.2,
+      "score": 62.6,
+      "scoreCycleLegacy": 62.6,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -172,7 +168,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 451689088,
+      "marketCap": 447570368,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -183,8 +179,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 62.6,
-      "scoreShrunk": 61.2,
+      "scoreBase": 64.1,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -199,7 +195,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 81.3,
+          "pct": 84.4,
           "weight": 2.7
         },
         {
@@ -214,12 +210,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 91.7,
+          "pct": 83.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 71.4,
+          "pct": 78.6,
           "weight": 1.5
         },
         {
@@ -274,7 +270,7 @@
         }
       },
       "g31OverviewShadow": {
-        "value": 0.5760127667048216,
+        "value": 0.5760127667048214,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -303,7 +299,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 657883520,
+      "marketCap": 659023744,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -365,7 +361,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 2.5,
-        "pctl": 0.833
+        "pctl": 0.769
       },
       "ath": null,
       "qPunkte": 5,
@@ -436,7 +432,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 310833536,
+      "marketCap": 319154592,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -567,9 +563,9 @@
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 473090944,
+      "marketCap": 467819744,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
@@ -701,7 +697,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 634000960,
+      "marketCap": 628884800,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -831,7 +827,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 382132832,
+      "marketCap": 379787328,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -960,7 +956,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 495900256,
+      "marketCap": 502220096,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1095,9 +1091,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 419541440,
+      "marketCap": 386984448,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -1227,7 +1223,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 447429408,
+      "marketCap": 445922912,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1363,7 +1359,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 343302304,
+      "marketCap": 311185920,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1499,7 +1495,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 611469120,
+      "marketCap": 607485632,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1637,9 +1633,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 413712096,
+      "marketCap": 402310592,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "kurz-vor-profitabel",
