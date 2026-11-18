@@ -130,8 +130,10 @@ async function filedCiks(days, deadline) {
     await sleep(RATE_DELAY_MS);
     // A weekday 403 can be throttling: kept as a failed day and read again (not on weekends: no index exists).
     if (res.missing) { if (!weekend && res.status === 403) failedDays.push(day); continue; }
+    let text;
+    try { text = await res.body.text(); } catch { failedDays.push(day); continue; } // body timeout: day kept (Codex round 3)
     daysRead++; if (!lastRead || day > lastRead) lastRead = day;
-    for (const line of (await res.body.text()).split('\n')) {
+    for (const line of text.split('\n')) {
       const m = line.match(/^(10-K|10-Q|10-KT)(\/A)?\s.*?\s(\d{1,10})\s+\d{4}-?\d{2}-?\d{2}\s/);
       if (m) { const c = m[3].padStart(10, '0'); if (!ciks.has(c) || ciks.get(c) < day) ciks.set(c, day); }
     }
@@ -162,8 +164,13 @@ async function refreshSec(dirs, max, budgetMin) {
   for (let t = Date.parse(cursor) - INDEX_REREAD_DAYS * 86400000; t <= Date.parse(now); t += 86400000) days.add(isoDay(t));
   const idx = await filedCiks([...days].sort(), deadline);
   if (idx.failedDays.length) console.warn(`::warning::[fcf-ttm] ${idx.failedDays.length} index days unread (403/timeout/budget); kept for the next run.`);
-  // A filer is pending unless its entry was read on or after the filing day (the overlap re-reads days).
-  for (const [c, day] of idx.ciks) { const e = store.byCik[c]; if (!e || !e.fetchedAt || e.fetchedAt.slice(0, 10) < day) pending.add(c); }
+  // A filer is pending unless its entry was read on a later day than the filing (a read on the filing
+  // day itself may have come before the filing; the overlap re-reads days). Codex round 3.
+  const pendingSince = store.pendingSince && typeof store.pendingSince === 'object' ? store.pendingSince : {};
+  for (const [c, day] of idx.ciks) {
+    const e = store.byCik[c];
+    if (!e || !e.fetchedAt || e.fetchedAt.slice(0, 10) <= day) { pending.add(c); if (!pendingSince[c]) pendingSince[c] = now; }
+  }
   const due = [];
   for (const cik of wanted.keys()) {
     const e = store.byCik[cik];
@@ -179,9 +186,14 @@ async function refreshSec(dirs, max, budgetMin) {
       const r = res.missing ? { ok: false, reason: 'sec-no-companyfacts' } : secTtmFromFacts(await res.body.json());
       const old = store.byCik[cik];
       // A good entry is never replaced by a failed read; the attempt is recorded next to it.
-      if (!r.ok && old && old.ok) store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
-      else store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
-      pending.delete(cik); // done only after a read that answered
+      if (!r.ok && old && old.ok) {
+        // A failed read next to a good entry stays pending (retried next run) for at most 14 days (Codex round 3).
+        store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
+        if (pending.has(cik) && Date.parse(now) - Date.parse(pendingSince[cik] || now) > 14 * 86400000) pending.delete(cik);
+      } else {
+        store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+        pending.delete(cik); // done only after a read that answered with figures (or a first read)
+      }
       fetched++;
       if (fetched % 100 === 0) { store.pendingCiks = [...pending].sort(); writeJsonAtomic(SEC_STORE, store); } // resumable
     } catch (e) { failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
@@ -190,6 +202,7 @@ async function refreshSec(dirs, max, budgetMin) {
   for (const [cik, tickers] of wanted) if (store.byCik[cik]) store.byCik[cik].tickers = tickers;
   for (const c of [...pending]) if (!wanted.has(c)) pending.delete(c); // filers outside the universe
   store.pendingCiks = [...pending].sort();
+  store.pendingSince = Object.fromEntries(store.pendingCiks.map((c) => [c, pendingSince[c] || now]));
   store.retryIndexDays = idx.failedDays.filter((d) => d >= isoDay(Date.parse(now) - 30 * 86400000)).sort();
   // The cursor moves only to the last day actually read; failed days stay in retryIndexDays.
   if (idx.lastRead && (!store.lastIndexDate || idx.lastRead > store.lastIndexDate)) store.lastIndexDate = idx.lastRead;
@@ -232,6 +245,10 @@ async function refreshVendor(dirs, max, concurrency, budgetMin) {
   for (const { ticker, snap } of loadSnapshots(dirs)) {
     if (vendorDue(store.byTicker[ticker], snap.meta && snap.meta.fetchedAt, now.getTime())) due.push(ticker);
   }
+  // Fair order (Codex round 3): never-read listings first, then the longest-waiting; a listing that keeps
+  // failing moves to the back by its own attempt time and cannot starve the others.
+  const waitedSince = (t) => { const e = store.byTicker[t]; return e ? (e.lastAttemptAt || e.fetchedAt || '') : ''; };
+  due.sort((a, b) => waitedSince(a).localeCompare(waitedSince(b)) || a.localeCompare(b));
   let i = 0, fetched = 0, failed = 0;
   const period1 = new Date(now.getTime() - 2 * 365 * 86400000);
   const keep = (t, reason) => {

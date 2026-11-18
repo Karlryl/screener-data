@@ -277,6 +277,10 @@ check('G5 impossible or future period ends are unusable; the export guard also r
   assert.equal(T.isCalendarDay('2026-02-30'), false);
   assert.equal(T.chooseFcfMargin({ sec: secE({ end: '2026-99-99' }), vendor: null, today: '2026-11-18' }).reason, 'sec-invalid-entry');
   assert.equal(T.chooseFcfMargin({ sec: secE({ end: '2099-09-30' }), vendor: null, today: '2026-11-18' }).reason, 'sec-invalid-entry');
+  // round 3: the whole string is the date, no prefix match
+  assert.equal(T.isCalendarDay('2012-12-31T00:00:00Z'), false);
+  assert.equal(T.isCalendarDay('2026-09-30garbage'), false);
+  assert.equal(T.chooseFcfMargin({ sec: secE({ end: '2026-09-30garbage' }), vendor: null, today: '2026-11-18' }).reason, 'sec-invalid-entry');
 });
 check('G6 Yahoo retries: a failed read is retried after a day, a good one only after a newer full pull', () => {
   const now = Date.parse('2026-11-19T10:00:00Z');
