@@ -75,6 +75,7 @@ const { g31Variant, g31Shadow, g31Export, g31Last, withG31Variant } = require('.
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
+const { isCalendarDay } = require('../lib/fcf-ttm.js');
 const { annualPairsShadowForSnapshot } = require('./write-findash-export.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 const { shownGrowthMonth } = require('../lib/home-listing.js');
@@ -1134,8 +1135,10 @@ function check(opts = {}) {
     // A row with another source means the switch did not run and the replaced definition would be ranked.
     if (r.fcfMarginSource !== 'sec-ttm' && r.fcfMarginSource !== 'yahoo-fts-ttm') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): fcfMarginSource "' + r.fcfMarginSource + '" ist keine TTM-Quelle (SEC oder Yahoo-TTM).');
-    } else if (typeof r.fcfMarginPeriodEnd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.fcfMarginPeriodEnd)) {
+    } else if (!isCalendarDay(r.fcfMarginPeriodEnd)) {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): fcfMarginPeriodEnd fehlt — die Marge haette keinen Zeitraum.');
+    } else if (typeof overview.generated_at === 'string' && r.fcfMarginPeriodEnd > overview.generated_at.slice(0, 10)) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): fcfMarginPeriodEnd ' + r.fcfMarginPeriodEnd + ' liegt nach dem Datenstand.');
     }
     if (r.track !== 'profitable' && r.track !== 'unprofitable') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): track "' + r.track + '" ist kein erlaubter Wert.');

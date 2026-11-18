@@ -101,8 +101,11 @@ function cikFor(ticker, byTicker) {
   return e && e.cik ? String(e.cik).padStart(10, '0') : null;
 }
 
+const REQUEST_TIMEOUT_MS = 30000; // one hanging request must not outlive the time budget
+
 async function secGet(url, missingStatuses = [404]) {
-  const r = await fetch(url, { headers: { 'User-Agent': secUserAgent(), 'Accept-Encoding': 'gzip, deflate' } });
+  const r = await fetch(url, { headers: { 'User-Agent': secUserAgent(), 'Accept-Encoding': 'gzip, deflate' },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   if (missingStatuses.includes(r.status)) return { status: r.status, missing: true };
   if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
   return { status: 200, body: r };
@@ -113,23 +116,27 @@ async function secGet(url, missingStatuses = [404]) {
  * www.sec.gov answers 403 for an index day that does not exist; on a weekday that can also be
  * throttling, so it counts as an error there. Returns the last day actually read.
  */
-async function filedCiks(from, to) {
-  const ciks = new Set();
-  let daysRead = 0, errors = 0, lastRead = null;
-  for (let t = Date.parse(from); t <= Date.parse(to); t += 86400000) {
-    const d = new Date(t), y = d.getUTCFullYear(), q = Math.floor(d.getUTCMonth() / 3) + 1;
+async function filedCiks(days, deadline) {
+  const ciks = new Map(); // cik -> latest index day it filed on
+  let daysRead = 0, lastRead = null;
+  const failedDays = [];
+  for (const day of days) {
+    if (Date.now() > deadline) { failedDays.push(day); continue; } // out of time: read next run
+    const t = Date.parse(day), d = new Date(t), y = d.getUTCFullYear(), q = Math.floor(d.getUTCMonth() / 3) + 1;
     const weekend = d.getUTCDay() === 0 || d.getUTCDay() === 6;
-    const ymd = isoDay(t).replace(/-/g, '');
-    const res = await secGet(`https://www.sec.gov/Archives/edgar/daily-index/${y}/QTR${q}/form.${ymd}.idx`, [403, 404]);
+    let res;
+    try { res = await secGet(`https://www.sec.gov/Archives/edgar/daily-index/${y}/QTR${q}/form.${day.replace(/-/g, '')}.idx`, [403, 404]); }
+    catch { failedDays.push(day); continue; }
     await sleep(RATE_DELAY_MS);
-    if (res.missing) { if (!weekend && res.status === 403 && t < Date.parse(to) - 86400000) errors++; continue; }
-    daysRead++; lastRead = isoDay(t);
+    // A weekday 403 can be throttling: kept as a failed day and read again (not on weekends: no index exists).
+    if (res.missing) { if (!weekend && res.status === 403) failedDays.push(day); continue; }
+    daysRead++; if (!lastRead || day > lastRead) lastRead = day;
     for (const line of (await res.body.text()).split('\n')) {
       const m = line.match(/^(10-K|10-Q|10-KT)(\/A)?\s.*?\s(\d{1,10})\s+\d{4}-?\d{2}-?\d{2}\s/);
-      if (m) ciks.add(m[3].padStart(10, '0'));
+      if (m) { const c = m[3].padStart(10, '0'); if (!ciks.has(c) || ciks.get(c) < day) ciks.set(c, day); }
     }
   }
-  return { ciks, daysRead, errors, lastRead };
+  return { ciks, daysRead, lastRead, failedDays };
 }
 
 /** Days until a company is re-read without a new filing: 23 to 36, fixed per CIK. */
@@ -146,18 +153,22 @@ async function refreshSec(dirs, max, budgetMin) {
     if (cik) wanted.set(cik, [...(wanted.get(cik) || []), ticker]);
   }
   const now = runDay();
+  // Work that must not get lost behind the cursor (Codex review round 2): filers found in an index but
+  // not yet read (pendingCiks) and index days that failed (retryIndexDays) live in the store until done.
+  const pending = new Set(Array.isArray(store.pendingCiks) ? store.pendingCiks : []);
+  const retryDays = new Set(Array.isArray(store.retryIndexDays) ? store.retryIndexDays : []);
   const cursor = store.lastIndexDate || isoDay(Date.now() - 7 * 86400000);
-  const from = isoDay(Date.parse(cursor) - INDEX_REREAD_DAYS * 86400000);
-  let idx = { ciks: new Set(), daysRead: 0, errors: 0, lastRead: null };
-  try { idx = await filedCiks(from, now); }
-  catch (e) { console.warn('::warning::[fcf-ttm] EDGAR daily index unreadable, only missing and periodic re-reads this run: ' + e.message); }
-  if (idx.errors > 0) console.warn(`::warning::[fcf-ttm] ${idx.errors} weekday index days answered 403 (throttling?); they are read again next run.`);
-  const filed = idx.ciks;
+  const days = new Set(retryDays);
+  for (let t = Date.parse(cursor) - INDEX_REREAD_DAYS * 86400000; t <= Date.parse(now); t += 86400000) days.add(isoDay(t));
+  const idx = await filedCiks([...days].sort(), deadline);
+  if (idx.failedDays.length) console.warn(`::warning::[fcf-ttm] ${idx.failedDays.length} index days unread (403/timeout/budget); kept for the next run.`);
+  // A filer is pending unless its entry was read on or after the filing day (the overlap re-reads days).
+  for (const [c, day] of idx.ciks) { const e = store.byCik[c]; if (!e || !e.fetchedAt || e.fetchedAt.slice(0, 10) < day) pending.add(c); }
   const due = [];
   for (const cik of wanted.keys()) {
     const e = store.byCik[cik];
     const age = e && e.fetchedAt ? (Date.parse(now) - Date.parse(e.fetchedAt)) / 86400000 : Infinity;
-    if (!e || filed.has(cik) || age >= recheckDays(cik)) due.push({ cik, prio: filed.has(cik) ? 0 : (!e ? 1 : 2), age });
+    if (!e || pending.has(cik) || age >= recheckDays(cik)) due.push({ cik, prio: pending.has(cik) ? 0 : (!e ? 1 : 2), age });
   }
   due.sort((a, b) => a.prio - b.prio || b.age - a.age);
   let fetched = 0, failed = 0, outOfTime = 0;
@@ -170,20 +181,44 @@ async function refreshSec(dirs, max, budgetMin) {
       // A good entry is never replaced by a failed read; the attempt is recorded next to it.
       if (!r.ok && old && old.ok) store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
       else store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+      pending.delete(cik); // done only after a read that answered
       fetched++;
-      if (fetched % 100 === 0) writeJsonAtomic(SEC_STORE, store); // resumable
+      if (fetched % 100 === 0) { store.pendingCiks = [...pending].sort(); writeJsonAtomic(SEC_STORE, store); } // resumable
     } catch (e) { failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
     await sleep(RATE_DELAY_MS);
   }
   for (const [cik, tickers] of wanted) if (store.byCik[cik]) store.byCik[cik].tickers = tickers;
-  // The cursor moves only to the last day actually read (its index existed); later days are read again.
+  for (const c of [...pending]) if (!wanted.has(c)) pending.delete(c); // filers outside the universe
+  store.pendingCiks = [...pending].sort();
+  store.retryIndexDays = idx.failedDays.filter((d) => d >= isoDay(Date.parse(now) - 30 * 86400000)).sort();
+  // The cursor moves only to the last day actually read; failed days stay in retryIndexDays.
   if (idx.lastRead && (!store.lastIndexDate || idx.lastRead > store.lastIndexDate)) store.lastIndexDate = idx.lastRead;
   store.updatedAt = now;
   writeJsonAtomic(SEC_STORE, store);
   const left = Math.max(0, due.length - max) + outOfTime;
-  console.log(`[fcf-ttm] SEC: ${wanted.size} US companies, ${filed.size} filers in ${idx.daysRead} index days, `
+  console.log(`[fcf-ttm] SEC: ${wanted.size} US companies, ${idx.ciks.size} filers in ${idx.daysRead} index days, ${pending.size} still pending, `
     + `${due.length} due, ${fetched} read, ${failed} failed, ${left} left for the next run`);
   if (failed > 0 && fetched === 0) process.exitCode = 1;
+}
+
+const VENDOR_RETRY_DAYS = 1; // a failed or empty Yahoo read is tried again after a day (Codex review round 2)
+
+/**
+ * Is a Yahoo listing due for a read? New: yes. Last good read older than the snapshot's last full
+ * pull: yes, unless a failed attempt was made less than VENDOR_RETRY_DAYS ago. Never read with
+ * success: retried every VENDOR_RETRY_DAYS.
+ * @param {object|undefined} e store entry.
+ * @param {string|undefined} pulledAt snapshot meta.fetchedAt (last full pull).
+ * @param {number} nowMs current time.
+ * @returns {boolean}
+ */
+function vendorDue(e, pulledAt, nowMs) {
+  if (!e) return true;
+  const day = 86400000, pulled = Date.parse(pulledAt || ''), good = e.ok ? Date.parse(e.fetchedAt) : NaN;
+  const attempt = Date.parse(e.lastAttemptAt || (e.ok ? '' : e.fetchedAt) || '');
+  const backoffOver = !Number.isFinite(attempt) || nowMs - attempt >= VENDOR_RETRY_DAYS * day;
+  if (!e.ok) return backoffOver;
+  return Number.isFinite(pulled) && pulled > good && backoffOver;
 }
 
 async function refreshVendor(dirs, max, concurrency, budgetMin) {
@@ -195,11 +230,7 @@ async function refreshVendor(dirs, max, concurrency, budgetMin) {
   const now = new Date();
   const due = [];
   for (const { ticker, snap } of loadSnapshots(dirs)) {
-    const e = store.byTicker[ticker];
-    const pulled = snap.meta && snap.meta.fetchedAt ? Date.parse(snap.meta.fetchedAt) : NaN;
-    const seen = e ? Date.parse(e.lastAttemptAt || e.fetchedAt) : NaN;
-    // A full pull (meta.fetchedAt) newer than our last read means new fundamentals: read again.
-    if (!e || (Number.isFinite(pulled) && pulled > seen)) due.push(ticker);
+    if (vendorDue(store.byTicker[ticker], snap.meta && snap.meta.fetchedAt, now.getTime())) due.push(ticker);
   }
   let i = 0, fetched = 0, failed = 0;
   const period1 = new Date(now.getTime() - 2 * 365 * 86400000);
@@ -215,7 +246,7 @@ async function refreshVendor(dirs, max, concurrency, budgetMin) {
       try {
         // Same symbol rule as the pull (FUNO/11.MX is FUNO11.MX at Yahoo).
         const rows = await yf.fundamentalsTimeSeries(normalizeYahooSymbol(t), { period1, period2: now, type: 'trailing', module: 'all' },
-          { validateResult: false });
+          { validateResult: false, fetchOptions: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } });
         const r = vendorTtmFromRows(rows);
         // An empty answer (Yahoo sometimes returns none for a while) never replaces a good entry.
         if (r.ok) store.byTicker[t] = Object.assign({ fetchedAt: new Date().toISOString() }, r); else keep(t, r.reason);
@@ -246,7 +277,8 @@ async function refreshVendor(dirs, max, concurrency, budgetMin) {
 function applyChoice(snap, choice, day) {
   const m = snap.metrics || (snap.metrics = {});
   const meta = snap.meta || (snap.meta = {});
-  const state = () => JSON.stringify([m.fcfMarginTTM, meta.fcfMarginTTMOld, meta.fcfMarginTTMSuppressed, meta.fcfMarginTTMReason]);
+  const state = () => JSON.stringify([m.fcfMarginTTM, meta.fcfMarginTTMOld, meta.fcfMarginTTMSuppressed, meta.fcfMarginTTMReason,
+    meta.fcfMarginTTMSource, meta.fcfMarginTTMPeriodEnd]);
   const before = state();
   const cur = m.fcfMarginTTM;
   if (!meta.fcfMarginTTMOld && !(cur && NEW_SOURCES.has(cur.source))) {
@@ -322,4 +354,4 @@ async function main() {
 
 if (require.main === module) main().catch((e) => { console.error('[fcf-ttm] ' + e.stack); process.exitCode = 1; });
 
-module.exports = { applyChoice, cikFor, readStore, apply, newestQuarterEnd, recheckDays };
+module.exports = { applyChoice, cikFor, readStore, apply, newestQuarterEnd, recheckDays, vendorDue, filedCiks, refreshSec };

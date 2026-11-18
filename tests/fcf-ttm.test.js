@@ -234,6 +234,67 @@ check('E3 re-reads are spread over 14 days by CIK', () => {
   assert.ok(days.size > 1 && [...days].every((d) => d >= 23 && d <= 36));
 });
 
+// (G) Codex review round 2 regressions.
+check('G1 EOG: oil-and-gas line plus "other PP&E" are both capex (6,148 + 530)', () => {
+  const r = T.secTtmFromFacts(facts({ NetCashProvidedByUsedInOperatingActivities: fy(14060),
+    PaymentsToAcquireOilAndGasPropertyAndEquipment: fy(6148), PaymentsToAcquireOtherPropertyPlantAndEquipment: fy(530), Revenues: fy(29728) }));
+  assert.equal(r.capex, 6678);
+  assert.equal(Math.round(r.margin * 10) / 10, 24.8);
+  // the combined productive-assets line takes no add-ons (no double count)
+  const pa = T.secTtmFromFacts(facts({ NetCashProvidedByUsedInOperatingActivities: fy(100),
+    PaymentsToAcquireProductiveAssets: fy(30), PaymentsToAcquireOtherPropertyPlantAndEquipment: fy(5), Revenues: fy(400) }));
+  assert.equal(pa.capex, 30);
+});
+check('G2 VET: negative Yahoo capex is rejected with a reason, also for stored entries', () => {
+  assert.equal(T.vendorTtmFromRows([{ date: 1790726400, operatingCashFlow: 600, capitalExpenditure: 504.7, totalRevenue: 1820 }]).reason, 'vendor-negative-capex');
+  const c = T.chooseFcfMargin({ sec: null, vendor: venE({ capex: -504.7, margin: 60.8 }) });
+  assert.deepEqual([c.value, c.reason], [null, 'vendor-invalid-entry']);
+});
+check('G3 an eleven-month 10-KT is not twelve months; 52- and 53-week years are', () => {
+  const kt = facts({ NetCashProvidedByUsedInOperatingActivities: [fact('2025-12-01', '2026-10-31', 120, '2026-12-20', '10-KT')],
+    PaymentsToAcquirePropertyPlantAndEquipment: [fact('2025-12-01', '2026-10-31', 20, '2026-12-20', '10-KT')],
+    Revenues: [fact('2025-12-01', '2026-10-31', 400, '2026-12-20', '10-KT')] });
+  assert.equal(T.secTtmFromFacts(kt).ok, false);
+  const w53 = facts({ NetCashProvidedByUsedInOperatingActivities: [fact('2025-08-29', '2026-09-03', 100, '2026-10-09', '10-K')],
+    PaymentsToAcquirePropertyPlantAndEquipment: [fact('2025-08-29', '2026-09-03', 10, '2026-10-09', '10-K')],
+    Revenues: [fact('2025-08-29', '2026-09-03', 400, '2026-10-09', '10-K')] });
+  assert.equal(T.secTtmFromFacts(w53).ok, true); // 371 days
+});
+check('G4 the newest period across both OCF concepts wins (concept switch)', () => {
+  const f = facts({
+    NetCashProvidedByUsedInOperatingActivities: fy(100),
+    NetCashProvidedByUsedInOperatingActivitiesContinuingOperations: [...fy(100),
+      fact('2026-01-01', '2026-09-30', 90, '2026-11-05'), fact('2025-01-01', '2025-09-30', 60, '2026-11-05')],
+    PaymentsToAcquirePropertyPlantAndEquipment: [...fy(10), fact('2026-01-01', '2026-09-30', 9, '2026-11-05'), fact('2025-01-01', '2025-09-30', 7, '2026-11-05')],
+    Revenues: [...fy(480), fact('2026-01-01', '2026-09-30', 380, '2026-11-05'), fact('2025-01-01', '2025-09-30', 340, '2026-11-05')],
+  });
+  const r = T.secTtmFromFacts(f);
+  // (100 + 90 - 60) - (10 + 9 - 7) = 118 over 480 + 380 - 340 = 520
+  assert.deepEqual([r.end, Math.round(r.margin * 10000) / 10000], ['2026-09-30', 22.6923]);
+});
+check('G5 impossible or future period ends are unusable; the export guard also rejects them', () => {
+  assert.equal(T.isCalendarDay('2026-99-99'), false);
+  assert.equal(T.isCalendarDay('2026-02-30'), false);
+  assert.equal(T.chooseFcfMargin({ sec: secE({ end: '2026-99-99' }), vendor: null, today: '2026-11-18' }).reason, 'sec-invalid-entry');
+  assert.equal(T.chooseFcfMargin({ sec: secE({ end: '2099-09-30' }), vendor: null, today: '2026-11-18' }).reason, 'sec-invalid-entry');
+});
+check('G6 Yahoo retries: a failed read is retried after a day, a good one only after a newer full pull', () => {
+  const now = Date.parse('2026-11-19T10:00:00Z');
+  const good = { ok: true, fetchedAt: '2026-11-10T00:00:00Z' };
+  assert.equal(O.vendorDue(good, '2026-11-05T00:00:00Z', now), false);
+  assert.equal(O.vendorDue(good, '2026-11-18T00:00:00Z', now), true);
+  assert.equal(O.vendorDue({ ...good, lastAttemptAt: '2026-11-19T08:00:00Z' }, '2026-11-18T00:00:00Z', now), false);
+  assert.equal(O.vendorDue({ ...good, lastAttemptAt: '2026-11-18T08:00:00Z' }, '2026-11-18T00:00:00Z', now), true);
+  assert.equal(O.vendorDue({ ok: false, reason: 'vendor-not-found', fetchedAt: '2026-11-18T08:00:00Z' }, null, now), true);
+  assert.equal(O.vendorDue({ ok: false, reason: 'vendor-not-found', fetchedAt: '2026-11-19T08:00:00Z' }, null, now), false);
+});
+check('G7 a suppressed margin whose period moves is written again (change detection)', () => {
+  const s = { meta: { ticker: 'S' }, metrics: {} };
+  O.applyChoice(s, { value: null, source: null, periodEnd: '2026-06-30', reason: 'abs-margin-over-200', suppressed: true }, '2026-11-18');
+  assert.equal(O.applyChoice(s, { value: null, source: null, periodEnd: '2026-09-30', reason: 'abs-margin-over-200', suppressed: true }, '2026-11-18'), true);
+  assert.equal(s.meta.fcfMarginTTMPeriodEnd, '2026-09-30');
+});
+
 // (F) The board guard: write-rule40-export.js --check rejects a row whose margin did not go through
 //     the TTM switch (source of the replaced Yahoo financialData field, or no period end).
 const R40 = require('../scripts/write-rule40-export.js');
@@ -252,5 +313,49 @@ check('F1 guard green on a TTM row, red on the replaced source and on a missing 
   assert.equal(tag(r40Fehler({ fcfMarginTTMPeriodEnd: null })).length, 1);
 });
 
-fs.rmSync(tmp, { recursive: true, force: true });
-console.log(`fcf-ttm: ${ok} checks passed`);
+// G8 (async, stubbed network): a filer found in the daily index but not read this run (max=1) stays
+// pending and is read the next day, although the cursor moved past its index day.
+async function g8() {
+  const snaps = path.join(tmp, 'g8'); fs.mkdirSync(snaps);
+  for (const t of ['MU', 'ALAB']) fs.writeFileSync(path.join(snaps, t + '.json'), JSON.stringify({ meta: { ticker: t }, metrics: {} }));
+  // both read on 10.11., before their filing of 13.11.; one of them already read again (16.11.) must not re-enter
+  const prior = { '0000723125': secE({ fetchedAt: '2026-11-10' }), '0001736297': secE({ fetchedAt: '2026-11-10' }) };
+  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: prior, lastIndexDate: '2026-11-12' }));
+  const realFetch = global.fetch, realDate = process.env.RUN_DATE_UTC, realContact = process.env.SEC_CONTACT;
+  const reads = [];
+  global.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('form.20261113.idx')) {
+      const body = '10-Q   MICRON   723125   20261113   x\n10-Q   ASTERA   1736297   20261113   y\n';
+      return { status: 200, ok: true, text: async () => body };
+    }
+    if (u.includes('/daily-index/')) return { status: 404, ok: false };
+    reads.push(u.match(/CIK(\d+)/)[1]);
+    return { status: 200, ok: true, json: async () => alab };
+  };
+  try {
+    process.env.SEC_CONTACT = 'test admin@example.org';
+    process.env.RUN_DATE_UTC = '2026-11-18';
+    await O.refreshSec([snaps], 1, 1);
+    let st = JSON.parse(fs.readFileSync(process.env.FCF_TTM_SEC_STORE, 'utf8'));
+    assert.equal(reads.length, 1);
+    assert.equal(st.pendingCiks.length, 1);
+    assert.equal(st.lastIndexDate, '2026-11-13');
+    process.env.RUN_DATE_UTC = '2026-11-19';
+    await O.refreshSec([snaps], 1, 1);
+    st = JSON.parse(fs.readFileSync(process.env.FCF_TTM_SEC_STORE, 'utf8'));
+    assert.equal(reads.length, 2);
+    assert.notEqual(reads[0], reads[1]);
+    assert.deepEqual(st.pendingCiks, []);
+  } finally {
+    global.fetch = realFetch;
+    if (realDate === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = realDate;
+    if (realContact === undefined) delete process.env.SEC_CONTACT; else process.env.SEC_CONTACT = realContact;
+  }
+  ok++; console.log('  ok   G8 a filer not read this run stays pending and is read the next day');
+}
+
+g8().then(() => {
+  fs.rmSync(tmp, { recursive: true, force: true });
+  console.log(`fcf-ttm: ${ok} checks passed`);
+}).catch((e) => { console.error(e); process.exitCode = 1; });
