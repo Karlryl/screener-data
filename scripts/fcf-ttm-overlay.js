@@ -5,24 +5,26 @@
  * (18.11.2026, definition and source order: lib/fcf-ttm.js).
  *
  * Runs in the scoring job of daily-pull.yml right after the OpInc source step and before
- * run-screener.js, so the Rule-of-40 board, the HyperGrowth rule-of-X axis and the filter tab all
- * read the same number. Like opinc-source-migrate.js it touches neither the shard caches nor the
- * uploaded snapshots artifact.
+ * run-screener.js, so the Rule-of-40 board, the HyperGrowth rule-of-X axis and track and the filter
+ * tab all read the same number. Like opinc-source-migrate.js it touches neither the shard caches nor
+ * the uploaded snapshots artifact.
  *
- *   node scripts/fcf-ttm-overlay.js refresh-sec    [--max=1500] [--dirs=snapshots,snapshots-smallcap]
- *   node scripts/fcf-ttm-overlay.js refresh-vendor [--max=3000] [--dirs=...]
+ *   node scripts/fcf-ttm-overlay.js refresh-sec    [--max=1500] [--budget-min=8] [--dirs=snapshots,snapshots-smallcap]
+ *   node scripts/fcf-ttm-overlay.js refresh-vendor [--max=3000] [--budget-min=8] [--dirs=...]
  *   node scripts/fcf-ttm-overlay.js apply          [--dirs=...] [--json=reports/fcf-ttm-apply.json]
  *
  * Stores (committed with the board-history vintage):
  *   external-data/fcf-ttm-sec.json     byCik:    SEC TTM per company (lib/fcf-ttm.js secTtmFromFacts)
  *   external-data/fcf-ttm-vendor.json  byTicker: Yahoo trailing TTM per listing (vendorTtmFromRows)
- * A refresh that fails keeps the previous entry with its own period end and fetch date; it never
- * writes a number it did not read. apply exits 1 on an unreadable store, so the scoring job stops
- * instead of scoring with the replaced definition.
+ * A refresh reads within a time budget, saves its progress every 100 reads, and never replaces a good
+ * entry by a failed or empty read (the failure is recorded as lastAttempt*). apply exits 1 on a missing
+ * or unreadable store or when almost no SEC margin is left, so the scoring job stops instead of scoring
+ * with the replaced definition.
  */
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { secUserAgent, assertSecContact } = require('../lib/sec-user-agent.js');
 const { RATE_DELAY_MS } = require('../lib/sec-rate-limit.js');
 const { secTtmFromFacts, vendorTtmFromRows, chooseFcfMargin, OLD_COMPARISON_UNTIL } = require('../lib/fcf-ttm.js');
@@ -32,23 +34,34 @@ const SEC_STORE = process.env.FCF_TTM_SEC_STORE || path.join(ROOT, 'external-dat
 const VENDOR_STORE = process.env.FCF_TTM_VENDOR_STORE || path.join(ROOT, 'external-data', 'fcf-ttm-vendor.json');
 const CIK_MAP = path.join(ROOT, 'external-data', 'sec-ticker-cik-map.json');
 const NEW_SOURCES = new Set(['sec-ttm', 'yahoo-fts-ttm']);
-const RECHECK_DAYS = 30; // re-read every company at least monthly (amendments, missed index days)
+// Every company is re-read at least every 23 to 36 days (amendments, missed index days); the spread by
+// CIK keeps the seeded companies from falling due on one day.
+const RECHECK_BASE_DAYS = 23, RECHECK_SPREAD_DAYS = 14;
+const INDEX_REREAD_DAYS = 3;       // the daily index of a day is published late: always read the last 3 days again
+const SEC_FLOOR = { usListings: 1000, minSecMargins: 200 }; // apply guard: the SEC path went missing
 
 function arg(name, dflt) {
   const a = process.argv.find((x) => x.startsWith('--' + name + '='));
   return a ? a.slice(name.length + 3) : dflt;
 }
 const sleep = (n) => new Promise((r) => setTimeout(r, n));
-const today = () => new Date().toISOString().slice(0, 10);
+const isoDay = (t) => new Date(t).toISOString().slice(0, 10);
+/** Run day: RUN_DATE_UTC of the daily run, else the clock. */
+const runDay = () => (/^\d{4}-\d{2}-\d{2}$/.test(process.env.RUN_DATE_UTC || '') ? process.env.RUN_DATE_UTC : isoDay(Date.now()));
 
 /**
- * Read a store; a missing file is an empty store, an unreadable one throws.
+ * Read a store; a missing file is an empty store only when `allowMissing` (first refresh), an
+ * unreadable one always throws.
  * @param {string} file path of the store.
  * @param {string} key 'byCik' or 'byTicker'.
+ * @param {boolean} [allowMissing=false] treat a missing file as empty.
  * @returns {object}
  */
-function readStore(file, key) {
-  if (!fs.existsSync(file)) return { schema: 1, [key]: {} };
+function readStore(file, key, allowMissing = false) {
+  if (!fs.existsSync(file)) {
+    if (allowMissing) return { schema: 1, [key]: {} };
+    throw new Error(file + ' missing');
+  }
   const s = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (!s || typeof s[key] !== 'object' || s[key] === null) throw new Error(file + ': no ' + key + ' object');
   return s;
@@ -65,7 +78,7 @@ function loadSnapshots(dirs) {
     const dir = path.isAbsolute(d) ? d : path.join(ROOT, d);
     if (!fs.existsSync(dir)) continue;
     for (const f of fs.readdirSync(dir)) {
-      if (!f.endsWith('.json') || f.startsWith('_')) continue;
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue; // the project's one metadata rule (P1 wave 8)
       const file = path.join(dir, f);
       let snap;
       try { snap = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { continue; }
@@ -90,136 +103,165 @@ function cikFor(ticker, byTicker) {
 
 async function secGet(url, missingStatuses = [404]) {
   const r = await fetch(url, { headers: { 'User-Agent': secUserAgent(), 'Accept-Encoding': 'gzip, deflate' } });
-  if (missingStatuses.includes(r.status)) return { status: 404 };
+  if (missingStatuses.includes(r.status)) return { status: r.status, missing: true };
   if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
   return { status: 200, body: r };
 }
 
-/** CIKs with a 10-K/10-Q (or amendment) in the EDGAR daily form index of each day after `from`. */
+/**
+ * CIKs with a 10-K/10-Q (or amendment) in the EDGAR daily form index from `from` through `to`.
+ * www.sec.gov answers 403 for an index day that does not exist; on a weekday that can also be
+ * throttling, so it counts as an error there. Returns the last day actually read.
+ */
 async function filedCiks(from, to) {
   const ciks = new Set();
-  let ok = 0;
-  for (let t = Date.parse(from) + 86400000; t <= Date.parse(to); t += 86400000) {
+  let daysRead = 0, errors = 0, lastRead = null;
+  for (let t = Date.parse(from); t <= Date.parse(to); t += 86400000) {
     const d = new Date(t), y = d.getUTCFullYear(), q = Math.floor(d.getUTCMonth() / 3) + 1;
-    const ymd = d.toISOString().slice(0, 10).replace(/-/g, '');
-    // www.sec.gov answers 403 (not 404) for an index day that does not exist (weekend, holiday).
+    const weekend = d.getUTCDay() === 0 || d.getUTCDay() === 6;
+    const ymd = isoDay(t).replace(/-/g, '');
     const res = await secGet(`https://www.sec.gov/Archives/edgar/daily-index/${y}/QTR${q}/form.${ymd}.idx`, [403, 404]);
     await sleep(RATE_DELAY_MS);
-    if (res.status === 404) continue; // weekend, holiday, or not yet published
-    ok++;
+    if (res.missing) { if (!weekend && res.status === 403 && t < Date.parse(to) - 86400000) errors++; continue; }
+    daysRead++; lastRead = isoDay(t);
     for (const line of (await res.body.text()).split('\n')) {
       const m = line.match(/^(10-K|10-Q|10-KT)(\/A)?\s.*?\s(\d{1,10})\s+\d{4}-?\d{2}-?\d{2}\s/);
       if (m) ciks.add(m[3].padStart(10, '0'));
     }
   }
-  return { ciks, daysRead: ok };
+  return { ciks, daysRead, errors, lastRead };
 }
 
-async function refreshSec(dirs, max) {
+/** Days until a company is re-read without a new filing: 23 to 36, fixed per CIK. */
+const recheckDays = (cik) => RECHECK_BASE_DAYS + (parseInt(cik, 10) % RECHECK_SPREAD_DAYS);
+
+async function refreshSec(dirs, max, budgetMin) {
   assertSecContact();
-  const store = readStore(SEC_STORE, 'byCik');
+  const deadline = Date.now() + budgetMin * 60000;
+  const store = readStore(SEC_STORE, 'byCik', true);
   const map = JSON.parse(fs.readFileSync(CIK_MAP, 'utf8')).byTicker || {};
   const wanted = new Map(); // cik -> tickers
   for (const { ticker } of loadSnapshots(dirs)) {
     const cik = cikFor(ticker, map);
     if (cik) wanted.set(cik, [...(wanted.get(cik) || []), ticker]);
   }
-  const now = today();
-  const from = store.lastIndexDate || new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  let filed = new Set(), daysRead = 0;
-  try { ({ ciks: filed, daysRead } = await filedCiks(from, now)); }
-  catch (e) { console.warn('::warning::[fcf-ttm] EDGAR daily index unreadable, only missing and monthly re-reads this run: ' + e.message); }
-  if (daysRead === 0) console.warn('::warning::[fcf-ttm] no EDGAR daily index day readable since ' + from + ' — new filings are caught by the monthly re-read only.');
+  const now = runDay();
+  const cursor = store.lastIndexDate || isoDay(Date.now() - 7 * 86400000);
+  const from = isoDay(Date.parse(cursor) - INDEX_REREAD_DAYS * 86400000);
+  let idx = { ciks: new Set(), daysRead: 0, errors: 0, lastRead: null };
+  try { idx = await filedCiks(from, now); }
+  catch (e) { console.warn('::warning::[fcf-ttm] EDGAR daily index unreadable, only missing and periodic re-reads this run: ' + e.message); }
+  if (idx.errors > 0) console.warn(`::warning::[fcf-ttm] ${idx.errors} weekday index days answered 403 (throttling?); they are read again next run.`);
+  const filed = idx.ciks;
   const due = [];
   for (const cik of wanted.keys()) {
     const e = store.byCik[cik];
     const age = e && e.fetchedAt ? (Date.parse(now) - Date.parse(e.fetchedAt)) / 86400000 : Infinity;
-    if (!e || filed.has(cik) || age >= RECHECK_DAYS) due.push({ cik, prio: filed.has(cik) ? 0 : (!e ? 1 : 2), age });
+    if (!e || filed.has(cik) || age >= recheckDays(cik)) due.push({ cik, prio: filed.has(cik) ? 0 : (!e ? 1 : 2), age });
   }
   due.sort((a, b) => a.prio - b.prio || b.age - a.age);
-  let fetched = 0, failed = 0;
+  let fetched = 0, failed = 0, outOfTime = 0;
   for (const { cik } of due.slice(0, max)) {
+    if (Date.now() > deadline) { outOfTime++; continue; }
     try {
       const res = await secGet(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`);
-      const r = res.status === 404 ? { ok: false, reason: 'sec-no-companyfacts' } : secTtmFromFacts(await res.body.json());
-      store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+      const r = res.missing ? { ok: false, reason: 'sec-no-companyfacts' } : secTtmFromFacts(await res.body.json());
+      const old = store.byCik[cik];
+      // A good entry is never replaced by a failed read; the attempt is recorded next to it.
+      if (!r.ok && old && old.ok) store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
+      else store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
       fetched++;
-    } catch (e) { failed++; console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
+      if (fetched % 100 === 0) writeJsonAtomic(SEC_STORE, store); // resumable
+    } catch (e) { failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
     await sleep(RATE_DELAY_MS);
   }
   for (const [cik, tickers] of wanted) if (store.byCik[cik]) store.byCik[cik].tickers = tickers;
-  if (daysRead > 0 || !store.lastIndexDate) store.lastIndexDate = now;
+  // The cursor moves only to the last day actually read (its index existed); later days are read again.
+  if (idx.lastRead && (!store.lastIndexDate || idx.lastRead > store.lastIndexDate)) store.lastIndexDate = idx.lastRead;
   store.updatedAt = now;
   writeJsonAtomic(SEC_STORE, store);
-  console.log(`[fcf-ttm] SEC: ${wanted.size} US companies, ${filed.size} filers in ${daysRead} index days, `
-    + `${due.length} due, ${fetched} read, ${failed} failed, ${Math.max(0, due.length - max)} left for the next run`);
+  const left = Math.max(0, due.length - max) + outOfTime;
+  console.log(`[fcf-ttm] SEC: ${wanted.size} US companies, ${filed.size} filers in ${idx.daysRead} index days, `
+    + `${due.length} due, ${fetched} read, ${failed} failed, ${left} left for the next run`);
   if (failed > 0 && fetched === 0) process.exitCode = 1;
 }
 
-async function refreshVendor(dirs, max, concurrency) {
+async function refreshVendor(dirs, max, concurrency, budgetMin) {
   const YF = require('yahoo-finance2').default;
   const { normalizeYahooSymbol } = require('../pull-yahoo.js');
   const yf = new YF({ suppressNotices: ['yahooSurvey'] });
-  const store = readStore(VENDOR_STORE, 'byTicker');
+  const deadline = Date.now() + budgetMin * 60000;
+  const store = readStore(VENDOR_STORE, 'byTicker', true);
   const now = new Date();
   const due = [];
   for (const { ticker, snap } of loadSnapshots(dirs)) {
     const e = store.byTicker[ticker];
     const pulled = snap.meta && snap.meta.fetchedAt ? Date.parse(snap.meta.fetchedAt) : NaN;
-    // A full pull (meta.fetchedAt) newer than our read means new fundamentals: read again.
-    if (!e || (Number.isFinite(pulled) && pulled > Date.parse(e.fetchedAt))) due.push(ticker);
+    const seen = e ? Date.parse(e.lastAttemptAt || e.fetchedAt) : NaN;
+    // A full pull (meta.fetchedAt) newer than our last read means new fundamentals: read again.
+    if (!e || (Number.isFinite(pulled) && pulled > seen)) due.push(ticker);
   }
   let i = 0, fetched = 0, failed = 0;
   const period1 = new Date(now.getTime() - 2 * 365 * 86400000);
+  const keep = (t, reason) => {
+    const old = store.byTicker[t];
+    const at = new Date().toISOString();
+    if (old && old.ok) store.byTicker[t] = Object.assign({}, old, { lastAttemptAt: at, lastAttemptReason: reason });
+    else store.byTicker[t] = { fetchedAt: at, ok: false, reason };
+  };
   async function worker() {
-    while (i < Math.min(due.length, max)) {
+    while (i < Math.min(due.length, max) && Date.now() < deadline) {
       const t = due[i++];
       try {
         // Same symbol rule as the pull (FUNO/11.MX is FUNO11.MX at Yahoo).
         const rows = await yf.fundamentalsTimeSeries(normalizeYahooSymbol(t), { period1, period2: now, type: 'trailing', module: 'all' },
           { validateResult: false });
-        store.byTicker[t] = Object.assign({ fetchedAt: new Date().toISOString() }, vendorTtmFromRows(rows));
+        const r = vendorTtmFromRows(rows);
+        // An empty answer (Yahoo sometimes returns none for a while) never replaces a good entry.
+        if (r.ok) store.byTicker[t] = Object.assign({ fetchedAt: new Date().toISOString() }, r); else keep(t, r.reason);
         fetched++;
       } catch (e) {
-        // A listing Yahoo does not know is recorded (reason, no number) and read again after its next full pull.
-        if (/404/.test(String(e.message))) store.byTicker[t] = { fetchedAt: new Date().toISOString(), ok: false, reason: 'vendor-not-found' };
+        if (/404/.test(String(e.message))) keep(t, 'vendor-not-found');
         failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] Yahoo ' + t + ': ' + e.message);
       }
-      if (fetched > 0 && fetched % 500 === 0) writeJsonAtomic(VENDOR_STORE, store); // resumable
+      if (fetched > 0 && fetched % 100 === 0) writeJsonAtomic(VENDOR_STORE, store); // resumable
     }
   }
   await Promise.all(Array.from({ length: concurrency }, worker));
-  store.updatedAt = now.toISOString().slice(0, 10);
+  store.updatedAt = isoDay(now);
   writeJsonAtomic(VENDOR_STORE, store);
-  console.log(`[fcf-ttm] vendor: ${due.length} due, ${fetched} read, ${failed} failed, ${Math.max(0, due.length - max)} left`);
+  console.log(`[fcf-ttm] vendor: ${due.length} due, ${fetched} read, ${failed} failed, ${Math.max(0, due.length - i)} left`);
   if (failed > 0 && fetched === 0) process.exitCode = 1;
 }
 
 /**
  * Write the chosen margin into one snapshot (pure on the object; returns whether it changed).
- * The replaced value is kept once as metrics.fcfMarginTTMOld (comparison until OLD_COMPARISON_UNTIL).
+ * The replaced value is kept once as meta.fcfMarginTTMOld (outside metrics, so no "oldest metric
+ * date" reader counts it) and removed once the run day is past OLD_COMPARISON_UNTIL.
  * @param {object} snap snapshot object, changed in place.
  * @param {{value:(number|null),source:(string|null),periodEnd:(string|null),reason:(string|null),suppressed:boolean}} choice
+ * @param {string} day run day (ISO), the asOf of the new value.
  * @returns {boolean}
  */
-function applyChoice(snap, choice) {
+function applyChoice(snap, choice, day) {
   const m = snap.metrics || (snap.metrics = {});
   const meta = snap.meta || (snap.meta = {});
-  const before = JSON.stringify([m.fcfMarginTTM, m.fcfMarginTTMOld, meta.fcfMarginTTMSuppressed, meta.fcfMarginTTMReason]);
+  const state = () => JSON.stringify([m.fcfMarginTTM, meta.fcfMarginTTMOld, meta.fcfMarginTTMSuppressed, meta.fcfMarginTTMReason]);
+  const before = state();
   const cur = m.fcfMarginTTM;
-  if (!m.fcfMarginTTMOld && !(cur && NEW_SOURCES.has(cur.source))) {
-    m.fcfMarginTTMOld = cur && typeof cur === 'object'
-      ? Object.assign({}, cur, { until: OLD_COMPARISON_UNTIL })
-      : { value: null, source: 'yahoo_quoteSummary', until: OLD_COMPARISON_UNTIL };
-    if (meta.fcfMarginTTMSuppressed) m.fcfMarginTTMOld.suppressed = true;
+  if (!meta.fcfMarginTTMOld && !(cur && NEW_SOURCES.has(cur.source))) {
+    meta.fcfMarginTTMOld = { value: cur && typeof cur.value === 'number' ? cur.value : null,
+      source: (cur && cur.source) || 'yahoo_quoteSummary', asOf: (cur && cur.asOf) || null, until: OLD_COMPARISON_UNTIL };
+    if (meta.fcfMarginTTMSuppressed) meta.fcfMarginTTMOld.suppressed = true;
   }
+  if (meta.fcfMarginTTMOld && day > meta.fcfMarginTTMOld.until) delete meta.fcfMarginTTMOld; // four weeks are over
   if (choice.value === null) delete m.fcfMarginTTM;
-  else m.fcfMarginTTM = { value: choice.value, source: choice.source, confidence: 0.95, asOf: choice.periodEnd, periodEnd: choice.periodEnd };
+  else m.fcfMarginTTM = { value: choice.value, source: choice.source, confidence: 0.95, asOf: day, periodEnd: choice.periodEnd };
   meta.fcfMarginTTMSuppressed = choice.suppressed;
   meta.fcfMarginTTMReason = choice.reason;
   meta.fcfMarginTTMSource = choice.source;
   meta.fcfMarginTTMPeriodEnd = choice.periodEnd;
-  return before !== JSON.stringify([m.fcfMarginTTM, m.fcfMarginTTMOld, meta.fcfMarginTTMSuppressed, meta.fcfMarginTTMReason]);
+  return before !== state();
 }
 
 /**
@@ -233,21 +275,35 @@ function newestQuarterEnd(snap) {
   return iso ? iso.slice(0, 10) : null;
 }
 
-function apply(dirs, jsonOut) {
+/**
+ * Apply the one FCF margin to every snapshot of `dirs`.
+ * @param {string[]} dirs snapshot folders.
+ * @param {string|null} jsonOut optional path of the count report.
+ * @param {string} [day] run day (ISO); default RUN_DATE_UTC or the clock.
+ * @returns {object} counts by source and reason.
+ */
+function apply(dirs, jsonOut, day = runDay()) {
   const sec = readStore(SEC_STORE, 'byCik');
   const vendor = readStore(VENDOR_STORE, 'byTicker');
   const map = JSON.parse(fs.readFileSync(CIK_MAP, 'utf8')).byTicker || {};
-  const counts = { total: 0, changed: 0, 'sec-ttm': 0, 'yahoo-fts-ttm': 0, empty: 0, suppressed: 0, reasons: {} };
+  const counts = { day, total: 0, changed: 0, usListings: 0, 'sec-ttm': 0, 'yahoo-fts-ttm': 0, empty: 0, suppressed: 0, reasons: {} };
+  const plan = [];
   for (const { file, ticker, snap } of loadSnapshots(dirs)) {
     const cik = cikFor(ticker, map);
+    if (cik) counts.usListings++;
     const choice = chooseFcfMargin({ sec: cik ? sec.byCik[cik] || null : null, vendor: vendor.byTicker[ticker] || null,
-      newestQuarterEnd: newestQuarterEnd(snap) });
+      newestQuarterEnd: newestQuarterEnd(snap), today: day });
     counts.total++;
     if (choice.suppressed) counts.suppressed++;
-    if (choice.value === null) { counts.empty++; counts.reasons[choice.reason] = (counts.reasons[choice.reason] || 0) + 1; }
-    else counts[choice.source]++;
-    if (applyChoice(snap, choice)) { writeJsonAtomic(file, snap); counts.changed++; }
+    if (choice.reason) counts.reasons[choice.reason] = (counts.reasons[choice.reason] || 0) + 1;
+    if (choice.value === null) counts.empty++; else counts[choice.source]++;
+    plan.push({ file, snap, choice });
   }
+  // Guard before anything is written: with many US listings and almost no SEC margin the SEC path is broken.
+  if (counts.usListings >= SEC_FLOOR.usListings && counts['sec-ttm'] < SEC_FLOOR.minSecMargins) {
+    throw new Error(`only ${counts['sec-ttm']} SEC margins for ${counts.usListings} US listings (floor ${SEC_FLOOR.minSecMargins}); store broken?`);
+  }
+  for (const { file, snap, choice } of plan) if (applyChoice(snap, choice, day)) { writeJsonAtomic(file, snap); counts.changed++; }
   console.log('[fcf-ttm] apply: ' + JSON.stringify(counts));
   if (jsonOut) writeJsonAtomic(path.isAbsolute(jsonOut) ? jsonOut : path.join(ROOT, jsonOut), counts);
   return counts;
@@ -256,13 +312,14 @@ function apply(dirs, jsonOut) {
 async function main() {
   const cmd = process.argv[2];
   const dirs = arg('dirs', 'snapshots,snapshots-smallcap').split(',').filter(Boolean);
-  if (cmd === 'refresh-sec') return refreshSec(dirs, Number(arg('max', 1500)));
-  if (cmd === 'refresh-vendor') return refreshVendor(dirs, Number(arg('max', 3000)), Number(arg('concurrency', 4)));
+  const budget = Number(arg('budget-min', 8));
+  if (cmd === 'refresh-sec') return refreshSec(dirs, Number(arg('max', 1500)), budget);
+  if (cmd === 'refresh-vendor') return refreshVendor(dirs, Number(arg('max', 3000)), Number(arg('concurrency', 4)), budget);
   if (cmd === 'apply') { apply(dirs, arg('json', null)); return; }
-  console.error('usage: fcf-ttm-overlay.js refresh-sec|refresh-vendor|apply [--dirs=a,b] [--max=n]');
+  console.error('usage: fcf-ttm-overlay.js refresh-sec|refresh-vendor|apply [--dirs=a,b] [--max=n] [--budget-min=m]');
   process.exitCode = 2;
 }
 
 if (require.main === module) main().catch((e) => { console.error('[fcf-ttm] ' + e.stack); process.exitCode = 1; });
 
-module.exports = { applyChoice, cikFor, readStore, apply, newestQuarterEnd };
+module.exports = { applyChoice, cikFor, readStore, apply, newestQuarterEnd, recheckDays };

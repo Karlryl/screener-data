@@ -673,10 +673,15 @@ function sammleKandidaten(opts = {}) {
       fcfMarginPct: fcf,
       // 18.11.2026 (lib/fcf-ttm.js): where the margin comes from and which twelve months it covers (G31),
       // plus the replaced Yahoo financialData value as the visible comparison until its end date.
-      fcfMarginSource: typeof meta.fcfMarginTTMSource === 'string' ? meta.fcfMarginTTMSource : null,
-      fcfMarginPeriodEnd: typeof meta.fcfMarginTTMPeriodEnd === 'string' ? meta.fcfMarginTTMPeriodEnd : null,
-      fcfMarginPctOld: snapshot.metrics && snapshot.metrics.fcfMarginTTMOld && istZahl(snapshot.metrics.fcfMarginTTMOld.value)
-        ? snapshot.metrics.fcfMarginTTMOld.value : null,
+      // Read from the metric itself (the guard in check() then tests the value's own label, not a side note).
+      fcfMarginSource: snapshot.metrics && snapshot.metrics.fcfMarginTTM && typeof snapshot.metrics.fcfMarginTTM.source === 'string'
+        ? snapshot.metrics.fcfMarginTTM.source : null,
+      fcfMarginPeriodEnd: snapshot.metrics && snapshot.metrics.fcfMarginTTM && typeof snapshot.metrics.fcfMarginTTM.periodEnd === 'string'
+        ? snapshot.metrics.fcfMarginTTM.periodEnd : null,
+      // Comparison only while it lasts: the overlay drops meta.fcfMarginTTMOld after its `until` day.
+      fcfMarginPctOld: meta.fcfMarginTTMOld && istZahl(meta.fcfMarginTTMOld.value)
+        && Number.isFinite(generatedMs) && String(meta.fcfMarginTTMOld.until || '') >= new Date(generatedMs).toISOString().slice(0, 10)
+        ? meta.fcfMarginTTMOld.value : null,
       ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
@@ -814,9 +819,9 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.revGrowthPctUsed = round1(k.wachstum);   // geklemmt; r40 = dieser Wert + fcfMarginPct
       zeile.revGrowthYoYPct = round1(k.wachstumRoh); // roh, EIN Begriff fuer Brett- und Nicht-Brett-Namen
       zeile.fcfMarginPct = round1(k.fcfMarginPct);
-      zeile.fcfMarginSource = k.fcfMarginSource;          // 'sec-ttm' | 'yahoo-fts-ttm'
-      zeile.fcfMarginPeriodEnd = k.fcfMarginPeriodEnd;    // last day of the twelve months
-      zeile.fcfMarginPctOld = k.fcfMarginPctOld === null ? null : round1(k.fcfMarginPctOld); // comparison only, never ranked
+      zeile.fcfMarginSource = k.fcfMarginSource ?? null;          // 'sec-ttm' | 'yahoo-fts-ttm'
+      zeile.fcfMarginPeriodEnd = k.fcfMarginPeriodEnd ?? null;    // last day of the twelve months
+      zeile.fcfMarginPctOld = istZahl(k.fcfMarginPctOld) ? round1(k.fcfMarginPctOld) : null; // comparison only, never ranked
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
       zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich

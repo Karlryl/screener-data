@@ -1,11 +1,15 @@
 'use strict';
 // 18.11.2026: ONE FCF margin for every board (lib/fcf-ttm.js, scripts/fcf-ttm-overlay.js).
-// (A) SEC TTM from companyfacts: fiscal year, YTD arithmetic, amendments win, missing parts give a
-//     reason and never a number. Oracle: MU, SNDK, ALAB, PLTR SEC figures of 18.11.2026 (check-D).
+// (A) SEC TTM from companyfacts: fiscal year, YTD arithmetic, amendments win, capex lines, missing parts
+//     give a reason and never a number. Oracles: ALAB and MU SEC figures of 18.11.2026 (plan 3, check D).
 // (B) Yahoo trailing row: newest complete row, capex sign.
-// (C) Choice: SEC first, vendor only without SEC TTM or with a strictly newer period end, |x| > 200 empty.
-// (D) applyChoice keeps the replaced value once as fcfMarginTTMOld and empties instead of inventing.
-// (E) apply end to end on temp snapshots and stores; an unreadable store stops the run.
+// (C) Choice: SEC first but cross-checked against a Yahoo row of the same period (month-end dates count
+//     as the same period); a mismatch falls back to Yahoo with the reason (EOG capex, FIX/bank revenue);
+//     a newer Yahoo period wins; stale rows are not used; beyond 200 % the other source is tried.
+// (D) applyChoice keeps the replaced value once (outside metrics), drops it after its end date, and
+//     empties instead of inventing.
+// (E) apply end to end; a missing or unreadable store and a collapsed SEC path stop the run.
+// (F) The board guard reads the metric's own source and period.
 // Hermetic: temp dirs only, no network.
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -27,7 +31,7 @@ const facts = (concepts) => ({ facts: { 'us-gaap': Object.fromEntries(Object.ent
   .map(([k, arr]) => [k, { units: { USD: arr } }])) } });
 
 // ALAB-shaped quarter (USD m): FY2025 + 9M 2026 - 9M 2025.
-const alab = facts({
+const alabConcepts = {
   NetCashProvidedByUsedInOperatingActivities: [
     fact('2025-01-01', '2025-12-31', 319.306, '2026-02-20', '10-K'),
     fact('2026-01-01', '2026-09-30', 341.477, '2026-11-04'),
@@ -44,7 +48,9 @@ const alab = facts({
     fact('2025-01-01', '2025-09-30', 581.942, '2026-11-04'),
     fact('2026-07-01', '2026-09-30', 584.899, '2026-11-04'),
   ],
-});
+};
+const alab = facts(alabConcepts);
+const fy = (val) => [fact('2025-01-01', '2025-12-31', val, '2026-02-20', '10-K')];
 
 check('A1 YTD arithmetic reproduces the SEC TTM of Astera Labs (22.1 %)', () => {
   const r = T.secTtmFromFacts(alab);
@@ -61,7 +67,6 @@ check('A2 a fiscal year ending last is the TTM itself (Micron 44.3 %)', () => {
     RevenueFromContractWithCustomerExcludingAssessedTax: [fact('2025-08-29', '2026-09-03', 133188, '2026-10-09', '10-K')],
   });
   const r = T.secTtmFromFacts(mu);
-  assert.equal(r.ok, true);
   assert.equal(r.end, '2026-09-03');
   assert.equal(Math.round(r.margin * 10) / 10, 44.3);
 });
@@ -70,13 +75,23 @@ check('A3 an amendment filed later replaces the original figure of the same peri
   const f = facts({
     NetCashProvidedByUsedInOperatingActivities: [fact('2025-01-01', '2025-12-31', 100, '2026-02-01', '10-K'),
       fact('2025-01-01', '2025-12-31', 80, '2026-04-01', '10-K/A')],
-    PaymentsToAcquirePropertyPlantAndEquipment: [fact('2025-01-01', '2025-12-31', 10, '2026-02-01', '10-K')],
-    Revenues: [fact('2025-01-01', '2025-12-31', 200, '2026-02-01', '10-K')],
+    PaymentsToAcquirePropertyPlantAndEquipment: fy(10),
+    Revenues: fy(200),
   });
   assert.equal(T.secTtmFromFacts(f).ocf, 80);
 });
 
-check('A4 missing capex, missing prior YTD, IFRS-only and 20-F facts give a reason, never a number', () => {
+check('A4 capex lines: software added, oil-and-gas without PP&E, a lone "other PP&E" line is no capex', () => {
+  const base = { NetCashProvidedByUsedInOperatingActivities: fy(100), Revenues: fy(400) };
+  const soft = T.secTtmFromFacts(facts({ ...base, PaymentsToAcquirePropertyPlantAndEquipment: fy(10), PaymentsToDevelopSoftware: fy(15) }));
+  assert.equal(soft.capex, 25);
+  const oil = T.secTtmFromFacts(facts({ ...base, PaymentsToAcquireOilAndGasPropertyAndEquipment: fy(60) }));
+  assert.equal(oil.capex, 60);
+  assert.equal(T.secTtmFromFacts(facts({ ...base, PaymentsToAcquireOtherPropertyPlantAndEquipment: fy(5) })).reason, 'sec-no-capex');
+  assert.equal(T.secTtmFromFacts(facts({ ...base, PaymentsToAcquirePropertyPlantAndEquipment: fy(-3) })).reason, 'sec-negative-capex');
+});
+
+check('A5 missing parts, IFRS-only, 20-F and a discrete quarter give a reason, never a number', () => {
   const noCapex = JSON.parse(JSON.stringify(alab));
   delete noCapex.facts['us-gaap'].PaymentsToAcquirePropertyPlantAndEquipment;
   assert.deepEqual(T.secTtmFromFacts(noCapex), { ok: false, reason: 'sec-no-capex' });
@@ -84,16 +99,11 @@ check('A4 missing capex, missing prior YTD, IFRS-only and 20-F facts give a reas
   noPrior.facts['us-gaap'].NetCashProvidedByUsedInOperatingActivities.units.USD.pop();
   assert.deepEqual(T.secTtmFromFacts(noPrior), { ok: false, reason: 'sec-no-ttm-ocf' });
   assert.deepEqual(T.secTtmFromFacts({ facts: { 'ifrs-full': {} } }), { ok: false, reason: 'sec-no-us-gaap' });
-  const twentyF = facts({ NetCashProvidedByUsedInOperatingActivities: [fact('2025-01-01', '2025-12-31', 5, '2026-03-01', '20-F')] });
-  assert.deepEqual(T.secTtmFromFacts(twentyF), { ok: false, reason: 'sec-no-ocf' });
-});
-
-check('A5 a discrete quarter without a fiscal year right before it is no YTD (no TTM)', () => {
-  const f = facts({
-    NetCashProvidedByUsedInOperatingActivities: [fact('2025-01-01', '2025-12-31', 100, '2026-02-01', '10-K'),
-      fact('2026-04-01', '2026-06-30', 30, '2026-08-01'), fact('2025-04-01', '2025-06-30', 20, '2026-08-01')],
-  });
-  assert.equal(T.secTtmFromFacts(f).reason, 'sec-no-ttm-ocf');
+  assert.deepEqual(T.secTtmFromFacts(facts({ NetCashProvidedByUsedInOperatingActivities: [fact('2025-01-01', '2025-12-31', 5, '2026-03-01', '20-F')] })),
+    { ok: false, reason: 'sec-no-ocf' });
+  const discrete = facts({ NetCashProvidedByUsedInOperatingActivities: [...fy(100),
+    fact('2026-04-01', '2026-06-30', 30, '2026-08-01'), fact('2025-04-01', '2025-06-30', 20, '2026-08-01')] });
+  assert.equal(T.secTtmFromFacts(discrete).reason, 'sec-no-ttm-ocf');
 });
 
 check('B1 Yahoo trailing: newest complete row, capex is negative at Yahoo', () => {
@@ -102,75 +112,126 @@ check('B1 Yahoo trailing: newest complete row, capex is negative at Yahoo', () =
     { date: 1790726400, operatingCashFlow: 9883, capitalExpenditure: -701, totalRevenue: 39387 },
     { date: 1782777600 },
   ]);
-  assert.equal(r.ok, true);
-  assert.equal(r.end, '2026-09-30');
-  assert.equal(r.fcf, 9182);
+  assert.deepEqual([r.ok, r.end, r.fcf], [true, '2026-09-30', 9182]);
   assert.equal(T.vendorTtmFromRows([{ date: 1, operatingCashFlow: 5 }]).reason, 'vendor-no-ttm');
 });
 
-const sec = { ok: true, end: '2026-09-30', margin: 22.1 };
-check('C1 SEC wins over Yahoo for the same or an older Yahoo period', () => {
-  assert.equal(T.chooseFcfMargin({ sec, vendor: { ok: true, end: '2026-09-30', margin: 8 } }).source, 'sec-ttm');
-  assert.equal(T.chooseFcfMargin({ sec, vendor: { ok: true, end: '2026-06-30', margin: 8 } }).value, 22.1);
-});
-check('C2 Yahoo only without SEC TTM or with a strictly newer period (G31)', () => {
-  assert.equal(T.chooseFcfMargin({ sec: { ok: false, reason: 'sec-no-capex' }, vendor: { ok: true, end: '2026-06-30', margin: 8 } }).source, 'yahoo-fts-ttm');
-  const newer = T.chooseFcfMargin({ sec, vendor: { ok: true, end: '2026-12-31', margin: 9 } });
-  assert.deepEqual([newer.source, newer.periodEnd], ['yahoo-fts-ttm', '2026-12-31']);
-});
-check('C3 nothing usable: empty with both reasons; beyond 200 % empty and suppressed', () => {
-  assert.deepEqual(T.chooseFcfMargin({ sec: { ok: false, reason: 'sec-no-capex' }, vendor: { ok: false, reason: 'vendor-no-ttm' } }),
-    { value: null, source: null, periodEnd: null, reason: 'sec-no-capex,vendor-no-ttm', suppressed: false });
-  const big = T.chooseFcfMargin({ sec: { ok: true, end: '2026-09-30', margin: -950 }, vendor: null });
-  assert.deepEqual([big.value, big.suppressed], [null, true]);
+// Store entries as the refresh writes them.
+const secE = (o) => Object.assign({ ok: true, end: '2026-09-30', ocf: 436.7, capex: 92.1, revenue: 1556.2,
+  revenues: { RevenueFromContractWithCustomerExcludingAssessedTax: 1556.2 }, margin: 22.15 }, o);
+const venE = (o) => Object.assign({ ok: true, end: '2026-09-30', ocf: 436.7, capex: 92.1, revenue: 1556.2, margin: 22.15 }, o);
+
+check('C1 agreeing SEC and Yahoo of the same period: SEC; month-end Yahoo dates are the same period', () => {
+  assert.equal(T.chooseFcfMargin({ sec: secE(), vendor: venE() }).source, 'sec-ttm');
+  const aapl = T.chooseFcfMargin({ sec: secE({ end: '2026-09-26' }), vendor: venE({ end: '2026-09-30' }) });
+  assert.deepEqual([aapl.source, aapl.periodEnd], ['sec-ttm', '2026-09-26']);
 });
 
-check('C4 a TTM ending more than 100 days before the newest quarter is stale and not used (G31)', () => {
-  const old = { ok: true, end: '2025-06-30', margin: 41.7 };
-  const c = T.chooseFcfMargin({ sec: null, vendor: old, newestQuarterEnd: '2026-09-30' });
-  assert.deepEqual([c.value, c.reason], [null, 'vendor-ttm-stale']);
-  // SEC stale but a fresh vendor row: the fresh one is used
-  const c2 = T.chooseFcfMargin({ sec: { ok: true, end: '2025-12-31', margin: 30 }, vendor: { ok: true, end: '2026-09-30', margin: 20 }, newestQuarterEnd: '2026-09-30' });
+check('C2 SEC extraction disagreeing with Yahoo of the same period falls back to Yahoo with the reason', () => {
+  // EOG: SEC capex 0.53 bn vs Yahoo 6.68 bn
+  const eog = T.chooseFcfMargin({ sec: secE({ ocf: 10, capex: 0.53, revenue: 22, revenues: { Revenues: 22 }, margin: 43 }),
+    vendor: venE({ ocf: 10.2, capex: 6.68, revenue: 22.4, margin: 15.7 }) });
+  assert.deepEqual([eog.source, eog.reason], ['yahoo-fts-ttm', 'sec-yahoo-mismatch-capex']);
+  // FIX / banks: no SEC revenue concept near Yahoo's total revenue
+  const fix = T.chooseFcfMargin({ sec: secE({ revenue: 5.27, revenues: { Revenues: 5.27 }, ocf: 2.6, capex: 0.17 }),
+    vendor: venE({ revenue: 12.5, ocf: 2.6, capex: 0.17, margin: 19.4 }) });
+  assert.deepEqual([fix.source, fix.reason], ['yahoo-fts-ttm', 'sec-yahoo-mismatch-revenue']);
+  // the SEC revenue concept closest to Yahoo is taken (excise tax: excluding vs including)
+  const mo = T.chooseFcfMargin({ sec: secE({ ocf: 9, capex: 0.2, revenue: 20.4,
+    revenues: { RevenueFromContractWithCustomerExcludingAssessedTax: 20.4, RevenueFromContractWithCustomerIncludingAssessedTax: 25.1 } }),
+    vendor: venE({ ocf: 9, capex: 0.2, revenue: 20.5 }) });
+  assert.deepEqual([mo.source, Math.round(mo.value * 10) / 10], ['sec-ttm', 43.1]);
+});
+
+check('C3 a Yahoo row more than 20 days newer wins (G31); an older one never replaces SEC', () => {
+  const newer = T.chooseFcfMargin({ sec: secE({ end: '2026-06-30' }), vendor: venE({ end: '2026-09-30', margin: 30 }) });
+  assert.deepEqual([newer.source, newer.reason], ['yahoo-fts-ttm', 'yahoo-newer']);
+  const older = T.chooseFcfMargin({ sec: secE(), vendor: venE({ end: '2026-06-30', margin: 8 }) });
+  assert.deepEqual([older.source, older.value], ['sec-ttm', 22.15]);
+  assert.equal(T.chooseFcfMargin({ sec: { ok: false, reason: 'sec-no-capex' }, vendor: venE() }).source, 'yahoo-fts-ttm');
+});
+
+check('C4 stale rows are not used: 100 days behind the newest quarter or 450 days before the run day', () => {
+  const old = venE({ end: '2025-06-30', margin: 41.7 });
+  assert.deepEqual([T.chooseFcfMargin({ sec: null, vendor: old, newestQuarterEnd: '2026-09-30' }).reason], ['vendor-ttm-stale']);
+  assert.equal(T.chooseFcfMargin({ sec: null, vendor: venE({ end: '2012-12-31' }), newestQuarterEnd: '2012-12-31', today: '2026-11-18' }).reason, 'vendor-ttm-stale');
+  assert.equal(T.chooseFcfMargin({ sec: null, vendor: old, newestQuarterEnd: null, today: '2026-08-01' }).value, 41.7);
+  const c2 = T.chooseFcfMargin({ sec: secE({ end: '2025-12-31' }), vendor: venE({ margin: 20 }), newestQuarterEnd: '2026-09-30' });
   assert.equal(c2.source, 'yahoo-fts-ttm');
-  // within one quarter: still used; no quarter end known: no age test
-  assert.equal(T.chooseFcfMargin({ sec, vendor: null, newestQuarterEnd: '2026-12-31' }).value, 22.1);
-  assert.equal(T.chooseFcfMargin({ sec: null, vendor: old, newestQuarterEnd: null }).value, 41.7);
   assert.equal(O.newestQuarterEnd({ timeseries: { revenueQEnds: [null, '2026-09-30', '2026-06-30'] } }), '2026-09-30');
 });
 
-check('D1 applyChoice keeps the replaced value once and labels the period', () => {
-  const s = { meta: { ticker: 'ALAB' }, metrics: { fcfMarginTTM: { value: 8.44, source: 'yahoo_quoteSummary' } } };
-  assert.equal(O.applyChoice(s, { value: 22.1, source: 'sec-ttm', periodEnd: '2026-09-30', reason: null, suppressed: false }), true);
-  assert.equal(s.metrics.fcfMarginTTM.value, 22.1);
-  assert.equal(s.metrics.fcfMarginTTMOld.value, 8.44);
-  assert.equal(s.metrics.fcfMarginTTMOld.until, T.OLD_COMPARISON_UNTIL);
-  assert.deepEqual([s.meta.fcfMarginTTMSource, s.meta.fcfMarginTTMPeriodEnd], ['sec-ttm', '2026-09-30']);
-  // second run: idempotent, the comparison is not overwritten with the new value
-  assert.equal(O.applyChoice(s, { value: 22.1, source: 'sec-ttm', periodEnd: '2026-09-30', reason: null, suppressed: false }), false);
-  assert.equal(s.metrics.fcfMarginTTMOld.value, 8.44);
-});
-check('D2 no source: the margin is removed (never 0), the reason stays on the row', () => {
-  const s = { meta: { ticker: 'X' }, metrics: { fcfMarginTTM: { value: 12, source: 'yahoo_quoteSummary' } } };
-  O.applyChoice(s, { value: null, source: null, periodEnd: null, reason: 'sec-no-capex,vendor-no-ttm', suppressed: false });
-  assert.equal('fcfMarginTTM' in s.metrics, false);
-  assert.equal(s.meta.fcfMarginTTMReason, 'sec-no-capex,vendor-no-ttm');
+check('C5 beyond 200 %: the other source is tried, else suppressed; nothing usable: empty with reasons', () => {
+  const cpt = T.chooseFcfMargin({ sec: secE({ end: '2026-06-30', margin: 4726 }), vendor: null });
+  assert.deepEqual([cpt.value, cpt.suppressed], [null, true]);
+  assert.deepEqual(T.chooseFcfMargin({ sec: { ok: false, reason: 'sec-no-capex' }, vendor: { ok: false, reason: 'vendor-no-ttm' } }),
+    { value: null, source: null, periodEnd: null, reason: 'sec-no-capex,vendor-no-ttm', suppressed: false });
 });
 
-check('E1 apply end to end: US listing from SEC, foreign listing from Yahoo, store failure stops', () => {
-  const dir = path.join(tmp, 'snaps');
-  fs.mkdirSync(dir);
+check('D1 applyChoice keeps the replaced value once outside metrics, labels the period, asOf is the run day', () => {
+  const s = { meta: { ticker: 'ALAB' }, metrics: { fcfMarginTTM: { value: 8.44, source: 'yahoo_quoteSummary', asOf: '2026-11-04' } } };
+  const ch = { value: 22.1, source: 'sec-ttm', periodEnd: '2026-09-30', reason: null, suppressed: false };
+  assert.equal(O.applyChoice(s, ch, '2026-11-18'), true);
+  assert.deepEqual(s.metrics.fcfMarginTTM, { value: 22.1, source: 'sec-ttm', confidence: 0.95, asOf: '2026-11-18', periodEnd: '2026-09-30' });
+  assert.equal('fcfMarginTTMOld' in s.metrics, false);
+  assert.deepEqual([s.meta.fcfMarginTTMOld.value, s.meta.fcfMarginTTMOld.until], [8.44, T.OLD_COMPARISON_UNTIL]);
+  assert.equal(O.applyChoice(s, ch, '2026-11-18'), false); // idempotent
+  assert.equal(s.meta.fcfMarginTTMOld.value, 8.44);
+});
+
+check('D2 the comparison ends after its day; no source: the margin is removed (never 0)', () => {
+  const s = { meta: { ticker: 'X' }, metrics: { fcfMarginTTM: { value: 12, source: 'yahoo_quoteSummary' } } };
+  O.applyChoice(s, { value: null, source: null, periodEnd: null, reason: 'sec-no-capex,vendor-no-ttm', suppressed: false }, '2026-11-18');
+  assert.equal('fcfMarginTTM' in s.metrics, false);
+  assert.equal(s.meta.fcfMarginTTMReason, 'sec-no-capex,vendor-no-ttm');
+  assert.equal(s.meta.fcfMarginTTMOld.value, 12);
+  O.applyChoice(s, { value: null, source: null, periodEnd: null, reason: 'x', suppressed: false }, '2026-12-17');
+  assert.equal('fcfMarginTTMOld' in s.meta, false);
+});
+
+const dir = path.join(tmp, 'snaps');
+fs.mkdirSync(dir);
+const writeSnaps = () => {
   fs.writeFileSync(path.join(dir, 'MU.json'), JSON.stringify({ meta: { ticker: 'MU' }, metrics: { fcfMarginTTM: { value: 21.9, source: 'yahoo_quoteSummary' } } }));
   fs.writeFileSync(path.join(dir, 'SAP.DE.json'), JSON.stringify({ meta: { ticker: 'SAP.DE' }, metrics: { fcfMarginTTM: { value: 20, source: 'yahoo_quoteSummary' } } }));
-  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: { '0000723125': { ok: true, end: '2026-09-03', margin: 44.27 } } }));
-  fs.writeFileSync(process.env.FCF_TTM_VENDOR_STORE, JSON.stringify({ byTicker: { 'SAP.DE': { ok: true, end: '2026-09-30', margin: 23.3 },
-    MU: { ok: true, end: '2026-09-03', margin: 44.27 } } }));
-  const c = O.apply([dir], null);
-  assert.equal(c['sec-ttm'], 1);
-  assert.equal(c['yahoo-fts-ttm'], 1);
+  fs.writeFileSync(path.join(dir, '_manifest.json'), JSON.stringify({ meta: { ticker: 'NOT-A-SNAPSHOT' } }));
+};
+const writeStores = () => {
+  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: { '0000723125': secE({ end: '2026-09-03', ocf: 89675, capex: 30712,
+    revenue: 133188, revenues: { RevenueFromContractWithCustomerExcludingAssessedTax: 133188 }, margin: 44.27 }) } }));
+  fs.writeFileSync(process.env.FCF_TTM_VENDOR_STORE, JSON.stringify({ byTicker: { 'SAP.DE': venE({ margin: 23.3 }),
+    MU: venE({ end: '2026-08-31', ocf: 89675, capex: 30712, revenue: 133188, margin: 44.27 }) } }));
+};
+
+check('E1 apply end to end: US listing from SEC, foreign listing from Yahoo, metadata files skipped', () => {
+  writeSnaps(); writeStores();
+  const c = O.apply([dir], null, '2026-11-18');
+  assert.deepEqual([c['sec-ttm'], c['yahoo-fts-ttm'], c.total], [1, 1, 2]);
   const mu = JSON.parse(fs.readFileSync(path.join(dir, 'MU.json'), 'utf8'));
-  assert.deepEqual([mu.metrics.fcfMarginTTM.value, mu.metrics.fcfMarginTTM.source, mu.metrics.fcfMarginTTMOld.value], [44.27, 'sec-ttm', 21.9]);
+  assert.deepEqual([Math.round(mu.metrics.fcfMarginTTM.value * 100) / 100, mu.metrics.fcfMarginTTM.source, mu.meta.fcfMarginTTMOld.value], [44.27, 'sec-ttm', 21.9]);
+});
+
+check('E2 a missing store, an unreadable store and a collapsed SEC path stop the run before writing', () => {
+  writeSnaps();
+  fs.rmSync(process.env.FCF_TTM_SEC_STORE);
+  assert.throws(() => O.apply([dir], null, '2026-11-18'), /missing/);
   fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, '{"broken":');
-  assert.throws(() => O.apply([dir], null));
+  assert.throws(() => O.apply([dir], null, '2026-11-18'));
+  // 1,000 US listings and not one SEC margin: the floor guard stops before any snapshot is written
+  writeStores();
+  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: {} }));
+  const map = require('../external-data/sec-ticker-cik-map.json').byTicker;
+  const big = path.join(tmp, 'big'); fs.mkdirSync(big);
+  const tickers = Object.keys(map).filter((t) => !t.includes('.')).slice(0, 1000);
+  for (const t of tickers) fs.writeFileSync(path.join(big, t.replace(/[^A-Za-z0-9-]/g, '_') + '.json'), JSON.stringify({ meta: { ticker: t }, metrics: {} }));
+  const before = fs.readFileSync(path.join(big, fs.readdirSync(big)[0]), 'utf8');
+  assert.throws(() => O.apply([big], null, '2026-11-18'), /floor/);
+  assert.equal(fs.readFileSync(path.join(big, fs.readdirSync(big)[0]), 'utf8'), before);
+});
+
+check('E3 re-reads are spread over 14 days by CIK', () => {
+  const days = new Set(['0000723125', '0001736297', '0001321655', '0002023554', '0000320193'].map(O.recheckDays));
+  assert.ok(days.size > 1 && [...days].every((d) => d >= 23 && d <= 36));
 });
 
 // (F) The board guard: write-rule40-export.js --check rejects a row whose margin did not go through

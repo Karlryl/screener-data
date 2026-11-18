@@ -2141,14 +2141,30 @@ jobs:
       # The two refreshes are network reads and fail soft: a failed read keeps the previous entry
       # with its own period end. The apply step is strict: without it the replaced Yahoo
       # financialData value would be ranked, and write-rule40-export.js --check would flag every row.
-      - name: FCF TTM stores refresh (SEC first, Yahoo trailing fallback)
+      # Each refresh reads inside its own time budget (--budget-min) and saves every 100 reads; the step
+      # timeout is the hard stop (scoring job: about 16 min + 2 x 5 + apply stays under its 30). A job-level
+      # timeout would ignore continue-on-error and block the deploy; left-over reads roll to the next run.
+      - name: FCF TTM store refresh, SEC (EDGAR daily index, periodic re-read)
         continue-on-error: true
-        run: |
-          node scripts/fcf-ttm-overlay.js refresh-sec
-          node scripts/fcf-ttm-overlay.js refresh-vendor
+        timeout-minutes: 7
+        run: node scripts/fcf-ttm-overlay.js refresh-sec --budget-min=5
+
+      - name: FCF TTM store refresh, Yahoo trailing (listings with a new full pull)
+        continue-on-error: true
+        timeout-minutes: 7
+        run: node scripts/fcf-ttm-overlay.js refresh-vendor --budget-min=5
 
       - name: FCF TTM apply (one margin for all boards)
         run: node scripts/fcf-ttm-overlay.js apply --json reports/fcf-ttm-apply.json
+
+      - name: Upload FCF TTM apply counts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fcf-ttm-apply
+          path: reports/fcf-ttm-apply.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Run Hypergrowth Screener
         run: |

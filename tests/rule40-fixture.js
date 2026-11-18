@@ -42,13 +42,13 @@ function snapshot(over = {}) {
       industry: over.industry !== undefined ? over.industry : 'Software - Application',
       fundamentalsAsOf: over.fundamentalsAsOf !== undefined ? over.fundamentalsAsOf : '2026-09-01T00:00:00.000Z',
       fcfMarginTTMSuppressed: !!over.fcfMarginTTMSuppressed,
-      // 18.11.2026: what scripts/fcf-ttm-overlay.js apply writes before the export runs.
-      fcfMarginTTMSource: over.fcfMarginTTMSource !== undefined ? over.fcfMarginTTMSource : 'sec-ttm',
-      fcfMarginTTMPeriodEnd: over.fcfMarginTTMPeriodEnd !== undefined ? over.fcfMarginTTMPeriodEnd : '2026-06-30',
     },
     marketCap: { value: over.marketCap !== undefined ? over.marketCap : 5e9 },
     metrics: {
-      fcfMarginTTM: { value: fcfMarginTTM },
+      // 18.11.2026: the metric carries its own source and period end (scripts/fcf-ttm-overlay.js apply).
+      fcfMarginTTM: { value: fcfMarginTTM,
+        source: over.fcfMarginTTMSource !== undefined ? over.fcfMarginTTMSource : 'sec-ttm',
+        periodEnd: over.fcfMarginTTMPeriodEnd !== undefined ? over.fcfMarginTTMPeriodEnd : '2026-06-30' },
       ebitdaMargins: { value: over.ebitdaMargins !== undefined ? over.ebitdaMargins : 25 },
       revenueTTM: { value: revenueTTM },
     },
