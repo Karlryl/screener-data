@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-17T12:15:47.781Z",
+  "generated_at": "2026-11-18T11:45:51.207Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
-    "status": "degradiert",
-    "degraded": true,
+    "status": "ok",
+    "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.4,
-    "generated_at": "2026-11-17T11:59:55.931Z",
-    "honest_coverage_pct": 88.9,
-    "n_addressable": 17956,
-    "n_ok": 15961,
-    "n_total": 22991,
-    "n_failed": 1255,
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-18T11:30:42.824Z",
+    "honest_coverage_pct": 90.1,
+    "n_addressable": 17647,
+    "n_ok": 15908,
+    "n_total": 23005,
+    "n_failed": 1256,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -40,7 +40,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 511600160,
+      "marketCap": 508595520,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -154,8 +154,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ARTNA",
-      "score": 59.6,
-      "scoreCycleLegacy": 59.6,
+      "score": 51.1,
+      "scoreCycleLegacy": 51.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -164,14 +164,14 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.06,
-        "companion": 17
+        "value": 0.027,
+        "companion": 11
       },
       "name": "Artesian Resources Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 337939168,
+      "marketCap": 338559232,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -182,8 +182,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 64.3,
-      "scoreShrunk": 59.6,
+      "scoreBase": 51.6,
+      "scoreShrunk": 51.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -193,7 +193,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80,
+          "pct": 60,
           "weight": 2.2
         },
         {
@@ -208,7 +208,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 60,
+          "pct": 40,
           "weight": 2.2
         },
         {
@@ -227,7 +227,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 7.408315527689235,
+      "revGrowthYoYPct": 4.778459217474018,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -238,10 +238,10 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "revAccelerationBasis": {
         "basis": "year",
         "quarterComparisons": 1,
@@ -249,14 +249,14 @@
       },
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 7.408315527689235,
+      "revGrowthYoYPctLegacy": 4.778459217474018,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
       "overviewValueLegacy": 0.045,
       "overviewPeriodLegacy": {
         "basis": "year",
@@ -267,16 +267,16 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 7.408315527689235,
+          "pct": 4.778459217474018,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.059860325906218925,
+        "value": 0.02678062678062676,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       }
     },
@@ -301,7 +301,7 @@
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 398787776,
+      "marketCap": 397027648,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -430,9 +430,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 503982720,
+      "marketCap": 467680896,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
