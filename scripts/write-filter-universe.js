@@ -26,9 +26,9 @@ const ROOT = path.resolve(__dirname, '..');
 const SCHEMA = 'findash-export/v1';
 // The master approved 6 MB for the complete universe; retain all fields.
 const MAX_BYTES = 6_000_000;
-const ROW_KEYS = 't n b sc rk c rg s mc g g3 ps evs pe peSt fpe dy dySt po roe fcf r40 gm d52 ath asOf aus'.split(' ');
+const ROW_KEYS = 't n b sc rk c rg s mc g g3 ps evs pe peSt fpe dy dySt po roe fcf fcfP fcfQ r40 gm d52 ath asOf aus'.split(' ');
 const NUMBER_KEYS = 'sc rk mc g g3 ps evs pe fpe dy po roe fcf r40 gm d52 ath'.split(' ');
-const STRING_KEYS = 'n b c rg s asOf'.split(' ');
+const STRING_KEYS = 'n b c rg s asOf fcfP fcfQ'.split(' ');
 const finite = Number.isFinite;
 const round = v => {
   if (!finite(v)) return null;
@@ -121,6 +121,35 @@ function evImplausible(snapshot) {
   return far(mcap + debt - cash) && !(factor > 0 && factor < 1 && !far(mcap + (debt - cash) * factor));
 }
 
+/**
+ * 18.11.2026 (lib/fcf-ttm.js): period end and source of a shown FCF margin, for the filter tab's label;
+ * nothing when no margin is shown. The replaced value is not exported here (it would become a
+ * filterable number); its four-week comparison is on the Rule-of-40 board.
+ * @param {object} snapshot snapshot after scripts/fcf-ttm-overlay.js apply.
+ * @returns {{fcfP: (string|null), fcfQ: (string|null)}}
+ */
+function fcfLabel(snapshot) {
+  const m = snapshot.metrics && snapshot.metrics.fcfMarginTTM;
+  if (usableFcf(snapshot) === null || !m) return { fcfP: null, fcfQ: null };
+  return {
+    fcfP: typeof m.periodEnd === 'string' ? m.periodEnd : null,
+    fcfQ: m.source === 'sec-ttm' ? 'sec' : m.source === 'yahoo-fts-ttm' ? 'yahoo' : null,
+  };
+}
+
+/**
+ * Why a company has no FCF margin at all (no twelve-month figure), as a filter reason code, or null.
+ * @param {object} snapshot snapshot after the overlay.
+ * @returns {string|null}
+ */
+function fcfLeerGrund(snapshot) {
+  const reason = snapshot.meta && snapshot.meta.fcfMarginTTMReason;
+  if (snapshot.metrics && snapshot.metrics.fcfMarginTTM || typeof reason !== 'string' || !reason) return null;
+  if (snapshot.meta.fcfMarginTTMSuppressed || /invalid|over-200|negative/.test(reason)) return 'fcf-ttm-unplausibel';
+  if (/stale/.test(reason)) return 'fcf-ttm-veraltet';
+  return 'fcf-ttm-fehlt';
+}
+
 function usableFcf(snapshot) {
   const margin = metricVal(snapshot, 'fcfMarginTTM');
   return !snapshot.meta?.fcfMarginTTMSuppressed
@@ -195,6 +224,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     // listing older), since nothing replaces it then. With an open home both rows keep their rank (AERO, AERO.MX).
     if (board?.dupIssuer && (!Number.isInteger(board.rank) || Number.isInteger(boards.get(board.dupIssuer.of)?.row?.rank))) aus.push('dup-issuer');
     if (mixed) aus.push('mischwaehrung');
+    const fcfGrund = fcfLeerGrund(snapshot); // 18.11.2026: why the FCF margin is empty
+    if (fcfGrund) aus.push(fcfGrund);
     if (board?.rankGrund) aus.push(board.rankGrund);
     const salesMixed = mischVerhaeltnisUnkorrigiert(meta);
     const ratio = (name, withheld) => mischVal(snapshot.metrics?.[name], withheld);
@@ -260,7 +291,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       ...(peShown => ({ pe: peShown, peSt: mixed ? 'waehrung' : peShown !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt' }))(zeige('P/E', pe)),
       fpe: zeige('Forward P/E', fpeBad ? null : fpe),
       ...div, po: poBad || (payout === 0 && (zahlt || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
-      fcf: round(usableFcf(snapshot)),
+      fcf: round(usableFcf(snapshot)), ...fcfLabel(snapshot),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
       r40: eligible.has(snapshot) ? round(ruleOfX(snapshot, 1, true, growthBounds)) : null,
       gm: grossMargin === 0 || gmBad ? null : round(grossMargin),
@@ -416,4 +447,4 @@ function main(argv) {
 
 // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
 if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
-module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES, fcfLabel, fcfLeerGrund };

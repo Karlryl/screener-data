@@ -171,38 +171,51 @@ async function refreshSec(dirs, max, budgetMin) {
     const e = store.byCik[c];
     if (!e || !e.fetchedAt || e.fetchedAt.slice(0, 10) <= day) { pending.add(c); if (!pendingSince[c]) pendingSince[c] = now; }
   }
+  // Pending work stays until a read ANSWERED with facts (the filing is then consumed); a missing or
+  // failed answer keeps it pending with a backoff of 1, 2, 4, 7, 7 ... days (Codex round 4: no expiry).
+  const attempts = store.pendingAttempts && typeof store.pendingAttempts === 'object' ? store.pendingAttempts : {};
+  const dayMs = 86400000;
+  const backoffOver = (cik) => {
+    const e = store.byCik[cik], last = e && e.lastAttemptAt ? Date.parse(e.lastAttemptAt) : NaN;
+    return !Number.isFinite(last) || Date.parse(now) - last >= Math.min(7, 2 ** Math.max(0, (attempts[cik] || 1) - 1)) * dayMs;
+  };
   const due = [];
   for (const cik of wanted.keys()) {
     const e = store.byCik[cik];
-    const age = e && e.fetchedAt ? (Date.parse(now) - Date.parse(e.fetchedAt)) / 86400000 : Infinity;
-    if (!e || pending.has(cik) || age >= recheckDays(cik)) due.push({ cik, prio: pending.has(cik) ? 0 : (!e ? 1 : 2), age });
+    const age = e && e.fetchedAt ? (Date.parse(now) - Date.parse(e.fetchedAt)) / dayMs : Infinity;
+    // A company whose last read gave no figures is re-read weekly, not after 23-36 days.
+    const recheck = e && !e.ok ? Math.min(7, recheckDays(cik)) : recheckDays(cik);
+    if (pending.has(cik) ? backoffOver(cik) : (!e || age >= recheck)) due.push({ cik, prio: pending.has(cik) ? 0 : (!e ? 1 : 2), age });
   }
   due.sort((a, b) => a.prio - b.prio || b.age - a.age);
   let fetched = 0, failed = 0, outOfTime = 0;
+  const failedRead = (cik, reason) => {
+    const old = store.byCik[cik];
+    store.byCik[cik] = old ? Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: reason })
+      : { tickers: wanted.get(cik), fetchedAt: now, lastAttemptAt: now, ok: false, reason };
+    if (pending.has(cik)) attempts[cik] = (attempts[cik] || 0) + 1;
+  };
   for (const { cik } of due.slice(0, max)) {
     if (Date.now() > deadline) { outOfTime++; continue; }
     try {
       const res = await secGet(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`);
-      const r = res.missing ? { ok: false, reason: 'sec-no-companyfacts' } : secTtmFromFacts(await res.body.json());
+      if (res.missing) { failedRead(cik, 'sec-no-companyfacts'); fetched++; continue; }
+      const r = secTtmFromFacts(await res.body.json());
       const old = store.byCik[cik];
-      // A good entry is never replaced by a failed read; the attempt is recorded next to it.
-      if (!r.ok && old && old.ok) {
-        // A failed read next to a good entry stays pending (retried next run) for at most 14 days (Codex round 3).
-        store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
-        if (pending.has(cik) && Date.parse(now) - Date.parse(pendingSince[cik] || now) > 14 * 86400000) pending.delete(cik);
-      } else {
-        store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
-        pending.delete(cik); // done only after a read that answered with figures (or a first read)
-      }
+      // The filing is consumed (facts answered). A result without figures never replaces a good entry.
+      if (!r.ok && old && old.ok) store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
+      else store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+      pending.delete(cik); delete attempts[cik];
       fetched++;
       if (fetched % 100 === 0) { store.pendingCiks = [...pending].sort(); writeJsonAtomic(SEC_STORE, store); } // resumable
-    } catch (e) { failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
+    } catch (e) { failed++; failedRead(cik, 'sec-read-failed'); if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
     await sleep(RATE_DELAY_MS);
   }
   for (const [cik, tickers] of wanted) if (store.byCik[cik]) store.byCik[cik].tickers = tickers;
   for (const c of [...pending]) if (!wanted.has(c)) pending.delete(c); // filers outside the universe
   store.pendingCiks = [...pending].sort();
   store.pendingSince = Object.fromEntries(store.pendingCiks.map((c) => [c, pendingSince[c] || now]));
+  store.pendingAttempts = Object.fromEntries(store.pendingCiks.filter((c) => attempts[c]).map((c) => [c, attempts[c]]));
   store.retryIndexDays = idx.failedDays.filter((d) => d >= isoDay(Date.parse(now) - 30 * 86400000)).sort();
   // The cursor moves only to the last day actually read; failed days stay in retryIndexDays.
   if (idx.lastRead && (!store.lastIndexDate || idx.lastRead > store.lastIndexDate)) store.lastIndexDate = idx.lastRead;
@@ -269,7 +282,11 @@ async function refreshVendor(dirs, max, concurrency, budgetMin) {
         if (r.ok) store.byTicker[t] = Object.assign({ fetchedAt: new Date().toISOString() }, r); else keep(t, r.reason);
         fetched++;
       } catch (e) {
-        if (/404/.test(String(e.message))) keep(t, 'vendor-not-found');
+        // Every failed attempt is recorded (404, 5xx, timeout), so the fair order and the one-day
+        // backoff apply to all of them (Codex round 4).
+        const status = e && (e.response && e.response.status || e.status || e.code);
+        const notFound = status === 404 || /\b404\b|not found/i.test(String(e && e.message));
+        keep(t, notFound ? 'vendor-not-found' : 'vendor-read-failed' + (status ? '-' + String(status).toLowerCase() : ''));
         failed++; if (failed <= 20) console.warn('::warning::[fcf-ttm] Yahoo ' + t + ': ' + e.message);
       }
       if (fetched > 0 && fetched % 100 === 0) writeJsonAtomic(VENDOR_STORE, store); // resumable

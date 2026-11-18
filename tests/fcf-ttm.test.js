@@ -317,6 +317,22 @@ check('F1 guard green on a TTM row, red on the replaced source and on a missing 
   assert.equal(tag(r40Fehler({ fcfMarginTTMPeriodEnd: null })).length, 1);
 });
 
+// G10 (Codex round 3, item 8): the filter tab gets period, source, comparison and the reason for an empty margin.
+check('G10 filter rows: fcfP/fcfQ with a shown margin, a reason code without one', () => {
+  const W = require('../scripts/write-filter-universe.js');
+  const shown = { meta: { ticker: 'ALAB', fcfMarginTTMOld: { value: 8.44, until: '2026-12-16' } },
+    metrics: { fcfMarginTTM: { value: 22.1, source: 'sec-ttm', periodEnd: '2026-09-30' } },
+    annual: { annualFCF: [{ value: 300 }, { value: 200 }], annualOCF: [{ value: 400 }, { value: 300 }] } };
+  assert.deepEqual(W.fcfLabel(shown), { fcfP: '2026-09-30', fcfQ: 'sec' });
+  for (const k of ['fcfP', 'fcfQ']) assert.ok(W.ROW_KEYS.includes(k));
+  assert.equal(W.ROW_KEYS.includes('fcf0'), false); // no filterable comparison number in the filter tab
+  const empty = (reason, suppressed = false) => W.fcfLeerGrund({ meta: { fcfMarginTTMReason: reason, fcfMarginTTMSuppressed: suppressed }, metrics: {} });
+  assert.equal(empty('vendor-ttm-stale'), 'fcf-ttm-veraltet');
+  assert.equal(empty('sec-no-capex,vendor-no-ttm'), 'fcf-ttm-fehlt');
+  assert.equal(empty('abs-margin-over-200', true), 'fcf-ttm-unplausibel');
+  assert.equal(W.fcfLeerGrund(shown), null);
+});
+
 // G8 (async, stubbed network): a filer found in the daily index but not read this run (max=1) stays
 // pending and is read the next day, although the cursor moved past its index day.
 async function g8() {
@@ -359,7 +375,35 @@ async function g8() {
   ok++; console.log('  ok   G8 a filer not read this run stays pending and is read the next day');
 }
 
-g8().then(() => {
+// G9 (Codex round 3, R3-A): a pending filer whose companyfacts keep answering 404 stays pending
+// with backoff (never dropped after 14 days) and keeps its good entry.
+async function g9() {
+  const snaps = path.join(tmp, 'g9'); fs.mkdirSync(snaps);
+  fs.writeFileSync(path.join(snaps, 'MU.json'), JSON.stringify({ meta: { ticker: 'MU' }, metrics: {} }));
+  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: { '0000723125': secE({ fetchedAt: '2026-11-17' }) },
+    lastIndexDate: '2026-11-17', pendingCiks: ['0000723125'], pendingSince: { '0000723125': '2026-11-18' } }));
+  const realFetch = global.fetch, realDate = process.env.RUN_DATE_UTC, realContact = process.env.SEC_CONTACT;
+  let reads = 0;
+  global.fetch = async (url) => { if (String(url).includes('companyfacts')) reads++; return { status: 404, ok: false }; };
+  try {
+    process.env.SEC_CONTACT = 'test admin@example.org';
+    for (const day of ['2026-11-18', '2026-11-19', '2026-11-20', '2026-11-22', '2026-12-04', '2026-12-11']) {
+      process.env.RUN_DATE_UTC = day;
+      await O.refreshSec([snaps], 5, 1);
+    }
+    const st = JSON.parse(fs.readFileSync(process.env.FCF_TTM_SEC_STORE, 'utf8'));
+    assert.deepEqual(st.pendingCiks, ['0000723125']);
+    assert.equal(st.byCik['0000723125'].ok, true);           // the good entry is kept
+    assert.ok(reads >= 4 && reads <= 6, 'reads with backoff: ' + reads);
+  } finally {
+    global.fetch = realFetch;
+    if (realDate === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = realDate;
+    if (realContact === undefined) delete process.env.SEC_CONTACT; else process.env.SEC_CONTACT = realContact;
+  }
+  ok++; console.log('  ok   G9 a pending filer answering 404 stays pending with backoff and keeps its good entry');
+}
+
+g8().then(g9).then(() => {
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`fcf-ttm: ${ok} checks passed`);
 }).catch((e) => { console.error(e); process.exitCode = 1; });
