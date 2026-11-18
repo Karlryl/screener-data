@@ -261,7 +261,8 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   // P134 adds source-period labels; exclude only these additions alongside the shadows from the frozen baseline.
   const stripped = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
     // P184 adds only these two trailing shadows to the unchanged legacy row.
-    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'revAccelerationBasis', ...G31_TRAILING_KEYS].includes(key)))); // 07.11.2026: additive acceleration basis label
+    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'revAccelerationBasis', ...G31_TRAILING_KEYS,
+      'fcfMarginSource', 'fcfMarginPeriodEnd', 'fcfMarginPctOld'].includes(key)))); // 07.11.2026: additive acceleration basis label; 18.11.2026: FCF TTM source, period, comparison (lib/fcf-ttm.js)
   assert.equal(JSON.stringify(stripped), JSON.stringify(fixture.before.rows));
   const byTicker = Object.fromEntries(rows.map((row) => [row.ticker, row]));
   assert.deepEqual(byTicker['688428.SS'].marketCapClassesShadow, shadow, 'on-board: same issuer value as the sector board');

@@ -43,6 +43,7 @@
   "scripts/f1-burnverschiebung.js": { "mode": "exempt", "reason": "Archived annual cash-flow counterfactual intentionally shares raw evidence between its arms." },
   "scripts/f1-rekonstruktions-kipppunkte.js": { "mode": "exempt", "reason": "Annual OCF sensitivity research delegates to the raw archived F1 experiment loader." },
   "scripts/f4-quartalsvergleich.js": { "mode": "exempt", "reason": "Controlled raw quarter-position/date counterfactual, not a daily board reader." },
+  "scripts/fcf-ttm-overlay.js": { "mode": "exempt", "reason": "Reads only the newest timeseries.revenueQEnds date as the staleness anchor of the FCF TTM choice (lib/fcf-ttm.js); writes no quarterly value into any snapshot, score or export." },
   "scripts/filter-snapshot-merge.js": { "mode": "exempt", "reason": "Issuer identity fingerprints require identical raw provider series across listing legs; do not publish these values." },
   "scripts/gqs00-freeze.js": { "mode": "exempt", "reason": "Frozen raw-fixture scoring contract must retain the original evidence." },
   "scripts/plausibilitaets-waechter.js": { "mode": "hook", "hook": "s = prepareSnapshot(readJson(path.join(opt.snapshotsDir, safeSnapshotFilename(z.r.ticker))));", "reason": "Reporting-only plausibility watcher judges the prepared snapshots the export writer shows; it writes only its own report and never changes a published value." },

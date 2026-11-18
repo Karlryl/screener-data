@@ -62,6 +62,7 @@ jobs:
           AGE_RULE_OFF: '1'
         run: |
           node scripts/opinc-source-migrate.js --json reports/opinc-source-diff.json
+          node scripts/fcf-ttm-overlay.js apply --json reports/fcf-ttm-apply.json
           node src/scoring/run-screener.js
           node scripts/write-findash-export.js
           node scripts/write-rule40-export.js || true

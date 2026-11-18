@@ -779,7 +779,10 @@ Deckel sitzt, statt ihn zu verschweigen.
 | `rankGrundShadow` | string \| null, OPTIONAL, SHADOW | Nicht-operativer Klassengrund wie §3/§4; Abwesenheit bedeutet null. Score, `r40`, `rank`, `rankGrund` und Reihenfolge bleiben unverändert. |
 | `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
 | `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
-| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2 |
+| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2. Seit 18.11.2026 (`lib/fcf-ttm.js`, `scripts/fcf-ttm-overlay.js`): operativer Cashflow minus Investitionen in Sachanlagen, geteilt durch den Umsatz, alle drei ueber dieselben letzten zwoelf Monate; aus den SEC-Meldungen (10-K/10-Q), wo die Firma bei der SEC meldet, sonst aus Yahoos Zwoelf-Monats-Zeile, sonst kein Eintrag. Vorher Yahoo `financialData.freeCashflow / totalRevenue` (keine OCF-minus-Capex-Groesse) |
+| `fcfMarginSource` | `'sec-ttm'` \| `'yahoo-fts-ttm'` | Quelle von `fcfMarginPct`; `--check` meldet jede andere Quelle |
+| `fcfMarginPeriodEnd` | ISO | letzter Tag der zwoelf Monate von `fcfMarginPct` (G31) |
+| `fcfMarginPctOld` | number \| null, VERGLEICH bis 16.12.2026 | die ersetzte Yahoo-financialData-Marge desselben Snapshots; nur Anzeige, nie fuer `r40` oder Rang |
 | `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
 | `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
 | `industry` | string \| null | `meta.industry` (im uebrigen Export nicht enthalten) |
@@ -1512,7 +1515,10 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
-| `fcf` | number or absent | TTM FCF margin after engine `fcfMarginValid` including G3, the pull suppression flag and the Rule40 ceiling of 100% |
+| `fcf` | number or absent | TTM FCF margin after engine `fcfMarginValid` including G3, the pull suppression flag and the Rule40 ceiling of 100% (since 18.11.2026 the one definition of `lib/fcf-ttm.js`: SEC first, Yahoo trailing fallback) |
+| `fp` | ISO date or absent (18.11.2026) | last day of the twelve months of `fcf`; present exactly when `fcf` is |
+| `fq` | `s` or absent (18.11.2026) | `s` = `fcf` comes from SEC filings; absent while `fp` is present = Yahoo's twelve-month row |
+| `aus` codes `fcf-leer`, `fcf-alt`, `fcf-unplausibel` | (18.11.2026) | why `fcf` is absent: no twelve-month source, newest twelve months too old, or the figures are implausible |
 | `r40` | number or absent | `ruleOfX(snapshot,1,true,bounds)` only after valid FCF and shared Rule40 data/unit/base-period/freshness/sector gates |
 | `d52`, `ath` | number or absent | Percent distance from 52-week high and seeded ATH, negative below the high; missing price/high remains null; `d52` is clamped to at most 0 |
 | `asOf` | string or absent | UTC date (`YYYY-MM-DD`) of the oldest available metric/fundamentals/ATH source, not today's price-only refresh |
