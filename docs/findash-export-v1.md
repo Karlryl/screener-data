@@ -779,7 +779,10 @@ Deckel sitzt, statt ihn zu verschweigen.
 | `rankGrundShadow` | string \| null, OPTIONAL, SHADOW | Nicht-operativer Klassengrund wie §3/§4; Abwesenheit bedeutet null. Score, `r40`, `rank`, `rankGrund` und Reihenfolge bleiben unverändert. |
 | `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
 | `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
-| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2 |
+| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2. Seit 18.11.2026 (`lib/fcf-ttm.js`, `scripts/fcf-ttm-overlay.js`): operativer Cashflow minus Investitionen in Sachanlagen, geteilt durch den Umsatz, alle drei ueber dieselben letzten zwoelf Monate; aus den SEC-Meldungen (10-K/10-Q), wo die Firma bei der SEC meldet, sonst aus Yahoos Zwoelf-Monats-Zeile, sonst kein Eintrag. Vorher Yahoo `financialData.freeCashflow / totalRevenue` (keine OCF-minus-Capex-Groesse) |
+| `fcfMarginSource` | `'sec-ttm'` \| `'yahoo-fts-ttm'` | Quelle von `fcfMarginPct`; `--check` meldet jede andere Quelle |
+| `fcfMarginPeriodEnd` | ISO | letzter Tag der zwoelf Monate von `fcfMarginPct` (G31) |
+| `fcfMarginPctOld` | number \| null, VERGLEICH bis 16.12.2026 | die ersetzte Yahoo-financialData-Marge desselben Snapshots; nur Anzeige, nie fuer `r40` oder Rang |
 | `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
 | `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
 | `industry` | string \| null | `meta.industry` (im uebrigen Export nicht enthalten) |

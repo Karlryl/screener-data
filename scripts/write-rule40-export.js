@@ -671,6 +671,12 @@ function sammleKandidaten(opts = {}) {
       meta,
       wachstumRoh,
       fcfMarginPct: fcf,
+      // 18.11.2026 (lib/fcf-ttm.js): where the margin comes from and which twelve months it covers (G31),
+      // plus the replaced Yahoo financialData value as the visible comparison until its end date.
+      fcfMarginSource: typeof meta.fcfMarginTTMSource === 'string' ? meta.fcfMarginTTMSource : null,
+      fcfMarginPeriodEnd: typeof meta.fcfMarginTTMPeriodEnd === 'string' ? meta.fcfMarginTTMPeriodEnd : null,
+      fcfMarginPctOld: snapshot.metrics && snapshot.metrics.fcfMarginTTMOld && istZahl(snapshot.metrics.fcfMarginTTMOld.value)
+        ? snapshot.metrics.fcfMarginTTMOld.value : null,
       ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
@@ -808,6 +814,9 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.revGrowthPctUsed = round1(k.wachstum);   // geklemmt; r40 = dieser Wert + fcfMarginPct
       zeile.revGrowthYoYPct = round1(k.wachstumRoh); // roh, EIN Begriff fuer Brett- und Nicht-Brett-Namen
       zeile.fcfMarginPct = round1(k.fcfMarginPct);
+      zeile.fcfMarginSource = k.fcfMarginSource;          // 'sec-ttm' | 'yahoo-fts-ttm'
+      zeile.fcfMarginPeriodEnd = k.fcfMarginPeriodEnd;    // last day of the twelve months
+      zeile.fcfMarginPctOld = k.fcfMarginPctOld === null ? null : round1(k.fcfMarginPctOld); // comparison only, never ranked
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
       zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich
@@ -1115,6 +1124,13 @@ function check(opts = {}) {
     }
     for (const f of REQUIRED_OVERVIEW_ROW) {
       if (!(f in r)) melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): Pflichtfeld "' + f + '" fehlt.');
+    }
+    // 18.11.2026 guard: every shown margin went through the TTM switch (scripts/fcf-ttm-overlay.js apply).
+    // A row with another source means the switch did not run and the replaced definition would be ranked.
+    if (r.fcfMarginSource !== 'sec-ttm' && r.fcfMarginSource !== 'yahoo-fts-ttm') {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): fcfMarginSource "' + r.fcfMarginSource + '" ist keine TTM-Quelle (SEC oder Yahoo-TTM).');
+    } else if (typeof r.fcfMarginPeriodEnd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.fcfMarginPeriodEnd)) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): fcfMarginPeriodEnd fehlt — die Marge haette keinen Zeitraum.');
     }
     if (r.track !== 'profitable' && r.track !== 'unprofitable') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): track "' + r.track + '" ist kein erlaubter Wert.');
