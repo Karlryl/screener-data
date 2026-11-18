@@ -24,11 +24,13 @@ const { filterToAuthorizedUniverse } = require('../src/scoring/run-screener.js')
 
 const ROOT = path.resolve(__dirname, '..');
 const SCHEMA = 'findash-export/v1';
-// The master approved 6 MB for the complete universe; retain all fields.
-const MAX_BYTES = 6_000_000;
-const ROW_KEYS = 't n b sc rk c rg s mc g g3 ps evs pe peSt fpe dy dySt po roe fcf fcfP fcfQ r40 gm d52 ath asOf aus'.split(' ');
+// The master approved 6 MB for the complete universe; retain all fields. 18.11.2026: 6.5 MB for the FCF
+// period and source labels (G31; measured +0.2 MB after compaction, base 5.8 MB); findash reads up to
+// 8 MiB (data-layer/http-get.js DEFAULT_MAX_BYTES), so the budget stays below the consumer's cap.
+const MAX_BYTES = 6_500_000;
+const ROW_KEYS = 't n b sc rk c rg s mc g g3 ps evs pe peSt fpe dy dySt po roe fcf fp fq r40 gm d52 ath asOf aus'.split(' ');
 const NUMBER_KEYS = 'sc rk mc g g3 ps evs pe fpe dy po roe fcf r40 gm d52 ath'.split(' ');
-const STRING_KEYS = 'n b c rg s asOf fcfP fcfQ'.split(' ');
+const STRING_KEYS = 'n b c rg s asOf fp fq'.split(' ');
 const finite = Number.isFinite;
 const round = v => {
   if (!finite(v)) return null;
@@ -122,19 +124,17 @@ function evImplausible(snapshot) {
 }
 
 /**
- * 18.11.2026 (lib/fcf-ttm.js): period end and source of a shown FCF margin, for the filter tab's label;
- * nothing when no margin is shown. The replaced value is not exported here (it would become a
+ * 18.11.2026 (lib/fcf-ttm.js): period end (fp) of a shown FCF margin and, when it comes from SEC
+ * filings, fq = 's' (absent fq with fp present = Yahoo's twelve-month row); compact on purpose, the
+ * feed has a byte budget. Nothing when no margin is shown. The replaced value is not exported here (it would become a
  * filterable number); its four-week comparison is on the Rule-of-40 board.
  * @param {object} snapshot snapshot after scripts/fcf-ttm-overlay.js apply.
- * @returns {{fcfP: (string|null), fcfQ: (string|null)}}
+ * @returns {{fp: (string|null), fq: (string|null)}}
  */
 function fcfLabel(snapshot) {
   const m = snapshot.metrics && snapshot.metrics.fcfMarginTTM;
-  if (usableFcf(snapshot) === null || !m) return { fcfP: null, fcfQ: null };
-  return {
-    fcfP: typeof m.periodEnd === 'string' ? m.periodEnd : null,
-    fcfQ: m.source === 'sec-ttm' ? 'sec' : m.source === 'yahoo-fts-ttm' ? 'yahoo' : null,
-  };
+  if (usableFcf(snapshot) === null || !m || typeof m.periodEnd !== 'string') return { fp: null, fq: null };
+  return { fp: m.periodEnd, fq: m.source === 'sec-ttm' ? 's' : null };
 }
 
 /**
@@ -145,9 +145,9 @@ function fcfLabel(snapshot) {
 function fcfLeerGrund(snapshot) {
   const reason = snapshot.meta && snapshot.meta.fcfMarginTTMReason;
   if (snapshot.metrics && snapshot.metrics.fcfMarginTTM || typeof reason !== 'string' || !reason) return null;
-  if (snapshot.meta.fcfMarginTTMSuppressed || /invalid|over-200|negative/.test(reason)) return 'fcf-ttm-unplausibel';
-  if (/stale/.test(reason)) return 'fcf-ttm-veraltet';
-  return 'fcf-ttm-fehlt';
+  if (snapshot.meta.fcfMarginTTMSuppressed || /invalid|over-200|negative/.test(reason)) return 'fcf-unplausibel';
+  if (/stale/.test(reason)) return 'fcf-alt';
+  return 'fcf-leer';
 }
 
 function usableFcf(snapshot) {

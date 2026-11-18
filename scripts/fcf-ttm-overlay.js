@@ -202,14 +202,21 @@ async function refreshSec(dirs, max, budgetMin) {
       if (res.missing) { failedRead(cik, 'sec-no-companyfacts'); fetched++; continue; }
       const r = secTtmFromFacts(await res.body.json());
       const old = store.byCik[cik];
-      // The filing is consumed (facts answered). A result without figures never replaces a good entry.
-      if (!r.ok && old && old.ok) store.byCik[cik] = Object.assign({}, old, { lastAttemptAt: now, lastAttemptReason: r.reason });
-      else store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
-      pending.delete(cik); delete attempts[cik];
+      if (r.ok) {
+        store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+        pending.delete(cik); delete attempts[cik]; // the filing is consumed only by a successful extraction
+      } else if (old && old.ok) {
+        // Facts answered but without a complete TTM (e.g. capex tagged days later): the good entry stays,
+        // a pending filer stays pending with backoff until extraction succeeds (Codex R4-B).
+        failedRead(cik, r.reason);
+      } else {
+        store.byCik[cik] = Object.assign({ tickers: wanted.get(cik), fetchedAt: now }, r);
+        if (pending.has(cik)) { attempts[cik] = (attempts[cik] || 0) + 1; store.byCik[cik].lastAttemptAt = now; }
+      }
       fetched++;
       if (fetched % 100 === 0) { store.pendingCiks = [...pending].sort(); writeJsonAtomic(SEC_STORE, store); } // resumable
     } catch (e) { failed++; failedRead(cik, 'sec-read-failed'); if (failed <= 20) console.warn('::warning::[fcf-ttm] SEC ' + cik + ': ' + e.message); }
-    await sleep(RATE_DELAY_MS);
+    finally { await sleep(RATE_DELAY_MS); } // pacing on every path, 404 included (Codex R4-D)
   }
   for (const [cik, tickers] of wanted) if (store.byCik[cik]) store.byCik[cik].tickers = tickers;
   for (const c of [...pending]) if (!wanted.has(c)) pending.delete(c); // filers outside the universe

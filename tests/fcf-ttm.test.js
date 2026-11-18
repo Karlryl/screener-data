@@ -318,18 +318,20 @@ check('F1 guard green on a TTM row, red on the replaced source and on a missing 
 });
 
 // G10 (Codex round 3, item 8): the filter tab gets period, source, comparison and the reason for an empty margin.
-check('G10 filter rows: fcfP/fcfQ with a shown margin, a reason code without one', () => {
+check('G10 filter rows: fp/fq with a shown margin, a reason code without one', () => {
   const W = require('../scripts/write-filter-universe.js');
   const shown = { meta: { ticker: 'ALAB', fcfMarginTTMOld: { value: 8.44, until: '2026-12-16' } },
     metrics: { fcfMarginTTM: { value: 22.1, source: 'sec-ttm', periodEnd: '2026-09-30' } },
     annual: { annualFCF: [{ value: 300 }, { value: 200 }], annualOCF: [{ value: 400 }, { value: 300 }] } };
-  assert.deepEqual(W.fcfLabel(shown), { fcfP: '2026-09-30', fcfQ: 'sec' });
-  for (const k of ['fcfP', 'fcfQ']) assert.ok(W.ROW_KEYS.includes(k));
+  assert.deepEqual(W.fcfLabel(shown), { fp: '2026-09-30', fq: 's' });
+  const yahoo = JSON.parse(JSON.stringify(shown)); yahoo.metrics.fcfMarginTTM.source = 'yahoo-fts-ttm';
+  assert.deepEqual(W.fcfLabel(yahoo), { fp: '2026-09-30', fq: null });
+  for (const k of ['fp', 'fq']) assert.ok(W.ROW_KEYS.includes(k));
   assert.equal(W.ROW_KEYS.includes('fcf0'), false); // no filterable comparison number in the filter tab
   const empty = (reason, suppressed = false) => W.fcfLeerGrund({ meta: { fcfMarginTTMReason: reason, fcfMarginTTMSuppressed: suppressed }, metrics: {} });
-  assert.equal(empty('vendor-ttm-stale'), 'fcf-ttm-veraltet');
-  assert.equal(empty('sec-no-capex,vendor-no-ttm'), 'fcf-ttm-fehlt');
-  assert.equal(empty('abs-margin-over-200', true), 'fcf-ttm-unplausibel');
+  assert.equal(empty('vendor-ttm-stale'), 'fcf-alt');
+  assert.equal(empty('sec-no-capex,vendor-no-ttm'), 'fcf-leer');
+  assert.equal(empty('abs-margin-over-200', true), 'fcf-unplausibel');
   assert.equal(W.fcfLeerGrund(shown), null);
 });
 
@@ -403,7 +405,41 @@ async function g9() {
   ok++; console.log('  ok   G9 a pending filer answering 404 stays pending with backoff and keeps its good entry');
 }
 
-g8().then(g9).then(() => {
+// G11 (Codex R4-B): facts that answer without a complete TTM (capex not yet tagged) keep the filer
+// pending; once the facts are complete the filing is consumed and the new period is stored.
+async function g11() {
+  const snaps = path.join(tmp, 'g11'); fs.mkdirSync(snaps);
+  fs.writeFileSync(path.join(snaps, 'ALAB.json'), JSON.stringify({ meta: { ticker: 'ALAB' }, metrics: {} }));
+  fs.writeFileSync(process.env.FCF_TTM_SEC_STORE, JSON.stringify({ byCik: { '0001736297': secE({ end: '2026-06-30', fetchedAt: '2026-11-01' }) },
+    lastIndexDate: '2026-11-17', pendingCiks: ['0001736297'], pendingSince: { '0001736297': '2026-11-18' } }));
+  const noCapex = JSON.parse(JSON.stringify(alab)); delete noCapex.facts['us-gaap'].PaymentsToAcquirePropertyPlantAndEquipment;
+  let complete = false, reads = 0;
+  const realFetch = global.fetch, realDate = process.env.RUN_DATE_UTC, realContact = process.env.SEC_CONTACT;
+  global.fetch = async (url) => {
+    if (!String(url).includes('companyfacts')) return { status: 404, ok: false };
+    reads++; return { status: 200, ok: true, json: async () => (complete ? alab : noCapex) };
+  };
+  try {
+    process.env.SEC_CONTACT = 'test admin@example.org';
+    process.env.RUN_DATE_UTC = '2026-11-18';
+    await O.refreshSec([snaps], 5, 1);
+    let st = JSON.parse(fs.readFileSync(process.env.FCF_TTM_SEC_STORE, 'utf8'));
+    assert.deepEqual([st.pendingCiks, st.byCik['0001736297'].end], [['0001736297'], '2026-06-30']);
+    complete = true;
+    process.env.RUN_DATE_UTC = '2026-11-23';
+    await O.refreshSec([snaps], 5, 1);
+    st = JSON.parse(fs.readFileSync(process.env.FCF_TTM_SEC_STORE, 'utf8'));
+    assert.deepEqual([st.pendingCiks, st.byCik['0001736297'].end], [[], '2026-09-30']);
+    assert.equal(reads, 2);
+  } finally {
+    global.fetch = realFetch;
+    if (realDate === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = realDate;
+    if (realContact === undefined) delete process.env.SEC_CONTACT; else process.env.SEC_CONTACT = realContact;
+  }
+  ok++; console.log('  ok   G11 facts without a complete TTM keep the filer pending until extraction succeeds');
+}
+
+g8().then(g9).then(g11).then(() => {
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`fcf-ttm: ${ok} checks passed`);
 }).catch((e) => { console.error(e); process.exitCode = 1; });

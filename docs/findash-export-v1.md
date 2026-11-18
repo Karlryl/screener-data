@@ -1516,9 +1516,9 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
 | `fcf` | number or absent | TTM FCF margin after engine `fcfMarginValid` including G3, the pull suppression flag and the Rule40 ceiling of 100% (since 18.11.2026 the one definition of `lib/fcf-ttm.js`: SEC first, Yahoo trailing fallback) |
-| `fcfP` | ISO date or absent (18.11.2026) | last day of the twelve months of `fcf`; present exactly when `fcf` is |
-| `fcfQ` | `sec` \| `yahoo` or absent (18.11.2026) | source of `fcf`; present exactly when `fcf` is |
-| `aus` codes `fcf-ttm-fehlt`, `fcf-ttm-veraltet`, `fcf-ttm-unplausibel` | (18.11.2026) | why `fcf` is absent: no twelve-month source, newest twelve months too old, or the figures are implausible |
+| `fp` | ISO date or absent (18.11.2026) | last day of the twelve months of `fcf`; present exactly when `fcf` is |
+| `fq` | `s` or absent (18.11.2026) | `s` = `fcf` comes from SEC filings; absent while `fp` is present = Yahoo's twelve-month row |
+| `aus` codes `fcf-leer`, `fcf-alt`, `fcf-unplausibel` | (18.11.2026) | why `fcf` is absent: no twelve-month source, newest twelve months too old, or the figures are implausible |
 | `r40` | number or absent | `ruleOfX(snapshot,1,true,bounds)` only after valid FCF and shared Rule40 data/unit/base-period/freshness/sector gates |
 | `d52`, `ath` | number or absent | Percent distance from 52-week high and seeded ATH, negative below the high; missing price/high remains null; `d52` is clamped to at most 0 |
 | `asOf` | string or absent | UTC date (`YYYY-MM-DD`) of the oldest available metric/fundamentals/ATH source, not today's price-only refresh |
