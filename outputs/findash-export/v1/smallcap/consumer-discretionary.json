@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-18T11:45:50.888Z",
+  "generated_at": "2026-11-19T11:56:44.445Z",
   "branch": "consumer-discretionary",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.2,
-    "generated_at": "2026-11-18T11:30:42.824Z",
-    "honest_coverage_pct": 90.1,
-    "n_addressable": 17647,
-    "n_ok": 15908,
-    "n_total": 23005,
-    "n_failed": 1256,
+    "coverage_pct": 69.6,
+    "generated_at": "2026-11-19T11:38:16.357Z",
+    "honest_coverage_pct": 90.3,
+    "n_addressable": 17550,
+    "n_ok": 15848,
+    "n_total": 22775,
+    "n_failed": 1250,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -32,13 +32,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.268,
-        "companion": 31.3
+        "companion": 35.9
       },
       "name": "Rocky Brands, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 391976416,
+      "marketCap": 390244352,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -152,8 +152,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CTRN",
-      "score": 65.8,
-      "scoreCycleLegacy": 65.8,
+      "score": 66,
+      "scoreCycleLegacy": 66,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -161,13 +161,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.126,
-        "companion": 25.5
+        "companion": 25.9
       },
       "name": "Citi Trends, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 365309472,
+      "marketCap": 388034464,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -178,8 +178,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 67.7,
-      "scoreShrunk": 65.8,
+      "scoreBase": 67.9,
+      "scoreShrunk": 66,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -204,7 +204,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 73.5,
+          "pct": 76.5,
           "weight": 0.55
         },
         {
@@ -290,15 +290,15 @@
       "overview": {
         "kind": "gp",
         "value": 0.001,
-        "companion": 37.6
+        "companion": 34.9
       },
       "name": "Dine Brands Global, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 454056192,
+      "marketCap": 478523328,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -410,8 +410,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BBW",
-      "score": 56.4,
-      "scoreCycleLegacy": 56.4,
+      "score": 56.9,
+      "scoreCycleLegacy": 56.9,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -420,13 +420,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.126,
-        "companion": -15.2
+        "companion": -11.8
       },
       "name": "Build-A-Bear Workshop, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 361942048,
+      "marketCap": 368471296,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -437,8 +437,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56.4,
+      "scoreBase": 57.7,
+      "scoreShrunk": 56.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -463,7 +463,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 2.9,
+          "pct": 11.8,
           "weight": 0.55
         },
         {
@@ -539,21 +539,152 @@
       "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "ELA",
+      "score": 51.8,
+      "scoreCycleLegacy": 51.8,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.08,
+        "companion": 16.8
+      },
+      "name": "Envela Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 312859904,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1992,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.94,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 83.2,
+      "scoreShrunk": 77.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667,
+        "cycleLegacy": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.1,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 91.2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.7,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 59.4,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.2,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 3.458304527158118,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 3.458304527158118,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": 0.217,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.458304527158118,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.07990919866066326,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 6,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "WEYS",
-      "score": 50.4,
-      "scoreCycleLegacy": 50.4,
+      "score": 51.3,
+      "scoreCycleLegacy": 51.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
         "value": 0.284,
-        "companion": 19.5
+        "companion": 29.1
       },
       "name": "Weyco Group, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 550422080,
+      "marketCap": 526461312,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -564,8 +695,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 50.4,
-      "scoreShrunk": 50.4,
+      "scoreBase": 51.4,
+      "scoreShrunk": 51.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -590,7 +721,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 64.7,
+          "pct": 82.4,
           "weight": 0.55
         },
         {
@@ -663,12 +794,12 @@
       }
     },
     {
-      "rank": 6,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CDRO",
-      "score": 49.4,
-      "scoreCycleLegacy": 49.4,
+      "score": 48.9,
+      "scoreCycleLegacy": 48.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -677,13 +808,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.047,
-        "companion": 20.1
+        "companion": 22.1
       },
       "name": "Codere Online Luxembourg, S.A.",
       "country": "Luxembourg",
       "region": "Europe",
       "sector": "Consumer Cyclical",
-      "marketCap": 392096192,
+      "marketCap": 374672096,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -694,8 +825,8 @@
       "coverageWeight": 0.9,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 49.6,
-      "scoreShrunk": 49.4,
+      "scoreBase": 49,
+      "scoreShrunk": 48.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -720,7 +851,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 67.6,
+          "pct": 70.6,
           "weight": 0.55
         },
         {
@@ -730,7 +861,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.3,
+          "pct": 82.4,
           "weight": 2.3
         },
         {
@@ -793,12 +924,12 @@
       }
     },
     {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "GCO",
-      "score": 46.5,
-      "scoreCycleLegacy": 46.5,
+      "score": 46.6,
+      "scoreCycleLegacy": 46.6,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -806,13 +937,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.089,
-        "companion": -4.9
+        "companion": -3.8
       },
       "name": "Genesco Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 376433088,
+      "marketCap": 383898976,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -823,8 +954,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 46.1,
-      "scoreShrunk": 46.5,
+      "scoreBase": 46.3,
+      "scoreShrunk": 46.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -849,7 +980,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 26.5,
+          "pct": 29.4,
           "weight": 0.55
         },
         {
@@ -922,12 +1053,12 @@
       }
     },
     {
-      "rank": 8,
+      "rank": 9,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FLXS",
-      "score": 45.4,
-      "scoreCycleLegacy": 45.4,
+      "score": 45.5,
+      "scoreCycleLegacy": 45.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -937,13 +1068,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.033,
-        "companion": 14.2
+        "companion": 16.5
       },
       "name": "Flexsteel Industries, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 305239072,
+      "marketCap": 300369568,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -954,8 +1085,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 44.9,
-      "scoreShrunk": 45.4,
+      "scoreBase": 45,
+      "scoreShrunk": 45.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -980,7 +1111,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 61.8,
+          "pct": 64.7,
           "weight": 0.55
         },
         {
@@ -1053,7 +1184,7 @@
       }
     },
     {
-      "rank": 9,
+      "rank": 10,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MNRO",
@@ -1066,13 +1197,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.031,
-        "companion": -1.5
+        "companion": -3.1
       },
       "name": "Monro, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 325204832,
+      "marketCap": 326739872,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1182,12 +1313,12 @@
       }
     },
     {
-      "rank": 10,
+      "rank": 11,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LOCO",
-      "score": 43.6,
-      "scoreCycleLegacy": 43.6,
+      "score": 44.2,
+      "scoreCycleLegacy": 44.2,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1195,13 +1326,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.034,
-        "companion": 14.2
+        "companion": 15.3
       },
       "name": "El Pollo Loco Holdings, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 444209696,
+      "marketCap": 462038496,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1212,8 +1343,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 42.9,
-      "scoreShrunk": 43.6,
+      "scoreBase": 43.6,
+      "scoreShrunk": 44.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1238,7 +1369,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 52.9,
+          "pct": 64.7,
           "weight": 0.55
         },
         {
@@ -1311,7 +1442,7 @@
       }
     },
     {
-      "rank": 11,
+      "rank": 12,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PTLO",
@@ -1323,18 +1454,19 @@
         "shortRunway",
         "lowRoic",
         "arDivergence",
+        "fcfArtefact",
         "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
         "value": 0.089,
-        "companion": 13.2
+        "companion": 16
       },
       "name": "Portillo's Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 476622816,
+      "marketCap": 480261152,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1447,7 +1579,7 @@
       }
     },
     {
-      "rank": 12,
+      "rank": 13,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LEGH",
@@ -1461,13 +1593,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.951,
-        "companion": 209
+        "companion": 185.6
       },
       "name": "Legacy Housing Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 671276288,
+      "marketCap": 657365568,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1577,7 +1709,7 @@
       }
     },
     {
-      "rank": 13,
+      "rank": 14,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ETD",
@@ -1588,15 +1720,15 @@
       "overview": {
         "kind": "gp",
         "value": -0.143,
-        "companion": -24.3
+        "companion": -23.1
       },
       "name": "Ethan Allen Interiors Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 411084000,
+      "marketCap": 399994080,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -1704,7 +1836,7 @@
       }
     },
     {
-      "rank": 14,
+      "rank": 15,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MBUU",
@@ -1717,13 +1849,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.355,
-        "companion": 69.8
+        "companion": 68.9
       },
       "name": "Malibu Boats, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 375181728,
+      "marketCap": 379800256,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1833,24 +1965,24 @@
       }
     },
     {
-      "rank": 15,
+      "rank": 16,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SHOE",
-      "score": 23.2,
-      "scoreCycleLegacy": 23.2,
+      "score": 23.6,
+      "scoreCycleLegacy": 23.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
         "value": -0.237,
-        "companion": -11.5
+        "companion": -10.6
       },
       "name": "Shoe Station Group Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 382204480,
+      "marketCap": 396475968,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1861,8 +1993,8 @@
       "coverageWeight": 1,
       "cohortN": 17,
       "cohortFallback": false,
-      "scoreBase": 20,
-      "scoreShrunk": 23.2,
+      "scoreBase": 20.5,
+      "scoreShrunk": 23.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1887,7 +2019,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 14.7,
+          "pct": 23.5,
           "weight": 0.55
         },
         {
@@ -1966,8 +2098,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "JOUT",
-      "score": 67,
-      "scoreCycleLegacy": 67,
+      "score": 67.1,
+      "scoreCycleLegacy": 67.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1976,13 +2108,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.265,
-        "companion": 15.4
+        "companion": 16.1
       },
       "name": "Johnson Outdoors Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 496421952,
+      "marketCap": 491391712,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1993,8 +2125,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 69.8,
-      "scoreShrunk": 67,
+      "scoreBase": 69.9,
+      "scoreShrunk": 67.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2019,7 +2151,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 51.8,
+          "pct": 53.6,
           "weight": 0.8
         },
         {
@@ -2096,8 +2228,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SFIX",
-      "score": 57.1,
-      "scoreCycleLegacy": 57.1,
+      "score": 57,
+      "scoreCycleLegacy": 57,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2107,13 +2239,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.042,
-        "companion": 12.3
+        "companion": 11.2
       },
       "name": "Stitch Fix, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 352180864,
+      "marketCap": 363561920,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2124,8 +2256,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 58.3,
-      "scoreShrunk": 57.1,
+      "scoreBase": 58.1,
+      "scoreShrunk": 57,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2150,7 +2282,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 30.4,
+          "pct": 28.6,
           "weight": 0.8
         },
         {
@@ -2226,9 +2358,146 @@
       "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "KRUS",
+      "score": 42.9,
+      "scoreCycleLegacy": 42.9,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.022,
+        "companion": 19.7
+      },
+      "name": "Kura Sushi USA, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 301960256,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 12,
+      "cohortFallback": true,
+      "scoreBase": 41.8,
+      "scoreShrunk": 42.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.9,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 28.6,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 59.3,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.3,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 22.2,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 14.3,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 33.3,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 11.873174906857308,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 6.4,
+        "pctl": 1
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-08-31",
+      "revGrowthPriorPeriodEnd": "2025-08-31",
+      "revGrowthSourcePeriodEnd": "2026-08-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-08-31",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-08-31",
+        "priorPeriodEnd": "2025-08-31",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 11.873174906857308,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-08-31",
+      "revGrowthPriorPeriodEndLegacy": "2025-08-31",
+      "overviewValueLegacy": 0.07,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2026-08-31",
+        "priorPeriodEnd": "2025-08-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 11.873174906857308,
+          "basis": "quarter",
+          "periodEnd": "2026-08-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.022167034584253176,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-08-31"
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "OXM",
-      "score": 38.3,
-      "scoreCycleLegacy": 38.3,
+      "score": 38.4,
+      "scoreCycleLegacy": 38.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit"
@@ -2236,13 +2505,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.176,
-        "companion": -4
+        "companion": -1.4
       },
       "name": "Oxford Industries, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 406660128,
+      "marketCap": 404563200,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2253,8 +2522,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 36.3,
-      "scoreShrunk": 38.3,
+      "scoreBase": 36.4,
+      "scoreShrunk": 38.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2279,7 +2548,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 23.2,
+          "pct": 25,
           "weight": 0.8
         },
         {
@@ -2352,7 +2621,7 @@
       }
     },
     {
-      "rank": 4,
+      "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MCFT",
@@ -2367,13 +2636,13 @@
       "overview": {
         "kind": "gp",
         "value": 1.108,
-        "companion": 283.8
+        "companion": 291.9
       },
       "name": "MasterCraft Boat Holdings, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 522984064,
+      "marketCap": 535067808,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -2483,7 +2752,7 @@
       }
     },
     {
-      "rank": 5,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FNKO",
@@ -2507,7 +2776,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 368814208,
+      "marketCap": 381211328,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2617,7 +2886,7 @@
       }
     },
     {
-      "rank": 6,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "XMAX",
@@ -2641,9 +2910,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 394768160,
+      "marketCap": 406121408,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
@@ -2703,7 +2972,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 3.8,
-        "pctl": 1
+        "pctl": 0.857
       },
       "ath": null,
       "qPunkte": 5,
@@ -2754,7 +3023,7 @@
       }
     },
     {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SLDP",
@@ -2767,8 +3036,7 @@
         "shortRunway",
         "highDilution",
         "lowRoic",
-        "arDivergence",
-        "shareCountDilution"
+        "arDivergence"
       ],
       "overview": {
         "kind": "gp",
@@ -2779,7 +3047,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 350520640,
+      "marketCap": 364409472,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2839,15 +3107,12 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 3.5,
-        "pctl": 0.833
-      },
+      "shareDilution": null,
       "ath": {
-        "distancePct": -89,
+        "distancePct": -89.1,
         "athDate": "2021-11-15",
         "monthsAgo": 60,
-        "lastDate": "2026-11-17"
+        "lastDate": "2026-11-18"
       },
       "qPunkte": 5,
       "qSpanTage": 365,

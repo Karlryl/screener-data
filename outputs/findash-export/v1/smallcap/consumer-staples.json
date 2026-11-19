@@ -1,162 +1,25 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-18T11:45:50.941Z",
+  "generated_at": "2026-11-19T11:56:44.499Z",
   "branch": "consumer-staples",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.2,
-    "generated_at": "2026-11-18T11:30:42.824Z",
-    "honest_coverage_pct": 90.1,
-    "n_addressable": 17647,
-    "n_ok": 15908,
-    "n_total": 23005,
-    "n_failed": 1256,
+    "coverage_pct": 69.6,
+    "generated_at": "2026-11-19T11:38:16.357Z",
+    "honest_coverage_pct": 90.3,
+    "n_addressable": 17550,
+    "n_ok": 15848,
+    "n_total": 22775,
+    "n_failed": 1250,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
   "profitable": [
     {
       "rank": 1,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "PRE",
-      "score": 61.7,
-      "scoreCycleLegacy": 61.7,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 3.1,
-        "companion": 663.7
-      },
-      "name": "Prenetics Global Limited",
-      "country": "Hong Kong",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 302275648,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 63.1,
-      "scoreShrunk": 61.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 95.8,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 96.2,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 95.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 95.8,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 75,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 16.7,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 3.6,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 288.5656970912738,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 6.4,
-        "pctl": 0.875
-      },
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 288.5656970912738,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 4.259,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 288.5656970912738,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 3.0997692412108053,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 2,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "AGCC",
@@ -177,9 +40,9 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 580184960,
+      "marketCap": 560503168,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -287,12 +150,12 @@
       }
     },
     {
-      "rank": 3,
+      "rank": 2,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NGVC",
-      "score": 59.9,
-      "scoreCycleLegacy": 59.9,
+      "score": 60,
+      "scoreCycleLegacy": 60,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -301,13 +164,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.003,
-        "companion": 5.4
+        "companion": 5.9
       },
       "name": "Natural Grocers by Vitamin Cottage, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 656814336,
+      "marketCap": 649785216,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -318,8 +181,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 61.1,
-      "scoreShrunk": 59.9,
+      "scoreBase": 61.3,
+      "scoreShrunk": 60,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -344,7 +207,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 54.2,
+          "pct": 58.3,
           "weight": 0.6
         },
         {
@@ -417,7 +280,7 @@
       }
     },
     {
-      "rank": 4,
+      "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "OFRM",
@@ -441,7 +304,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 491822080,
+      "marketCap": 522244064,
       "phase": null,
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -554,12 +417,12 @@
       }
     },
     {
-      "rank": 5,
+      "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SNDL",
-      "score": 44.2,
-      "scoreCycleLegacy": 44.2,
+      "score": 41.1,
+      "scoreCycleLegacy": 41.1,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -569,13 +432,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.098,
-        "companion": -2.1
+        "companion": -1.4
       },
       "name": "SNDL Inc.",
       "country": "Canada",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 326664832,
+      "marketCap": 331466944,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -586,8 +449,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 43.4,
-      "scoreShrunk": 44.2,
+      "scoreBase": 40,
+      "scoreShrunk": 41.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -597,7 +460,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 45.8,
           "weight": 4.2
         },
         {
@@ -617,21 +480,21 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 25,
+          "pct": 21.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 33.3,
+          "pct": 26.7,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 25,
+          "pct": 21.4,
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": -2.5489417285305294,
+      "revGrowthYoYPct": -2.5489417285305405,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -657,7 +520,7 @@
         "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": -2.5489417285305294,
+      "revGrowthYoYPctLegacy": -2.5489417285305405,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-09-30",
       "revGrowthPriorPeriodEndLegacy": "2025-09-30",
@@ -671,7 +534,7 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": -2.5489417285305294,
+          "pct": -2.5489417285305405,
           "basis": "quarter",
           "periodEnd": "2026-09-30"
         }
@@ -685,7 +548,7 @@
       }
     },
     {
-      "rank": 6,
+      "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VITL",
@@ -700,15 +563,15 @@
       "overview": {
         "kind": "gp",
         "value": -0.438,
-        "companion": -29.7
+        "companion": -37.9
       },
       "name": "Vital Farms, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 380413024,
+      "marketCap": 412185696,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
@@ -816,7 +679,7 @@
       }
     },
     {
-      "rank": 7,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "DNUT",
@@ -839,7 +702,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 632407488,
+      "marketCap": 627792448,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -949,12 +812,12 @@
       }
     },
     {
-      "rank": 8,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HNST",
-      "score": 35.6,
-      "scoreCycleLegacy": 35.6,
+      "score": 34.5,
+      "scoreCycleLegacy": 34.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -964,13 +827,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.104,
-        "companion": 1.2
+        "companion": -5.2
       },
       "name": "The Honest Company, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 523061248,
+      "marketCap": 517606976,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -981,8 +844,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 33.9,
-      "scoreShrunk": 35.6,
+      "scoreBase": 32.6,
+      "scoreShrunk": 34.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1007,7 +870,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.3,
+          "pct": 33.3,
           "weight": 0.6
         },
         {
@@ -1032,7 +895,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 4.4,
-        "pctl": 0.75
+        "pctl": 0.857
       },
       "ath": null,
       "qPunkte": 5,
