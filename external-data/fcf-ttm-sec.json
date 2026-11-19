@@ -1045,6 +1045,7 @@
     },
     "0001956439": {
       "tickers": [
+        "ENHA",
         "ENHA"
       ],
       "fetchedAt": "2026-11-18",
@@ -2949,6 +2950,7 @@
     },
     "0001894562": {
       "tickers": [
+        "PRME",
         "PRME"
       ],
       "fetchedAt": "2026-11-18",
@@ -5035,7 +5037,7 @@
       "tickers": [
         "ACM"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
       "end": "2026-09-30",
       "filed": "2026-11-18",
@@ -10557,6 +10559,7 @@
     },
     "0001830043": {
       "tickers": [
+        "BMBL",
         "BMBL"
       ],
       "fetchedAt": "2026-11-18",
@@ -10890,9 +10893,27 @@
       "tickers": [
         "BRBR"
       ],
-      "fetchedAt": "2026-11-18",
-      "ok": false,
-      "reason": "sec-no-revenue"
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 126000000,
+      "capex": 9400000,
+      "revenue": 2398400000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2398400000,
+        "Revenues": 2398400000
+      },
+      "fcf": 116600000,
+      "margin": 4.861574382921948,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
     },
     "0000746598": {
       "tickers": [
@@ -16761,7 +16782,8 @@
     },
     "0000800457": {
       "tickers": [
-        "DGICB"
+        "DGICB",
+        "DGICA"
       ],
       "fetchedAt": "2026-11-18",
       "ok": false,
@@ -16846,19 +16868,19 @@
       "tickers": [
         "DHI"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
-      "end": "2026-06-30",
-      "filed": "2026-07-23",
-      "form": "10-Q",
-      "ocf": 3352600000,
-      "capex": 150400000,
-      "revenue": 33350000000,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 3507200000,
+      "capex": 160400000,
+      "revenue": 33043400000,
       "revenues": {
-        "Revenues": 33350000000
+        "Revenues": 33043400000
       },
-      "fcf": 3202200000,
-      "margin": 9.601799100449774,
+      "fcf": 3346800000,
+      "margin": 10.128497672757646,
       "concepts": {
         "ocf": "NetCashProvidedByUsedInOperatingActivities",
         "capex": [
@@ -21023,20 +21045,20 @@
       "tickers": [
         "FOR"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
-      "end": "2026-06-30",
-      "filed": "2026-07-22",
-      "form": "10-Q",
-      "ocf": 283900000,
-      "capex": 1000000,
-      "revenue": 1724800000,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 289500000,
+      "capex": 300000,
+      "revenue": 1635100000,
       "revenues": {
-        "Revenues": 1724800000,
-        "RevenueFromContractWithCustomerIncludingAssessedTax": 1530900000
+        "Revenues": 1635100000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 1506000000
       },
-      "fcf": 282900000,
-      "margin": 16.40190166975881,
+      "fcf": 289200000,
+      "margin": 17.686991621307566,
       "concepts": {
         "ocf": "NetCashProvidedByUsedInOperatingActivities",
         "capex": [
@@ -21942,6 +21964,7 @@
     },
     "0001743725": {
       "tickers": [
+        "GDYN",
         "GDYN"
       ],
       "fetchedAt": "2026-11-18",
@@ -21995,9 +22018,10 @@
         "GEF-B",
         "GEF"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": false,
-      "reason": "sec-no-ttm-ocf"
+      "reason": "sec-no-capex",
+      "lastAttemptAt": "2026-11-19"
     },
     "0001932393": {
       "tickers": [
@@ -24022,6 +24046,7 @@
     },
     "0000916789": {
       "tickers": [
+        "HELE",
         "HELE"
       ],
       "fetchedAt": "2026-11-18",
@@ -27514,7 +27539,8 @@
     },
     "0000055135": {
       "tickers": [
-        "KELYB"
+        "KELYB",
+        "KELYA"
       ],
       "fetchedAt": "2026-11-18",
       "ok": true,
@@ -27715,6 +27741,7 @@
     },
     "0001425450": {
       "tickers": [
+        "KIDS",
         "KIDS"
       ],
       "fetchedAt": "2026-11-18",
@@ -32888,19 +32915,19 @@
       "tickers": [
         "MWA"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
-      "end": "2026-06-30",
-      "filed": "2026-08-06",
-      "form": "10-Q",
-      "ocf": 237700000,
-      "capex": 58100000,
-      "revenue": 1479300000,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 262900000,
+      "capex": 55600000,
+      "revenue": 1475000000,
       "revenues": {
-        "Revenues": 1479300000
+        "Revenues": 1475000000
       },
-      "fcf": 179600000,
-      "margin": 12.140877442033394,
+      "fcf": 207300000,
+      "margin": 14.054237288135592,
       "concepts": {
         "ocf": "NetCashProvidedByUsedInOperatingActivities",
         "capex": [
@@ -35571,6 +35598,7 @@
     },
     "0001643615": {
       "tickers": [
+        "ONT",
         "ONT"
       ],
       "fetchedAt": "2026-11-18",
@@ -35912,6 +35940,7 @@
     },
     "0001044777": {
       "tickers": [
+        "OSPN",
         "OSPN"
       ],
       "fetchedAt": "2026-11-18",
@@ -39999,6 +40028,7 @@
     },
     "0000095029": {
       "tickers": [
+        "RGR",
         "RGR"
       ],
       "fetchedAt": "2026-11-18",
@@ -43483,7 +43513,7 @@
       "tickers": [
         "SONO"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
       "end": "2026-10-03",
       "filed": "2026-11-18",
@@ -43508,20 +43538,20 @@
       "tickers": [
         "SPB"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
-      "end": "2026-06-28",
-      "filed": "2026-08-07",
-      "form": "10-Q",
-      "ocf": 332000000,
-      "capex": 40400000,
-      "revenue": 2872700000,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 290800000,
+      "capex": 47800000,
+      "revenue": 2852400000,
       "revenues": {
-        "RevenueFromContractWithCustomerExcludingAssessedTax": 2872700000,
-        "RevenueFromContractWithCustomerIncludingAssessedTax": 2872700000
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2852400000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 2852400000
       },
-      "fcf": 291600000,
-      "margin": 10.150729279075433,
+      "fcf": 243000000,
+      "margin": 8.519141775347077,
       "concepts": {
         "ocf": "NetCashProvidedByUsedInOperatingActivities",
         "capex": [
@@ -44824,6 +44854,7 @@
     },
     "0001829864": {
       "tickers": [
+        "TASK",
         "TASK"
       ],
       "fetchedAt": "2026-11-18",
@@ -48899,6 +48930,7 @@
     },
     "0001526119": {
       "tickers": [
+        "VSTM",
         "VSTM"
       ],
       "fetchedAt": "2026-11-18",
@@ -49141,19 +49173,19 @@
       "tickers": [
         "WAFD"
       ],
-      "fetchedAt": "2026-11-18",
+      "fetchedAt": "2026-11-19",
       "ok": true,
-      "end": "2026-06-30",
-      "filed": "2026-08-04",
-      "form": "10-Q",
-      "ocf": 267513000,
-      "capex": 40540000,
-      "revenue": 31633000,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": 245252000,
+      "capex": 33691000,
+      "revenue": 31927000,
       "revenues": {
-        "RevenueFromContractWithCustomerExcludingAssessedTax": 31633000
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 31927000
       },
-      "fcf": 226973000,
-      "margin": 717.5196788164259,
+      "fcf": 211561000,
+      "margin": 662.639771979829,
       "concepts": {
         "ocf": "NetCashProvidedByUsedInOperatingActivities",
         "capex": [
@@ -51278,13 +51310,6687 @@
         ],
         "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
       }
+    },
+    "0001921865": {
+      "tickers": [
+        "ASPI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-16",
+      "form": "10-Q",
+      "ocf": -84294000,
+      "capex": 15972000,
+      "revenue": 34705000,
+      "revenues": {
+        "Revenues": 34705000
+      },
+      "fcf": -100266000,
+      "margin": -288.9093790520098,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001747079": {
+      "tickers": [
+        "BALY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0000796505": {
+      "tickers": [
+        "CLFD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-17",
+      "form": "10-K",
+      "ocf": 12621000,
+      "capex": 3597000,
+      "revenue": 151939000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 151939000
+      },
+      "fcf": 9024000,
+      "margin": 5.939225610277809,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002058349": {
+      "tickers": [
+        "EFTY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0000701719": {
+      "tickers": [
+        "ELA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-17",
+      "form": "10-Q",
+      "ocf": 29907261,
+      "capex": 5140475,
+      "revenue": 279093969,
+      "revenues": {
+        "Revenues": 279093969
+      },
+      "fcf": 24766786,
+      "margin": 8.873995410484845,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001177648": {
+      "tickers": [
+        "ENTA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-18",
+      "form": "10-K",
+      "ocf": -42560000,
+      "capex": 206000,
+      "revenue": 63001000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 63001000
+      },
+      "fcf": -42766000,
+      "margin": -67.88146219901272,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001143513": {
+      "tickers": [
+        "GLAD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0001374690": {
+      "tickers": [
+        "LRMR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0002067627": {
+      "tickers": [
+        "NKLR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0000056868": {
+      "tickers": [
+        "PNRG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-16",
+      "form": "10-Q",
+      "ocf": 74054000,
+      "capex": 25999000,
+      "revenue": 178597000,
+      "revenues": {
+        "Revenues": 178597000
+      },
+      "fcf": 48055000,
+      "margin": 26.90694692520031,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001678660": {
+      "tickers": [
+        "PRLD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-16",
+      "form": "10-Q",
+      "ocf": -27919000,
+      "capex": 35000,
+      "revenue": 21571000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 21571000
+      },
+      "fcf": -27954000,
+      "margin": -129.590654118956,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001676163": {
+      "tickers": [
+        "SSII"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex",
+      "lastAttemptAt": "2026-11-19"
+    },
+    "0001714174": {
+      "tickers": [
+        "BUR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001734713": {
+      "tickers": [
+        "BV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-K",
+      "ocf": 184700000,
+      "capex": 225000000,
+      "revenue": 2712600000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 2712600000
+      },
+      "fcf": -40300000,
+      "margin": -1.4856595148565952,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001267565": {
+      "tickers": [
+        "COLL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 338020000,
+      "capex": 1732000,
+      "revenue": 815186000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 815186000
+      },
+      "fcf": 336288000,
+      "margin": 41.25291651230516,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001691710": {
+      "tickers": [
+        "CPPKF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "lastAttemptAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-companyfacts"
+    },
+    "0001821159": {
+      "tickers": [
+        "EVGO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -45827000,
+      "capex": 148602000,
+      "revenue": 402066000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 402066000
+      },
+      "fcf": -194429000,
+      "margin": -48.35748359722036,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001401257": {
+      "tickers": [
+        "FET"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 68524000,
+      "capex": 6473000,
+      "revenue": 873930000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 873930000
+      },
+      "fcf": 62051000,
+      "margin": 7.10022541851178,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001756594": {
+      "tickers": [
+        "IVA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000031235": {
+      "tickers": [
+        "KODK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": 489000000,
+      "capex": 24000000,
+      "revenue": 1142000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1142000000
+      },
+      "fcf": 465000000,
+      "margin": 40.71803852889667,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000712034": {
+      "tickers": [
+        "ACCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001401521": {
+      "tickers": [
+        "ACIC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 69567000,
+      "capex": 627000,
+      "revenue": 310900000,
+      "revenues": {
+        "Revenues": 310900000
+      },
+      "fcf": 68940000,
+      "margin": 22.174332582824057,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000715579": {
+      "tickers": [
+        "ACNB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 80417000,
+      "capex": 1512000,
+      "revenue": 204180000,
+      "revenues": {
+        "Revenues": 204180000
+      },
+      "fcf": 78905000,
+      "margin": 38.6448231952199,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000934549": {
+      "tickers": [
+        "ACTG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 35434000,
+      "capex": 23007000,
+      "revenue": 273373000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 273373000
+      },
+      "fcf": 12427000,
+      "margin": 4.5458037187286235,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireOilAndGasProperty"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001863934": {
+      "tickers": [
+        "ADUR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001776661": {
+      "tickers": [
+        "ADV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002060016": {
+      "tickers": [
+        "AGCC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0002020932": {
+      "tickers": [
+        "AGMB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001495932": {
+      "tickers": [
+        "AGNT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 91374000,
+      "capex": 9446000,
+      "revenue": 5039791000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 5039791000
+      },
+      "fcf": 81928000,
+      "margin": 1.6256229673016203,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001569187": {
+      "tickers": [
+        "AHRT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002007587": {
+      "tickers": [
+        "AII"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": 297881000,
+      "capex": 4977000,
+      "revenue": 387666000,
+      "revenues": {
+        "Revenues": 387666000
+      },
+      "fcf": 292904000,
+      "margin": 75.55576191876511,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001774170": {
+      "tickers": [
+        "AIOT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 25057000,
+      "capex": 38410000,
+      "revenue": 454493000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 454493000
+      },
+      "fcf": -13353000,
+      "margin": -2.937999045089803,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001737287": {
+      "tickers": [
+        "ALLO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": -108626000,
+      "capex": 184000,
+      "revenue": 4640000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 4640000
+      },
+      "fcf": -108810000,
+      "margin": -2345.043103448276,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001365767": {
+      "tickers": [
+        "ALLT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001326190": {
+      "tickers": [
+        "ALT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001838615": {
+      "tickers": [
+        "ALTI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 11509000,
+      "capex": 865000,
+      "revenue": 277282000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 277282000
+      },
+      "fcf": 10644000,
+      "margin": 3.8386912962255035,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001514991": {
+      "tickers": [
+        "AMCX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 132079000,
+      "capex": 35991000,
+      "revenue": 2250495000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2250495000
+      },
+      "fcf": 96088000,
+      "margin": 4.269638457317168,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001018979": {
+      "tickers": [
+        "AMSF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 12566000,
+      "capex": 241000,
+      "revenue": 333464000,
+      "revenues": {
+        "Revenues": 333464000
+      },
+      "fcf": 12325000,
+      "margin": 3.696051147950004,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001275187": {
+      "tickers": [
+        "ANGO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-31",
+      "filed": "2026-10-08",
+      "form": "10-Q",
+      "ocf": 3673000,
+      "capex": 2229000,
+      "revenue": 325378000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 325378000
+      },
+      "fcf": 1444000,
+      "margin": 0.4437915286220949,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001802883": {
+      "tickers": [
+        "API"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001398733": {
+      "tickers": [
+        "AQST"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": -39762000,
+      "capex": 933000,
+      "revenue": 48837000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 48837000
+      },
+      "fcf": -40695000,
+      "margin": -83.32821426377541,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000717538": {
+      "tickers": [
+        "AROW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000863110": {
+      "tickers": [
+        "ARTNA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": 44413000,
+      "capex": 59099000,
+      "revenue": 118401000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 118401000
+      },
+      "fcf": -14686000,
+      "margin": -12.403611455984324,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001817241": {
+      "tickers": [
+        "ARTV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001655759": {
+      "tickers": [
+        "ARVN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001577437": {
+      "tickers": [
+        "ASC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001673985": {
+      "tickers": [
+        "ASIX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 106390000,
+      "capex": 102521000,
+      "revenue": 1616221000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 1616221000
+      },
+      "fcf": 3869000,
+      "margin": 0.23938557907612884,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001426800": {
+      "tickers": [
+        "ASMB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001145986": {
+      "tickers": [
+        "ASPN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 30327000,
+      "capex": 10380000,
+      "revenue": 214250000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 214250000
+      },
+      "fcf": 19947000,
+      "margin": 9.310151691948658,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001860805": {
+      "tickers": [
+        "ASTL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000879585": {
+      "tickers": [
+        "ATNI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 112964000,
+      "capex": 95482000,
+      "revenue": 678478000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 678478000,
+        "Revenues": 734175000
+      },
+      "fcf": 17482000,
+      "margin": 2.5766495007944252,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001730463": {
+      "tickers": [
+        "AUTL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": -176241000,
+      "capex": 3963000,
+      "revenue": 137434000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 137434000
+      },
+      "fcf": -180204000,
+      "margin": -131.12039233377476,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002058758": {
+      "tickers": [
+        "AVBC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001443575": {
+      "tickers": [
+        "AVBH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001593899": {
+      "tickers": [
+        "AVIR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001130713": {
+      "tickers": [
+        "BBBY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -124938000,
+      "capex": 14121000,
+      "revenue": 1391658000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1391658000
+      },
+      "fcf": -139059000,
+      "margin": -9.992325700710952,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001703956": {
+      "tickers": [
+        "BBCP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-03",
+      "form": "10-Q",
+      "ocf": 68100000,
+      "capex": 52517000,
+      "revenue": 384502000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 384502000,
+        "Revenues": 422910000
+      },
+      "fcf": 15583000,
+      "margin": 4.052774757998658,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001113809": {
+      "tickers": [
+        "BBW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-01",
+      "filed": "2026-09-10",
+      "form": "10-Q",
+      "ocf": 59181000,
+      "capex": 34638000,
+      "revenue": 517751000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 517751000
+      },
+      "fcf": 24543000,
+      "margin": 4.740309531029395,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001795815": {
+      "tickers": [
+        "BCAL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001730984": {
+      "tickers": [
+        "BCML"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001835856": {
+      "tickers": [
+        "BETR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -69722000,
+      "capex": 10813000,
+      "revenue": 4580000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 4580000
+      },
+      "fcf": -80535000,
+      "margin": -1758.406113537118,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001732379": {
+      "tickers": [
+        "BMM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "lastAttemptAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-companyfacts"
+    },
+    "0001403475": {
+      "tickers": [
+        "BMRC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001808898": {
+      "tickers": [
+        "BNTC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002058601": {
+      "tickers": [
+        "BRBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001130144": {
+      "tickers": [
+        "BSRR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001746129": {
+      "tickers": [
+        "BSVN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001710350": {
+      "tickers": [
+        "BTBT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": 79179563,
+      "capex": 671714406,
+      "revenue": 119443320,
+      "revenues": {
+        "Revenues": 119443320
+      },
+      "fcf": -592534843,
+      "margin": -496.0803525889936,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001821866": {
+      "tickers": [
+        "BTQ"
+      ],
+      "fetchedAt": "2026-11-19",
+      "lastAttemptAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-companyfacts"
+    },
+    "0001505065": {
+      "tickers": [
+        "BWAY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001341317": {
+      "tickers": [
+        "BWB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001505732": {
+      "tickers": [
+        "BWFG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 38452000,
+      "capex": 1650000,
+      "revenue": 3167000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 3167000
+      },
+      "fcf": 36802000,
+      "margin": 1162.0461004104832,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001847590": {
+      "tickers": [
+        "BWMN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 18618000,
+      "capex": 15822000,
+      "revenue": 550269000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 550269000
+      },
+      "fcf": 2796000,
+      "margin": 0.5081151218767548,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001759138": {
+      "tickers": [
+        "CABA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001829576": {
+      "tickers": [
+        "CARE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001794546": {
+      "tickers": [
+        "CARL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": -34360000,
+      "capex": 1788000,
+      "revenue": 71775000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 71775000
+      },
+      "fcf": -36148000,
+      "margin": -50.36293974225009,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0000708781": {
+      "tickers": [
+        "CASS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 40661000,
+      "capex": 7375000,
+      "revenue": 108452000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 108452000,
+        "Revenues": 201630000
+      },
+      "fcf": 33286000,
+      "margin": 30.691919005643047,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001253689": {
+      "tickers": [
+        "CBIO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": -82077000,
+      "capex": 353000,
+      "revenue": 15000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 15000000
+      },
+      "fcf": -82430000,
+      "margin": -549.5333333333333,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001981546": {
+      "tickers": [
+        "CBK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001419536": {
+      "tickers": [
+        "CBNK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001662579": {
+      "tickers": [
+        "CCCC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -79629000,
+      "capex": 112000,
+      "revenue": 32277000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 32277000
+      },
+      "fcf": -79741000,
+      "margin": -247.05208042878832,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001158324": {
+      "tickers": [
+        "CCOI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 15820000,
+      "capex": 158110000,
+      "revenue": 946472000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 946472000
+      },
+      "fcf": -142290000,
+      "margin": -15.033725244909515,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001866633": {
+      "tickers": [
+        "CCSI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 139914000,
+      "capex": 30114000,
+      "revenue": 357901000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 357901000
+      },
+      "fcf": 109800000,
+      "margin": 30.67887488439541,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001866782": {
+      "tickers": [
+        "CDRO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001020214": {
+      "tickers": [
+        "CERS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "ocf": 3497000,
+      "capex": 3003000,
+      "revenue": 254232000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 254232000
+      },
+      "fcf": 494000,
+      "margin": 0.19431070832939992,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001737927": {
+      "tickers": [
+        "CGC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001824814": {
+      "tickers": [
+        "CGNT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000763563": {
+      "tickers": [
+        "CHMG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000944745": {
+      "tickers": [
+        "CIVB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000945983": {
+      "tickers": [
+        "CLMB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001368265": {
+      "tickers": [
+        "CLNE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 69710000,
+      "capex": 24912000,
+      "revenue": 448413000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 448413000
+      },
+      "fcf": 44798000,
+      "margin": 9.990343723308646,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001285550": {
+      "tickers": [
+        "CLPT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": -32149000,
+      "capex": 1045000,
+      "revenue": 45493000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 45493000,
+        "Revenues": 45493000
+      },
+      "fcf": -33194000,
+      "margin": -72.96507154946916,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001005229": {
+      "tickers": [
+        "CMCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": -125394000,
+      "capex": 27800000,
+      "revenue": 1767230000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1767230000
+      },
+      "fcf": -153194000,
+      "margin": -8.66859435387584,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000803164": {
+      "tickers": [
+        "COFS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 59554000,
+      "capex": 7635000,
+      "revenue": 240888000,
+      "revenues": {
+        "Revenues": 240888000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 21285000
+      },
+      "fcf": 51919000,
+      "margin": 21.55316993789645,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001410098": {
+      "tickers": [
+        "CRMD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001768267": {
+      "tickers": [
+        "CRNC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-06",
+      "form": "10-Q",
+      "ocf": 84713000,
+      "capex": 6074000,
+      "revenue": 309494000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 309494000
+      },
+      "fcf": 78639000,
+      "margin": 25.408893225716817,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002087587": {
+      "tickers": [
+        "CSHR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001831915": {
+      "tickers": [
+        "CTKB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -6591000,
+      "capex": 6892000,
+      "revenue": 207645000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 207645000
+      },
+      "fcf": -13483000,
+      "margin": -6.493293842856798,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001855175": {
+      "tickers": [
+        "CTNM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001318484": {
+      "tickers": [
+        "CTRN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-01",
+      "filed": "2026-09-09",
+      "form": "10-Q",
+      "ocf": 34768000,
+      "capex": 28272000,
+      "revenue": 869974000,
+      "revenues": {
+        "Revenues": 869974000
+      },
+      "fcf": 6496000,
+      "margin": 0.7466889815097922,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001862935": {
+      "tickers": [
+        "CURR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2025-03-31",
+      "filed": "2025-05-20",
+      "form": "10-Q",
+      "ocf": 2183300,
+      "capex": 739774,
+      "revenue": 43386858,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 43386858
+      },
+      "fcf": 1443526,
+      "margin": 3.327104258160386,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001378325": {
+      "tickers": [
+        "CV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": -29197000,
+      "capex": 78000,
+      "revenue": 13921000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 13921000
+      },
+      "fcf": -29275000,
+      "margin": -210.293800732706,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001127371": {
+      "tickers": [
+        "CWBC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000928340": {
+      "tickers": [
+        "CWCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 24893313,
+      "capex": 8530231,
+      "revenue": 123414797,
+      "revenues": {
+        "Revenues": 123414797
+      },
+      "fcf": 16363082,
+      "margin": 13.25860625934506,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000739421": {
+      "tickers": [
+        "CZFS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 39919000,
+      "capex": 717000,
+      "revenue": 9807000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 9807000
+      },
+      "fcf": 39202000,
+      "margin": 399.73488324666056,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000810958": {
+      "tickers": [
+        "CZNC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001829959": {
+      "tickers": [
+        "DCBO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000872912": {
+      "tickers": [
+        "DCTH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 22993000,
+      "capex": 2883000,
+      "revenue": 109957000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 109957000
+      },
+      "fcf": 20110000,
+      "margin": 18.288967505479413,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000910638": {
+      "tickers": [
+        "DDD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -32199000,
+      "capex": 10264000,
+      "revenue": 395696000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 395696000
+      },
+      "fcf": -42463000,
+      "margin": -10.731217904654077,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001799567": {
+      "tickers": [
+        "DDI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001854545": {
+      "tickers": [
+        "DDL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001854368": {
+      "tickers": [
+        "DGXX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": -6017808,
+      "capex": 159790245,
+      "revenue": 35496839,
+      "revenues": {
+        "Revenues": 35496839
+      },
+      "fcf": -165808053,
+      "margin": -467.10653024625657,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000049754": {
+      "tickers": [
+        "DIN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 43500000,
+      "capex": 45300000,
+      "revenue": 932600000,
+      "revenues": {
+        "Revenues": 932600000
+      },
+      "fcf": -1800000,
+      "margin": -0.19300879262277504,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001401040": {
+      "tickers": [
+        "DMAC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001857154": {
+      "tickers": [
+        "DNUT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 63689000,
+      "capex": 45724000,
+      "revenue": 1419154000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1419154000
+      },
+      "fcf": 17965000,
+      "margin": 1.2658950332381123,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001827401": {
+      "tickers": [
+        "DRUG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000033002": {
+      "tickers": [
+        "EBF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-31",
+      "filed": "2026-10-05",
+      "form": "10-Q",
+      "ocf": 68434000,
+      "capex": 10859000,
+      "revenue": 397150000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 397150000
+      },
+      "fcf": 57575000,
+      "margin": 14.497041420118343,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001367644": {
+      "tickers": [
+        "EBS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": 200100000,
+      "capex": 11700000,
+      "revenue": 649100000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 649100000
+      },
+      "fcf": 188400000,
+      "margin": 29.024803574179632,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001604174": {
+      "tickers": [
+        "ECC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001861974": {
+      "tickers": [
+        "ECX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001650664": {
+      "tickers": [
+        "EDIT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -110206000,
+      "capex": 258000,
+      "revenue": 49827000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 49827000
+      },
+      "fcf": -110464000,
+      "margin": -221.69506492463924,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000894627": {
+      "tickers": [
+        "EGY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001759783": {
+      "tickers": [
+        "EH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001861123": {
+      "tickers": [
+        "EIKN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0002101698": {
+      "tickers": [
+        "ELMT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001570562": {
+      "tickers": [
+        "EOLS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -2645000,
+      "capex": 5590000,
+      "revenue": 325473000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 325473000
+      },
+      "fcf": -8235000,
+      "margin": -2.5301637923883087,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001581178": {
+      "tickers": [
+        "EPRX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001421517": {
+      "tickers": [
+        "ERII"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 35173000,
+      "capex": 2810000,
+      "revenue": 99769000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 99769000
+      },
+      "fcf": 32363000,
+      "margin": 32.437931622046925,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001341170": {
+      "tickers": [
+        "ESEA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000896156": {
+      "tickers": [
+        "ETD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 34856000,
+      "capex": 12034000,
+      "revenue": 562105000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 562105000
+      },
+      "fcf": 22822000,
+      "margin": 4.06009553375259,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001628908": {
+      "tickers": [
+        "EVH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002044725": {
+      "tickers": [
+        "EVMN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001412558": {
+      "tickers": [
+        "EVO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001521951": {
+      "tickers": [
+        "FBIZ"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001562528": {
+      "tickers": [
+        "FBRT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001937987": {
+      "tickers": [
+        "FBYD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000932781": {
+      "tickers": [
+        "FCCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": 24990000,
+      "capex": 1273000,
+      "revenue": 886000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 886000
+      },
+      "fcf": 23717000,
+      "margin": 2676.86230248307,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001513363": {
+      "tickers": [
+        "FDUS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001211583": {
+      "tickers": [
+        "FENC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001899883": {
+      "tickers": [
+        "FIP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": -11109000,
+      "capex": 280270000,
+      "revenue": 737622000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 737622000
+      },
+      "fcf": -291379000,
+      "margin": -39.50248230123288,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001674930": {
+      "tickers": [
+        "FLGT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 14428000,
+      "capex": 15828000,
+      "revenue": 330275000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 330275000
+      },
+      "fcf": -1400000,
+      "margin": -0.4238891832563773,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000037472": {
+      "tickers": [
+        "FLXS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": 45938000,
+      "capex": 3549000,
+      "revenue": 462705000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 462705000
+      },
+      "fcf": 42389000,
+      "margin": 9.161128580845247,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000792966": {
+      "tickers": [
+        "FMAO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001704711": {
+      "tickers": [
+        "FNKO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 82264000,
+      "capex": 33662000,
+      "revenue": 940076000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 940076000
+      },
+      "fcf": 48602000,
+      "margin": 5.17000753130598,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000765207": {
+      "tickers": [
+        "FNLC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001574197": {
+      "tickers": [
+        "FPH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-23",
+      "form": "10-Q",
+      "ocf": 6346000,
+      "capex": 336000,
+      "revenue": 116006000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 116006000,
+        "Revenues": 118000000
+      },
+      "fcf": 6010000,
+      "margin": 5.1807665120769615,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001591670": {
+      "tickers": [
+        "FPI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000844059": {
+      "tickers": [
+        "FRPH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": 27176000,
+      "capex": 87028000,
+      "revenue": 43554000,
+      "revenues": {
+        "Revenues": 43554000
+      },
+      "fcf": -59852000,
+      "margin": -137.42021398723423,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001325670": {
+      "tickers": [
+        "FRST"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001530249": {
+      "tickers": [
+        "FSBW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000352825": {
+      "tickers": [
+        "FSTR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 53147000,
+      "capex": 11611000,
+      "revenue": 588063000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 588063000
+      },
+      "fcf": 41536000,
+      "margin": 7.063188808001863,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0002083125": {
+      "tickers": [
+        "FTW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001675644": {
+      "tickers": [
+        "FVCB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 29957000,
+      "capex": 73000,
+      "revenue": 2175000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2175000
+      },
+      "fcf": 29884000,
+      "margin": 1373.9770114942528,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001988494": {
+      "tickers": [
+        "FVR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001762301": {
+      "tickers": [
+        "FVRR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000038264": {
+      "tickers": [
+        "FWDI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-12",
+      "form": "10-Q",
+      "ocf": -18381303,
+      "capex": 3361,
+      "revenue": 53121450,
+      "revenues": {
+        "Revenues": 53121450
+      },
+      "fcf": -18384664,
+      "margin": -34.60873903103172,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000912728": {
+      "tickers": [
+        "FWRD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001328919": {
+      "tickers": [
+        "GASS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001377757": {
+      "tickers": [
+        "GAU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001494904": {
+      "tickers": [
+        "GBLI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001070524": {
+      "tickers": [
+        "GCBC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000018498": {
+      "tickers": [
+        "GCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-01",
+      "filed": "2026-09-10",
+      "form": "10-Q",
+      "ocf": 134056000,
+      "capex": 60217000,
+      "revenue": 2433041000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2433041000
+      },
+      "fcf": 73839000,
+      "margin": 3.034844049072745,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001386278": {
+      "tickers": [
+        "GDOT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 95714000,
+      "capex": 70212000,
+      "revenue": 2280614000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2280614000,
+        "Revenues": 2375831000
+      },
+      "fcf": 25502000,
+      "margin": 1.1182076405739858,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002055592": {
+      "tickers": [
+        "GEMI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": -304782000,
+      "capex": 9315000,
+      "revenue": 196971000,
+      "revenues": {
+        "Revenues": 196971000
+      },
+      "fcf": -314097000,
+      "margin": -159.46357585634433,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001392380": {
+      "tickers": [
+        "GEVO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": 31980000,
+      "capex": 62793000,
+      "revenue": 217750000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 217750000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 217750000
+      },
+      "fcf": -30813000,
+      "margin": -14.150631458094146,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001385613": {
+      "tickers": [
+        "GLRE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001537054": {
+      "tickers": [
+        "GOGO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 59897000,
+      "capex": 72784000,
+      "revenue": 892925000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 892925000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 18000000
+      },
+      "fcf": -12887000,
+      "margin": -1.4432343141921216,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001234006": {
+      "tickers": [
+        "GOOD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001313310": {
+      "tickers": [
+        "GRVY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001124105": {
+      "tickers": [
+        "GYRE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": -6335000,
+      "capex": 1412000,
+      "revenue": 110058000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 110058000
+      },
+      "fcf": -7747000,
+      "margin": -7.039015791673481,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001436425": {
+      "tickers": [
+        "HBCP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000788965": {
+      "tickers": [
+        "HNRG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -16988000,
+      "capex": 116018000,
+      "revenue": 438603000,
+      "revenues": {
+        "Revenues": 438603000
+      },
+      "fcf": -133006000,
+      "margin": -30.324917978217204,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001530979": {
+      "tickers": [
+        "HNST"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 52591000,
+      "capex": 4014000,
+      "revenue": 334052000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 334052000
+      },
+      "fcf": 48577000,
+      "margin": 14.541747991330691,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001720420": {
+      "tickers": [
+        "IBEX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 59657000,
+      "capex": 27333000,
+      "revenue": 668122000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 668122000
+      },
+      "fcf": 32324000,
+      "margin": 4.838038561819548,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001400891": {
+      "tickers": [
+        "IHRT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 142314000,
+      "capex": 83625000,
+      "revenue": 4018469000,
+      "revenues": {
+        "Revenues": 4018469000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 4017905000
+      },
+      "fcf": 58689000,
+      "margin": 1.4604815913722364,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001728688": {
+      "tickers": [
+        "IIIV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-07",
+      "form": "10-Q",
+      "ocf": 52384000,
+      "capex": 10886000,
+      "revenue": 218157000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 218157000
+      },
+      "fcf": 41498000,
+      "margin": 19.022080428315387,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001717307": {
+      "tickers": [
+        "ILPT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0002019804": {
+      "tickers": [
+        "IMSR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001683695": {
+      "tickers": [
+        "IMXI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 67890000,
+      "capex": 20221000,
+      "revenue": 526922000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 526922000
+      },
+      "fcf": 47669000,
+      "margin": 9.046690022432163,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001857044": {
+      "tickers": [
+        "INDP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001421461": {
+      "tickers": [
+        "IPI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 61820000,
+      "capex": 36301000,
+      "revenue": 301862000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 301862000
+      },
+      "fcf": 25519000,
+      "margin": 8.453863023500805,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001850119": {
+      "tickers": [
+        "IPSC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001446847": {
+      "tickers": [
+        "IRWD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001997377": {
+      "tickers": [
+        "ISOU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000836690": {
+      "tickers": [
+        "ISSC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-13",
+      "form": "10-Q",
+      "ocf": 18507847,
+      "capex": 4217084,
+      "revenue": 93151207,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 93151207
+      },
+      "fcf": 14290763,
+      "margin": 15.341468414896653,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001602658": {
+      "tickers": [
+        "ISTR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000720858": {
+      "tickers": [
+        "ITIC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 29379000,
+      "capex": 6095000,
+      "revenue": 41598000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 41598000,
+        "Revenues": 301929000
+      },
+      "fcf": 23284000,
+      "margin": 55.973844896389245,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001722387": {
+      "tickers": [
+        "ITRG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001839839": {
+      "tickers": [
+        "JBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-10-03",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": 119400000,
+      "capex": 13700000,
+      "revenue": 895600000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 895600000
+      },
+      "fcf": 105700000,
+      "margin": 11.802143814202768,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001710482": {
+      "tickers": [
+        "JMSB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000788329": {
+      "tickers": [
+        "JOUT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-03",
+      "filed": "2026-08-07",
+      "form": "10-Q",
+      "ocf": 50390000,
+      "capex": 20499000,
+      "revenue": 660908000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 660908000
+      },
+      "fcf": 29891000,
+      "margin": 4.522717231445224,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001606757": {
+      "tickers": [
+        "KE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 44878000,
+      "capex": 50095000,
+      "revenue": 1456578000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1456578000
+      },
+      "fcf": -5217000,
+      "margin": -0.35816825463517915,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001567529": {
+      "tickers": [
+        "KMDA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001564180": {
+      "tickers": [
+        "KNOP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001631596": {
+      "tickers": [
+        "KREF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001625791": {
+      "tickers": [
+        "KRNT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001617242": {
+      "tickers": [
+        "KRNY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001772177": {
+      "tickers": [
+        "KRUS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-31",
+      "filed": "2026-11-05",
+      "form": "10-K",
+      "ocf": 31867000,
+      "capex": 56956000,
+      "revenue": 328276000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 328276000
+      },
+      "fcf": -25089000,
+      "margin": -7.642654351825903,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001994702": {
+      "tickers": [
+        "KYTX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001951222": {
+      "tickers": [
+        "LAES"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001495240": {
+      "tickers": [
+        "LAND"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001831631": {
+      "tickers": [
+        "LDI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000799288": {
+      "tickers": [
+        "LE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-03",
+      "form": "10-Q",
+      "ocf": -37332000,
+      "capex": 36070000,
+      "revenue": 1320813000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1320813000,
+        "Revenues": 1153784000
+      },
+      "fcf": -73402000,
+      "margin": -5.5573347627559695,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001436208": {
+      "tickers": [
+        "LEGH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 54253000,
+      "capex": 13497000,
+      "revenue": 155954000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 155954000,
+        "Revenues": 208677000
+      },
+      "fcf": 40756000,
+      "margin": 26.133347012580632,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001499849": {
+      "tickers": [
+        "LND"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001606366": {
+      "tickers": [
+        "LOCO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 66517000,
+      "capex": 34914000,
+      "revenue": 505576000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 505576000
+      },
+      "fcf": 31603000,
+      "margin": 6.250890073895913,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001041514": {
+      "tickers": [
+        "LSAK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 36720000,
+      "capex": 24909000,
+      "revenue": 734678000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 734678000,
+        "Revenues": 734678000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 624398000
+      },
+      "fcf": 11811000,
+      "margin": 1.607643076286482,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000814586": {
+      "tickers": [
+        "LWAY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": 5204000,
+      "capex": 40443000,
+      "revenue": 253063000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 253063000
+      },
+      "fcf": -35239000,
+      "margin": -13.924991010143719,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001096056": {
+      "tickers": [
+        "LXFR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": 30000000,
+      "capex": 11100000,
+      "revenue": 357000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 357000000
+      },
+      "fcf": 18900000,
+      "margin": 5.294117647058823,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001806952": {
+      "tickers": [
+        "LYEL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -139250000,
+      "capex": 715000,
+      "revenue": 15000,
+      "revenues": {
+        "Revenues": 15000
+      },
+      "fcf": -139965000,
+      "margin": -933100,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000041719": {
+      "tickers": [
+        "MAGN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-27",
+      "filed": "2026-08-06",
+      "form": "10-Q",
+      "ocf": 172000000,
+      "capex": 59000000,
+      "revenue": 3284000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 3284000000
+      },
+      "fcf": 113000000,
+      "margin": 3.4409257003654083,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001555279": {
+      "tickers": [
+        "MASS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": 2884000,
+      "capex": 261000,
+      "revenue": 65786000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 65786000
+      },
+      "fcf": 2623000,
+      "margin": 3.987170522603593,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001590976": {
+      "tickers": [
+        "MBUU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 29888000,
+      "capex": 28737000,
+      "revenue": 972798000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 972798000
+      },
+      "fcf": 1151000,
+      "margin": 0.11831849983244208,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001638290": {
+      "tickers": [
+        "MCFT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-10-04",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": 43575000,
+      "capex": 8372000,
+      "revenue": 434040000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 434040000
+      },
+      "fcf": 35203000,
+      "margin": 8.110542807114552,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002035992": {
+      "tickers": [
+        "MCTA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001376339": {
+      "tickers": [
+        "MDXG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001940941": {
+      "tickers": [
+        "MFI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000835011": {
+      "tickers": [
+        "MGPI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": 20219000,
+      "capex": 19692000,
+      "revenue": 487011000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 487011000
+      },
+      "fcf": 527000,
+      "margin": 0.10821110816798798,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000724004": {
+      "tickers": [
+        "MLAB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 51548000,
+      "capex": 2095000,
+      "revenue": 251324000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 251324000
+      },
+      "fcf": 49453000,
+      "margin": 19.676990657477997,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001645469": {
+      "tickers": [
+        "MNPR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000876427": {
+      "tickers": [
+        "MNRO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-26",
+      "filed": "2026-10-29",
+      "form": "10-Q",
+      "ocf": 44253000,
+      "capex": 31861000,
+      "revenue": 1137994000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1137994000
+      },
+      "fcf": 12392000,
+      "margin": 1.0889336850633657,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001489993": {
+      "tickers": [
+        "MOBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001438423": {
+      "tickers": [
+        "MRAM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": 4216000,
+      "capex": 10658000,
+      "revenue": 69059000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 69059000
+      },
+      "fcf": -6442000,
+      "margin": -9.328255549602513,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001466026": {
+      "tickers": [
+        "MSBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001742518": {
+      "tickers": [
+        "MTC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001091223": {
+      "tickers": [
+        "MTLS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001277902": {
+      "tickers": [
+        "MVBF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001327607": {
+      "tickers": [
+        "MYFW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 23317000,
+      "capex": 3297000,
+      "revenue": 110745000,
+      "revenues": {
+        "Revenues": 110745000
+      },
+      "fcf": 20020000,
+      "margin": 18.077565578581424,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000899923": {
+      "tickers": [
+        "MYGN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000069733": {
+      "tickers": [
+        "NATH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-28",
+      "filed": "2026-08-07",
+      "form": "10-Q",
+      "ocf": 19403000,
+      "capex": 322000,
+      "revenue": 169127000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 169127000
+      },
+      "fcf": 19081000,
+      "margin": 11.282054314213578,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001512228": {
+      "tickers": [
+        "NB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001847398": {
+      "tickers": [
+        "NECB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001587987": {
+      "tickers": [
+        "NEWT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001849396": {
+      "tickers": [
+        "NEXN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001404644": {
+      "tickers": [
+        "NGNE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001084991": {
+      "tickers": [
+        "NGS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 79081000,
+      "capex": 94514000,
+      "revenue": 207273000,
+      "revenues": {
+        "Revenues": 207273000
+      },
+      "fcf": -15433000,
+      "margin": -7.445735817014276,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001547459": {
+      "tickers": [
+        "NGVC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-06",
+      "form": "10-Q",
+      "ocf": 70724000,
+      "capex": 48013000,
+      "revenue": 1343835000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1343835000
+      },
+      "fcf": 22711000,
+      "margin": 1.6900140270196862,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001649752": {
+      "tickers": [
+        "NMG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001562051": {
+      "tickers": [
+        "NML"
+      ],
+      "fetchedAt": "2026-11-19",
+      "lastAttemptAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-companyfacts"
+    },
+    "0001643303": {
+      "tickers": [
+        "NNDM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -66815000,
+      "capex": 984000,
+      "revenue": 125918000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 125918000
+      },
+      "fcf": -67799000,
+      "margin": -53.84377134325513,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001368519": {
+      "tickers": [
+        "NOA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001499543": {
+      "tickers": [
+        "NOAH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001681206": {
+      "tickers": [
+        "NODK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": -2767000,
+      "capex": 283000,
+      "revenue": 259404000,
+      "revenues": {
+        "Revenues": 259404000
+      },
+      "fcf": -3050000,
+      "margin": -1.1757721546313857,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001336706": {
+      "tickers": [
+        "NPB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001528287": {
+      "tickers": [
+        "NPCE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": -12060000,
+      "capex": 355000,
+      "revenue": 106746000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 106746000
+      },
+      "fcf": -12415000,
+      "margin": -11.630412380791787,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000070487": {
+      "tickers": [
+        "NRC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 23765000,
+      "capex": 5317000,
+      "revenue": 143788000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 143788000
+      },
+      "fcf": 18448000,
+      "margin": 12.82999972181267,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001625278": {
+      "tickers": [
+        "NRDS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 147000000,
+      "capex": 15800000,
+      "revenue": 884500000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 884500000
+      },
+      "fcf": 131200000,
+      "margin": 14.833239118145844,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001786248": {
+      "tickers": [
+        "NREF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001163370": {
+      "tickers": [
+        "NRIM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 88257000,
+      "capex": 6254000,
+      "revenue": 255915000,
+      "revenues": {
+        "Revenues": 255915000
+      },
+      "fcf": 82003000,
+      "margin": 32.04306117265499,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001122904": {
+      "tickers": [
+        "NTGR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 7207000,
+      "capex": 12580000,
+      "revenue": 677194000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 677194000
+      },
+      "fcf": -5373000,
+      "margin": -0.7934210876056197,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001875558": {
+      "tickers": [
+        "NVCT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000724910": {
+      "tickers": [
+        "NVEC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000045876": {
+      "tickers": [
+        "NVRI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-03-31",
+      "filed": "2026-05-11",
+      "form": "10-Q",
+      "ocf": 116343000,
+      "capex": 153382000,
+      "revenue": 2242254000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2242254000
+      },
+      "fcf": -37039000,
+      "margin": -1.6518645969635912,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001013272": {
+      "tickers": [
+        "NWFL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 42162000,
+      "capex": 2342000,
+      "revenue": 8969000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 8969000
+      },
+      "fcf": 39820000,
+      "margin": 443.9736871446092,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001846253": {
+      "tickers": [
+        "OABI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 2666000,
+      "capex": 286000,
+      "revenue": 40211000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 40211000
+      },
+      "fcf": 2380000,
+      "margin": 5.918778443709432,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001754226": {
+      "tickers": [
+        "OBT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001372299": {
+      "tickers": [
+        "OCGN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -63692000,
+      "capex": 211000,
+      "revenue": 4780000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 4780000
+      },
+      "fcf": -63903000,
+      "margin": -1336.8828451882844,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001953530": {
+      "tickers": [
+        "OCS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001609804": {
+      "tickers": [
+        "OEC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 165600000,
+      "capex": 122000000,
+      "revenue": 1844900000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1844900000
+      },
+      "fcf": 43600000,
+      "margin": 2.3632717220445554,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000884624": {
+      "tickers": [
+        "OFIX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 4226000,
+      "capex": 48687000,
+      "revenue": 835414000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 835414000
+      },
+      "fcf": -44461000,
+      "margin": -5.322031950625678,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001696556": {
+      "tickers": [
+        "OFRM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001957538": {
+      "tickers": [
+        "OIO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001121484": {
+      "tickers": [
+        "OIS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 47304000,
+      "capex": 13355000,
+      "revenue": 650250000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 650250000
+      },
+      "fcf": 33949000,
+      "margin": 5.220915032679739,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000712770": {
+      "tickers": [
+        "OLP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001327688": {
+      "tickers": [
+        "OOMA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-04",
+      "form": "10-Q",
+      "ocf": 37121000,
+      "capex": 6819000,
+      "revenue": 306586000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 306586000
+      },
+      "fcf": 30302000,
+      "margin": 9.883686795874567,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001702780": {
+      "tickers": [
+        "OPTU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 959160000,
+      "capex": 1256902000,
+      "revenue": 8272003000,
+      "revenues": {
+        "Revenues": 8272003000
+      },
+      "fcf": -297742000,
+      "margin": -3.5993942458676575,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001866816": {
+      "tickers": [
+        "OPTX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": 1286818,
+      "capex": 1644398,
+      "revenue": 30835046,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 30835046
+      },
+      "fcf": -357580,
+      "margin": -1.1596545048124787,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001402829": {
+      "tickers": [
+        "ORN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": 3084000,
+      "capex": 41461000,
+      "revenue": 927554000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 927554000
+      },
+      "fcf": -38377000,
+      "margin": -4.137441054644797,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001636651": {
+      "tickers": [
+        "OVID"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002025416": {
+      "tickers": [
+        "OWLS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000075288": {
+      "tickers": [
+        "OXM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-01",
+      "filed": "2026-09-04",
+      "form": "10-Q",
+      "ocf": 137397000,
+      "capex": 85271000,
+      "revenue": 1467608000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1467608000
+      },
+      "fcf": 52126000,
+      "margin": 3.551765866634687,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001299130": {
+      "tickers": [
+        "PACB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -136948000,
+      "capex": 6447000,
+      "revenue": 161394000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 161394000
+      },
+      "fcf": -143395000,
+      "margin": -88.84778864146126,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001712463": {
+      "tickers": [
+        "PACK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000798287": {
+      "tickers": [
+        "PAMT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": -23482000,
+      "capex": 41089000,
+      "revenue": 610396000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 610396000
+      },
+      "fcf": -64571000,
+      "margin": -10.578542454406648,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001606909": {
+      "tickers": [
+        "PANL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001769663": {
+      "tickers": [
+        "PBFS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001401667": {
+      "tickers": [
+        "PBYI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-negative-capex"
+    },
+    "0001423869": {
+      "tickers": [
+        "PCB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 40330000,
+      "capex": 487000,
+      "revenue": 3219000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 3219000
+      },
+      "fcf": 39843000,
+      "margin": 1237.744641192917,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001874071": {
+      "tickers": [
+        "PDLB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001338940": {
+      "tickers": [
+        "PERI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000891532": {
+      "tickers": [
+        "PESI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -13160000,
+      "capex": 7258000,
+      "revenue": 57674000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 57674000
+      },
+      "fcf": -20418000,
+      "margin": -35.40243437250754,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001056943": {
+      "tickers": [
+        "PFIS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001244183": {
+      "tickers": [
+        "PFL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0002035709": {
+      "tickers": [
+        "PHOE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001412408": {
+      "tickers": [
+        "PHR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-03",
+      "form": "10-Q",
+      "ocf": 91379000,
+      "capex": 23857000,
+      "revenue": 507793000,
+      "revenues": {
+        "Revenues": 507793000
+      },
+      "fcf": 67522000,
+      "margin": 13.297150610583447,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001786117": {
+      "tickers": [
+        "PINE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-22",
+      "form": "10-Q",
+      "ocf": 17918000,
+      "capex": 1900000,
+      "revenue": 75768000,
+      "revenues": {
+        "Revenues": 75768000
+      },
+      "fcf": 16018000,
+      "margin": 21.140851018899802,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsForCapitalImprovements"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001315399": {
+      "tickers": [
+        "PKBK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000076282": {
+      "tickers": [
+        "PKOH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 65600000,
+      "capex": 44600000,
+      "revenue": 1714600000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1714600000
+      },
+      "fcf": 21000000,
+      "margin": 1.2247754578327308,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001525769": {
+      "tickers": [
+        "PLAY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-04",
+      "filed": "2026-09-14",
+      "form": "10-Q",
+      "ocf": 321600000,
+      "capex": 337600000,
+      "revenue": 2081100000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2081100000
+      },
+      "fcf": -16000000,
+      "margin": -0.7688241795204459,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001168455": {
+      "tickers": [
+        "PLBC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001185348": {
+      "tickers": [
+        "PRAA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -43829000,
+      "capex": 5333000,
+      "revenue": 1306363000,
+      "revenues": {
+        "Revenues": 1306363000
+      },
+      "fcf": -49162000,
+      "margin": -3.763272536040901,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001876431": {
+      "tickers": [
+        "PRE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001559053": {
+      "tickers": [
+        "PRTA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001653558": {
+      "tickers": [
+        "PRTH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 134869000,
+      "capex": 26404000,
+      "revenue": 1027565000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1027565000
+      },
+      "fcf": 108465000,
+      "margin": 10.555536632719098,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001833835": {
+      "tickers": [
+        "PSFE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001871509": {
+      "tickers": [
+        "PTLO"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 84993000,
+      "capex": 72414000,
+      "revenue": 761396000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 761396000
+      },
+      "fcf": 12579000,
+      "margin": 1.6520969377301693,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002106613": {
+      "tickers": [
+        "QNC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001481792": {
+      "tickers": [
+        "QUAD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-29",
+      "form": "10-Q",
+      "ocf": 83500000,
+      "capex": 46300000,
+      "revenue": 2375800000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2375800000
+      },
+      "fcf": 37200000,
+      "margin": 1.5657883660240763,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001499422": {
+      "tickers": [
+        "RBB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000895456": {
+      "tickers": [
+        "RCKY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": 35812000,
+      "capex": 7941000,
+      "revenue": 521299000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 521299000
+      },
+      "fcf": 27871000,
+      "margin": 5.346451844335017,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001862461": {
+      "tickers": [
+        "REAX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001384195": {
+      "tickers": [
+        "REI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 174423373,
+      "capex": 23705621,
+      "revenue": 347579585,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 347579585
+      },
+      "fcf": 150717752,
+      "margin": 43.36208411089506,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireOilAndGasProperty"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001590877": {
+      "tickers": [
+        "RGNX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -152105000,
+      "capex": 2697000,
+      "revenue": 153911000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 153911000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 153911000
+      },
+      "fcf": -154802000,
+      "margin": -100.57890599112473,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001171155": {
+      "tickers": [
+        "RLGT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 19271000,
+      "capex": 3651000,
+      "revenue": 987490000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 987490000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 987490000
+      },
+      "fcf": 15620000,
+      "margin": 1.581788170006785,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001553643": {
+      "tickers": [
+        "RLMD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001519401": {
+      "tickers": [
+        "RM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 324367000,
+      "capex": 4858000,
+      "revenue": 683774000,
+      "revenues": {
+        "Revenues": 683774000
+      },
+      "fcf": 319509000,
+      "margin": 46.727281236197925,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001581091": {
+      "tickers": [
+        "RMAX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-06",
+      "form": "10-Q",
+      "ocf": 34993000,
+      "capex": 9149000,
+      "revenue": 283122000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 283122000
+      },
+      "fcf": 25844000,
+      "margin": 9.128220343173615,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001635282": {
+      "tickers": [
+        "RMNI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-29",
+      "form": "10-Q",
+      "ocf": 27239000,
+      "capex": 4900000,
+      "revenue": 438394000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 438394000
+      },
+      "fcf": 22339000,
+      "margin": 5.095644557179158,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001644378": {
+      "tickers": [
+        "RMR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001699039": {
+      "tickers": [
+        "RNGR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 77600000,
+      "capex": 42200000,
+      "revenue": 640600000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 640600000
+      },
+      "fcf": 35400000,
+      "margin": 5.526069310021855,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001945240": {
+      "tickers": [
+        "ROMA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001720592": {
+      "tickers": [
+        "RPAY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 90258000,
+      "capex": 64620000,
+      "revenue": 413482000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 413482000
+      },
+      "fcf": 25638000,
+      "margin": 6.200511751418442,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001963685": {
+      "tickers": [
+        "RR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-19",
+      "form": "10-Q",
+      "ocf": -7070000,
+      "capex": 22054000,
+      "revenue": 5389000,
+      "revenues": {
+        "Revenues": 5389000
+      },
+      "fcf": -29124000,
+      "margin": -540.4342178511783,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001071236": {
+      "tickers": [
+        "RRBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001824403": {
+      "tickers": [
+        "RSVR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 46397808,
+      "capex": 487982,
+      "revenue": 184456814,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 184456814,
+        "Revenues": 184456814
+      },
+      "fcf": 45909826,
+      "margin": 24.889200352338296,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000930236": {
+      "tickers": [
+        "RWT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001597672": {
+      "tickers": [
+        "RYAM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001509261": {
+      "tickers": [
+        "RZLT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001930313": {
+      "tickers": [
+        "SBC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-13",
+      "form": "10-Q",
+      "ocf": 102211310,
+      "capex": 2011949,
+      "revenue": 190396856,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 190396856
+      },
+      "fcf": 100199361,
+      "margin": 52.62658381291758,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001349436": {
+      "tickers": [
+        "SD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 126016000,
+      "capex": 78965000,
+      "revenue": 194710000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 194710000
+      },
+      "fcf": 47051000,
+      "margin": 24.164655128139284,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0002009684": {
+      "tickers": [
+        "SEG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001832483": {
+      "tickers": [
+        "SERV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -153171000,
+      "capex": 24226000,
+      "revenue": 9939000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 9939000
+      },
+      "fcf": -177397000,
+      "margin": -1784.85763155247,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001576942": {
+      "tickers": [
+        "SFIX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-08-01",
+      "filed": "2026-09-24",
+      "form": "10-K",
+      "ocf": 39070000,
+      "capex": 19224000,
+      "revenue": 1348119000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1348119000
+      },
+      "fcf": 19846000,
+      "margin": 1.4721252352351686,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001090009": {
+      "tickers": [
+        "SFST"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 48081000,
+      "capex": 2802000,
+      "revenue": 5143000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 5143000
+      },
+      "fcf": 45279000,
+      "margin": 880.4005444293214,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
+    },
+    "0001400118": {
+      "tickers": [
+        "SGMT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001002590": {
+      "tickers": [
+        "SGU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-05",
+      "form": "10-Q",
+      "ocf": 71610000,
+      "capex": 14784000,
+      "revenue": 1911734000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1911734000
+      },
+      "fcf": 56826000,
+      "margin": 2.9724846657537083,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001035092": {
+      "tickers": [
+        "SHBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "ocf": 83593000,
+      "capex": 2921000,
+      "revenue": 22176000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 22176000
+      },
+      "fcf": 80672000,
+      "margin": 363.78066378066376,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000354963": {
+      "tickers": [
+        "SHEN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-28",
+      "form": "10-Q",
+      "ocf": 105435000,
+      "capex": 322387000,
+      "revenue": 371141000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 371141000
+      },
+      "fcf": -216952000,
+      "margin": -58.45541182461652,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001448397": {
+      "tickers": [
+        "SHIP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001699350": {
+      "tickers": [
+        "SI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -34925000,
+      "capex": 7760000,
+      "revenue": 64490000,
+      "revenues": {
+        "Revenues": 64490000
+      },
+      "fcf": -42685000,
+      "margin": -66.18855636532795,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001844862": {
+      "tickers": [
+        "SLDP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": -62358000,
+      "capex": 17204000,
+      "revenue": 7660000,
+      "revenues": {
+        "Revenues": 7660000
+      },
+      "fcf": -79562000,
+      "margin": -1038.668407310705,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001537137": {
+      "tickers": [
+        "SLI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001023459": {
+      "tickers": [
+        "SLP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-05-31",
+      "filed": "2026-07-09",
+      "form": "10-Q",
+      "ocf": 24942000,
+      "capex": 3262000,
+      "revenue": 82058000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 82058000
+      },
+      "fcf": 21680000,
+      "margin": 26.420336834921642,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001418076": {
+      "tickers": [
+        "SLRC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0002024218": {
+      "tickers": [
+        "SMC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 109990000,
+      "capex": 84596000,
+      "revenue": 619454000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 619454000
+      },
+      "fcf": 25394000,
+      "margin": 4.099416582990827,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001766600": {
+      "tickers": [
+        "SNDL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001734107": {
+      "tickers": [
+        "SOHU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001840706": {
+      "tickers": [
+        "SOPH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001706946": {
+      "tickers": [
+        "SPCE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": -214194000,
+      "capex": 163621000,
+      "revenue": 1100000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1100000
+      },
+      "fcf": -377815000,
+      "margin": -34346.81818181818,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001816017": {
+      "tickers": [
+        "SPIR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-10",
+      "form": "10-Q",
+      "ocf": -58814000,
+      "capex": 34239000,
+      "revenue": 67705000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 67705000
+      },
+      "fcf": -93053000,
+      "margin": -137.4388892991655,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001671858": {
+      "tickers": [
+        "SPRY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": -183071000,
+      "capex": 0,
+      "revenue": 122136000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 122136000
+      },
+      "fcf": -183071000,
+      "margin": -149.8911049977075,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001517375": {
+      "tickers": [
+        "SPT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 55340000,
+      "capex": 3251000,
+      "revenue": 491378000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 491378000
+      },
+      "fcf": 52089000,
+      "margin": 10.60059668931047,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001779128": {
+      "tickers": [
+        "SRTA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": 10723000,
+      "capex": 9917000,
+      "revenue": 280758000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 280758000
+      },
+      "fcf": 806000,
+      "margin": 0.2870799763497389,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001517396": {
+      "tickers": [
+        "SSYS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0000929351": {
+      "tickers": [
+        "STRZ"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001680367": {
+      "tickers": [
+        "STTK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001934114": {
+      "tickers": [
+        "SUJA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001897087": {
+      "tickers": [
+        "SUPX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001092796": {
+      "tickers": [
+        "SWBI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-03",
+      "form": "10-Q",
+      "ocf": 113459000,
+      "capex": 31386000,
+      "revenue": 551355000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 551355000
+      },
+      "fcf": 82073000,
+      "margin": 14.885690707438945,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000808439": {
+      "tickers": [
+        "TATT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001781730": {
+      "tickers": [
+        "TCBX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000733590": {
+      "tickers": [
+        "TCI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001027838": {
+      "tickers": [
+        "TCMD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "ocf": 32189000,
+      "capex": 3165000,
+      "revenue": 356417000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 356417000
+      },
+      "fcf": 29024000,
+      "margin": 8.143270382725852,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001681087": {
+      "tickers": [
+        "TECX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001134115": {
+      "tickers": [
+        "THM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001409171": {
+      "tickers": [
+        "TITN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001731348": {
+      "tickers": [
+        "TLRY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000320121": {
+      "tickers": [
+        "TLS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 34913000,
+      "capex": 8262000,
+      "revenue": 197462000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 197462000
+      },
+      "fcf": 26651000,
+      "margin": 13.496774062857664,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001543418": {
+      "tickers": [
+        "TMQ"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000096869": {
+      "tickers": [
+        "TRC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001434621": {
+      "tickers": [
+        "TREE"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 92976000,
+      "capex": 11877000,
+      "revenue": 1303965000,
+      "revenues": {
+        "Revenues": 1303965000
+      },
+      "fcf": 81099000,
+      "margin": 6.219415398419436,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireProductiveAssets"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001630472": {
+      "tickers": [
+        "TRTX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001683825": {
+      "tickers": [
+        "TRVG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001046050": {
+      "tickers": [
+        "TSBK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0002023016": {
+      "tickers": [
+        "TTRX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0000899751": {
+      "tickers": [
+        "TWI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-29",
+      "form": "10-Q",
+      "ocf": 22544000,
+      "capex": 49508000,
+      "revenue": 1838292000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1838292000
+      },
+      "fcf": -26964000,
+      "margin": -1.4667963522661254,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000100378": {
+      "tickers": [
+        "TWIN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-25",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 41955000,
+      "capex": 16067000,
+      "revenue": 390019000,
+      "revenues": {
+        "Revenues": 390019000,
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 390019000
+      },
+      "fcf": 25888000,
+      "margin": 6.63762534645748,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000798783": {
+      "tickers": [
+        "UHT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001308208": {
+      "tickers": [
+        "ULH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-10-03",
+      "filed": "2026-11-12",
+      "form": "10-Q",
+      "ocf": 160446000,
+      "capex": 87969000,
+      "revenue": 1526374000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1526374000
+      },
+      "fcf": 72477000,
+      "margin": 4.748312012652208,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000920427": {
+      "tickers": [
+        "UNTY"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001375205": {
+      "tickers": [
+        "URG"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": -82073000,
+      "capex": 47876000,
+      "revenue": 41186000,
+      "revenues": {
+        "Revenues": 41186000
+      },
+      "fcf": -129949000,
+      "margin": -315.5174088282426,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001901637": {
+      "tickers": [
+        "USCB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001836564": {
+      "tickers": [
+        "VALN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000717720": {
+      "tickers": [
+        "VALU"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001690639": {
+      "tickers": [
+        "VBNK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001692376": {
+      "tickers": [
+        "VEL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0000059255": {
+      "tickers": [
+        "VHI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 172300000,
+      "capex": 53700000,
+      "revenue": 2249700000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2249700000
+      },
+      "fcf": 118600000,
+      "margin": 5.271814019647064,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001826286": {
+      "tickers": [
+        "VINP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001579733": {
+      "tickers": [
+        "VITL"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-27",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": -48660000,
+      "capex": 89652000,
+      "revenue": 748900000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 748900000
+      },
+      "fcf": -138312000,
+      "margin": -18.46868740819869,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000103595": {
+      "tickers": [
+        "VLGEA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-25",
+      "filed": "2026-10-08",
+      "form": "10-K",
+      "ocf": 108800000,
+      "capex": 53741000,
+      "revenue": 2405707000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 2405707000
+      },
+      "fcf": 55059000,
+      "margin": 2.2886827032552177,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001729149": {
+      "tickers": [
+        "VMD"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 53901000,
+      "capex": 32525000,
+      "revenue": 310365000,
+      "revenues": {
+        "Revenues": 310365000
+      },
+      "fcf": 21376000,
+      "margin": 6.887374542876936,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001681622": {
+      "tickers": [
+        "VREX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-03",
+      "filed": "2026-08-10",
+      "form": "10-Q",
+      "ocf": 11300000,
+      "capex": 31500000,
+      "revenue": 865000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 865000000
+      },
+      "fcf": -20200000,
+      "margin": -2.3352601156069364,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001682745": {
+      "tickers": [
+        "VRRM"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-30",
+      "form": "10-Q",
+      "ocf": 251749000,
+      "capex": 114391000,
+      "revenue": 1003896000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1003896000,
+        "Revenues": 114121000
+      },
+      "fcf": 137358000,
+      "margin": 13.682493007243778,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001793663": {
+      "tickers": [
+        "VTEX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001944558": {
+      "tickers": [
+        "VTS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "ocf": 126283000,
+      "capex": 25113000,
+      "revenue": 299986000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 299986000
+      },
+      "fcf": 101170000,
+      "margin": 33.72490716233425,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquireOilAndGasProperty",
+          "PaymentsToAcquireOtherPropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001059386": {
+      "tickers": [
+        "VVR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0000737468": {
+      "tickers": [
+        "WASH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 83180000,
+      "capex": 6228000,
+      "revenue": 53603000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 53603000,
+        "Revenues": 242501000
+      },
+      "fcf": 76952000,
+      "margin": 143.55912915321903,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001609151": {
+      "tickers": [
+        "WEAV"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-06-30",
+      "filed": "2026-08-06",
+      "form": "10-Q",
+      "ocf": 16850000,
+      "capex": 5828000,
+      "revenue": 257787000,
+      "revenues": {
+        "Revenues": 257787000
+      },
+      "fcf": 11022000,
+      "margin": 4.275622897973909,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000106532": {
+      "tickers": [
+        "WEYS"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-06",
+      "form": "10-Q",
+      "ocf": 50616000,
+      "capex": 2794000,
+      "revenue": 284042000,
+      "revenues": {
+        "Revenues": 284042000
+      },
+      "fcf": 47822000,
+      "margin": 16.836242527513537,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0001921603": {
+      "tickers": [
+        "WHK"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ttm-ocf"
+    },
+    "0001604665": {
+      "tickers": [
+        "WLKP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "ocf": 482584000,
+      "capex": 38553000,
+      "revenue": 1240283000,
+      "revenues": {
+        "Revenues": 1240283000
+      },
+      "fcf": 444031000,
+      "margin": 35.80078095079913,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "Revenues"
+      }
+    },
+    "0000879526": {
+      "tickers": [
+        "WNC"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-10-29",
+      "form": "10-Q",
+      "ocf": -123254000,
+      "capex": 13450000,
+      "revenue": 1518331000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 1518331000
+      },
+      "fcf": -136704000,
+      "margin": -9.003570367726141,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001364125": {
+      "tickers": [
+        "WRN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-us-gaap"
+    },
+    "0001569994": {
+      "tickers": [
+        "WSBF"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001166928": {
+      "tickers": [
+        "WTBA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001288403": {
+      "tickers": [
+        "WTI"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001501697": {
+      "tickers": [
+        "XFOR"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001510593": {
+      "tickers": [
+        "XNET"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001788999": {
+      "tickers": [
+        "XPER"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 4734000,
+      "capex": 25580000,
+      "revenue": 459158000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 459158000,
+        "Revenues": 459158000
+      },
+      "fcf": -20846000,
+      "margin": -4.5400493947617155,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001533615": {
+      "tickers": [
+        "XRN"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001770450": {
+      "tickers": [
+        "XRX"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "ocf": 131000000,
+      "capex": 94000000,
+      "revenue": 7664000000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 7664000000
+      },
+      "fcf": 37000000,
+      "margin": 0.48277661795407095,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsToDevelopSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001995520": {
+      "tickers": [
+        "YB"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001614178": {
+      "tickers": [
+        "YEXT"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-07-31",
+      "filed": "2026-09-01",
+      "form": "10-Q",
+      "ocf": 55092000,
+      "capex": 2110000,
+      "revenue": 443021000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 443021000
+      },
+      "fcf": 52982000,
+      "margin": 11.959252495931343,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0000108985": {
+      "tickers": [
+        "YORW"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-capex"
+    },
+    "0001617553": {
+      "tickers": [
+        "ZIP"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-09",
+      "form": "10-Q",
+      "ocf": 34963000,
+      "capex": 7530000,
+      "revenue": 461725000,
+      "revenues": {
+        "RevenueFromContractWithCustomerExcludingAssessedTax": 461725000
+      },
+      "fcf": 27433000,
+      "margin": 5.941415344631545,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment",
+          "PaymentsForSoftware"
+        ],
+        "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax"
+      }
+    },
+    "0001862044": {
+      "tickers": [
+        "ZKH"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-ocf"
+    },
+    "0001855644": {
+      "tickers": [
+        "ZURA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": false,
+      "reason": "sec-no-revenue"
+    },
+    "0001434647": {
+      "tickers": [
+        "ZVRA"
+      ],
+      "fetchedAt": "2026-11-19",
+      "ok": true,
+      "end": "2026-09-30",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "ocf": 38737000,
+      "capex": 459000,
+      "revenue": 147764000,
+      "revenues": {
+        "RevenueFromContractWithCustomerIncludingAssessedTax": 147764000
+      },
+      "fcf": 38278000,
+      "margin": 25.904821201375167,
+      "concepts": {
+        "ocf": "NetCashProvidedByUsedInOperatingActivities",
+        "capex": [
+          "PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "revenue": "RevenueFromContractWithCustomerIncludingAssessedTax"
+      }
     }
   },
-  "pendingCiks": [],
+  "pendingCiks": [
+    "0000043920",
+    "0001143513",
+    "0001374690",
+    "0001676163",
+    "0001747079",
+    "0002058349",
+    "0002067627"
+  ],
   "retryIndexDays": [
     "2026-11-11",
-    "2026-11-18"
+    "2026-11-19"
   ],
-  "lastIndexDate": "2026-11-17",
-  "updatedAt": "2026-11-18"
+  "lastIndexDate": "2026-11-18",
+  "updatedAt": "2026-11-19",
+  "pendingSince": {
+    "0000043920": "2026-11-19",
+    "0001143513": "2026-11-19",
+    "0001374690": "2026-11-19",
+    "0001676163": "2026-11-19",
+    "0001747079": "2026-11-19",
+    "0002058349": "2026-11-19",
+    "0002067627": "2026-11-19"
+  },
+  "pendingAttempts": {
+    "0000043920": 1,
+    "0001143513": 1,
+    "0001374690": 1,
+    "0001676163": 1,
+    "0001747079": 1,
+    "0002058349": 1,
+    "0002067627": 1
+  }
 }
