@@ -311,7 +311,7 @@
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
       "dependencyFiles": {
-        "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
+        "lib/g31-recency.js": "f9c692d10bfd1ecb9ab0586e3a7a6e13a6d8d44824443e8ef971f5f745457653",
         "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },
       "dependencyRule": "scripts/gqs00-freeze.js verify(): while this transition is open, every path in REQUIRED_DEPENDENCIES must be registered under dependencyFiles and match its hash; historical source hashes stay untouched. P267 round 2: lib/annual-pairs.js (dated fiscal-year ends and pair checks read by the selection) is a required dependency too.",
@@ -464,6 +464,14 @@
       "review": "Builder evidence only; narrow independent re-check and merge remain pending."
     }
   },
+  "secQuarterFill": {
+    "date": "2026-10-31",
+    "scope": "lib/g31-recency.js quarterCandidate reads meta.secQuarterFill, a read-time record of a filed SEC quarter the vendor lacks (lib/exchange-quarter-check.js, policy usFill). Only the shared growth leg moves; no file under src/scoring changes and the vendor series stays untouched. The record carries its own source end: within the end tolerance of the vendor fiscal year it is that end (same period end), so the quarter leads as on an equal end; a fiscal year truly newer means no record at all.",
+    "goldenImpact": "None: golden snapshots carry no such record.",
+    "dependencyNote": "Codex R4 on #85 (P2-S): lib/sec-pit.js derives the SEC quarters and decides when a filing is known (knownOn), so it is a required dependency of the seal like lib/exchange-quarter-check.js; a changed fingerprint turns verify() red.",
+    "review": "Build registration only; Codex decides on the draft.",
+    "rollback": "Set usFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
+  },
   "p290HomeListing": {
     "date": "2026-11-01",
     "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
@@ -596,12 +604,13 @@
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
     "lib/home-listing.js": "4a834a29722ab66cafa69f20c2a621502f6f1718c54bf39a2d1146c38c1de000",
-    "lib/g31-recency.js": "039e96267213a0ead4d8749e501e1b4ab5df9825790b7b17798443b35f04b9db",
+    "lib/g31-recency.js": "998c2db0128d4648b087d7dcdd3481fe6bbf85f5cb107d06d192b19b0b48d154",
     "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
-    "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d",
+    "lib/yahoo-q4-known-cases.js": "c15b1ab93f20c4fbc7421106d96ebfbdecbbbaa632632d6687b2690120f91e99",
+    "lib/exchange-quarter-check.js": "f97e1e503295e8bad381d82d290dbb292511ae6dc280028b7d417d06af2036b9",
+    "lib/sec-pit.js": "e26c826f4916d2f8debcdafca6aa8d0c67cd36d77bb64656e84b330bfee3a574",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
     "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
   },
