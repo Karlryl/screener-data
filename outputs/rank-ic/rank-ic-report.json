@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-20T11:40:36.405Z",
+  "generatedAt": "2026-11-21T11:26:11.709Z",
   "spec": "Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration",
-  "vintagesTotal": 73,
+  "vintagesTotal": 74,
   "vintagesExcluded": [
     "2026-07-14",
     "2026-07-15",
@@ -468,6 +468,11 @@
     {
       "date": "2026-11-20",
       "board": "utilities",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-11-21",
+      "board": "financials",
       "reason": "gate-suspect: p99-delta-exceeds-threshold"
     }
   ],
@@ -976,7 +981,8 @@
         "2026-10-31",
         "2026-11-05",
         "2026-11-07",
-        "2026-11-13"
+        "2026-11-13",
+        "2026-11-21"
       ]
     },
     "health-care": {
@@ -2245,7 +2251,7 @@
       ]
     }
   },
-  "newestPriceDate": "2026-11-19",
+  "newestPriceDate": "2026-11-20",
   "schemaVersion": 2,
   "families": [
     {
@@ -2745,7 +2751,8 @@
           "2026-10-31",
           "2026-11-05",
           "2026-11-07",
-          "2026-11-13"
+          "2026-11-13",
+          "2026-11-21"
         ]
       },
       {
