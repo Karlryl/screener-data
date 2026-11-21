@@ -138,13 +138,10 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
 // The hand-table holds of #72 stay on. Capital efficiency is computed without the SEC and regional annual series the score
 // attaches (run-screener mergeSecIntoUniverse), so it differs from the score for those firms (147 on 31.10.2026). Remove with the comparison.
 // Codex R31 (05.11.2026): the end is bound to the data day, RUN_DATE_UTC (else the UTC clock day): from 04.12.2026 no row carries it.
-const PERIOD_GATE_SHADOW_ENDS = '2026-12-04';
+// The end date lives with every other comparison end in lib/comparison-ends.js (arm periodGate).
+const { comparisonShown } = require('../lib/comparison-ends.js');
 /** @param {string} [day] Data day YYYY-MM-DD. @returns {boolean} true while the comparison is shown. */
-function periodGateShadowShown(day) {
-  const env = process.env.RUN_DATE_UTC || '';
-  const d = day || (/^\d{4}-\d{2}-\d{2}/.test(env) ? env.slice(0, 10) : new Date().toISOString().slice(0, 10));
-  return d < PERIOD_GATE_SHADOW_ENDS;
-}
+function periodGateShadowShown(day) { return comparisonShown('periodGate', day); }
 function periodGateShadowForSnapshot(snapshot) {
   if (!snapshot) return null;
   wachstumsSchranken();
@@ -424,9 +421,10 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
       const cell = snap.timeseries?.revenueQ?.[i];
       return typeof e === 'string' && Number.isFinite(typeof cell === 'number' ? cell : cell?.value);
     }).sort().at(-1) ?? null : null,
-    // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
-    wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
-    overviewLegacy: snap ? withG31Variant('legacy', () => {
+    // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values. From the end in
+    // lib/comparison-ends.js (arm g31Legacy, data day 16.11.2026) the *Legacy fields stay in the contract but are null.
+    wachstumLegacy: snap && comparisonShown('g31Legacy') ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
+    overviewLegacy: snap && comparisonShown('g31Legacy') ? withG31Variant('legacy', () => {
       const pick = m => ({ value: m.value, period: m.period ?? null });
       return { gp: pick(overviewMetric(snap)), 'revenue-badge': pick(overviewMetric(snap, { gpClass: 'degenerate' })) };
     }) : null,

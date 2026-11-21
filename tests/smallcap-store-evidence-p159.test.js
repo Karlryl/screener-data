@@ -43,6 +43,7 @@ function mapperModule(source, samples) {
     revGrowthLeg: () => null, fcfSchattenJeAlpha: () => null, annualPairsShadowForSnapshot: () => null, sealedEraSnapshot: () => false,
     staleReason: require('../lib/annual-pairs.js').staleReason, // belegPunkte's age decision (Codex R22); no data day here, so no verdict.
     withG31Variant: () => null, overviewMetric: () => ({ value: null }), // G31 comparison fields stay inert here too.
+    comparisonShown: () => true, // lib/comparison-ends.js gate of the G31 comparison (F004); the stubbed arm stays inert either way.
     g31Variant: () => 'v1', // P267-r3: the derivation cache key names the active arm.
     _dupIssuerShadow: new Map(), _valueFlags: new Map(), applyDupIssuerShadow: () => {},
     rankGrundShadowFor: () => null, athFor: () => null,

@@ -60,6 +60,7 @@ const {
 const { isUS } = require('../src/scoring/router.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { homeListingRank, shownGrowthMonth, hasHomeExchange, NOT_HOME } = require('../lib/home-listing.js');
+const { comparisonShown } = require('../lib/comparison-ends.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
 const { readIntakeLog, deliveredListingExits, readListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
@@ -255,8 +256,9 @@ function homeListingReport(gruppen) {
     const rank = (e) => homeListingRank(e.ticker, country(e) || (shown && country(shown)));
     const legs = g.filter((e) => !istRaus(e) || e.reason === 'dup-issuer');
     if (!shown || !shown.snapshot) continue;
-    const old = [...legs].sort(issuerDedupComparatorOld)[0];
-    if (old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
+    // The rule before P290 as the visible comparison, only until the end in lib/comparison-ends.js (arm p290OldRule).
+    const old = comparisonShown('p290OldRule') ? [...legs].sort(issuerDedupComparatorOld)[0] : null;
+    if (old && old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
     const several = legs.length >= 2 && !isUS(shown.snapshot);
     if (several && !country(shown)) counts.multiListedWithoutCountry++;
     if (isUS(shown.snapshot) || !hasHomeExchange(country(shown))) continue;
