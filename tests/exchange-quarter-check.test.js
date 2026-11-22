@@ -863,6 +863,87 @@ test('K2 printed-check: switch off restores the previous no-baseline result exac
   assert.equal(X.validatePolicy({ ...X.policy, printedQ3Check: undefined }).mode, 'fill-only');
 });
 
+// ── K2-TW: printed check without a July row (constructed from the 6446.TW fixture) ─────────────────────────
+// The MOPS 115Q3 season prints 114Q3 = 3,893,772 thousand TWD (the fixture's own 114Q3 quarter); the July row is removed.
+function twPrintedCase({ season = true, readAt = '2026-09-24T21:00:00.000Z', prior = 3893772 } = {}) {
+  const st = clone(F.store), nb = clone(F.baseline);
+  delete nb.rows['6446.TW'];
+  if (season) st.tw.companies['6446.TW'].seasons['115Q3'] = [{ reportType: '合併', line: '營業收入合計',
+    columns: [['115年第3季', 5000000], ['114年第3季', prior], ['115年01月01日至115年09月30日', 16976809], ['114年01月01日至114年09月30日', 10753539]],
+    confirmedBy: [{ src: 'tw-20261002T071224Z', fetchedAt: readAt, updateDate: null }] }];
+  return { s: snap('6446.TW'), ctx: ctxOf(st, nb), st, nb };
+}
+// The store derives Q3-2025 from the 115Q3 comparative, so a disagreement needs a store module that derives it otherwise.
+const S = require('../lib/exchange-quarter-store.js');
+const shiftedStore = f => ({ ...S, taiwanSingleQuarters: seasons => { const q = S.taiwanSingleQuarters(seasons);
+  return { ...q, '2025-09-30': q['2025-09-30'] * f }; } });
+const twLib = (transform = s => s, policyPatch = {}, store = S) => moduleCopy('lib/exchange-quarter-check.js', transform,
+  { '../configs/exchange-quarter-policy.json': { ...X.policy, ...policyPatch }, './exchange-quarter-store.js': store });
+
+test('K2-TW printed check: an agreeing MOPS print fills the MOPS quarter, with season, line, column and printed figure', () => {
+  const c = twPrintedCase(), r = res(c.s, c.ctx);
+  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.derivation, 'printed-quarter');
+  assert.equal(r.fill.nativeValue, 3893772 * 1000);
+  assert.equal(r.fill.printedCheck.agree, true); assert.equal(r.fill.printedCheck.source, 'MOPS'); assert.equal(r.fill.printedCheck.season, '115Q3');
+  assert.equal(r.fill.printedCheck.printedPriorQuarter, 3893772 * 1000); assert.equal(r.fill.operands[0].season, '115Q3');
+  assert.equal(r.fill.reason, 'Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (MOPS, abgerufen 24.09.2026). ' +
+    'Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3), Zeile ' +
+    '營業收入合計, Spalte 114年第3季 (3,893,772 Tausend TWD).');
+  const out = run(c.s, 'fill-only', c.ctx).snapshot, cell = out.timeseries.revenueQ[3];
+  assert.equal(cell.exchangeFill.printedCheck.column, '114年第3季'); assert.equal(cell.exchangeFill.nativeValue, 3893772 * 1000);
+  assert.equal(revGrowthLeg(out).basis, 'quarter');
+});
+test('K2-TW printed check: missing, late or disagreeing prints keep no-baseline; every other block keeps blocking', () => {
+  const kept = (c, status, lib = X) => {
+    const r = lib.applyExchangeCheck(clone(c.s), { mode: 'shadow', context: c.ctx }).result;
+    assert.equal(r.fill.blocked, 'no-baseline', status); assert.equal(r.fill.otherwiseFillable, true, status);
+    assert.equal(r.fill.printedCheck.status, status); assert.notEqual(r.category, 'would-fill');
+    assert.equal(serial(lib.applyExchangeCheck(clone(c.s), { mode: 'fill-only', context: c.ctx }).snapshot), serial(c.s), status);
+  };
+  kept(twPrintedCase({ season: false }), 'no-printed-report');
+  kept(twPrintedCase({ readAt: '2026-09-26T00:00:00.000Z' }), 'read-after-snapshot');
+  kept(twPrintedCase(), 'fill-value-differs-from-print', twLib(s => s, {}, shiftedStore(1.002)));
+  assert.equal(twLib(s => s, {}, shiftedStore(1.0009)).applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase().ctx })
+    .result.category, 'would-fill', 'inside the 0.1 % tolerance');
+  // A season without a printed prior quarter stays blocked earlier (november-not-confirmed), as before.
+  const blank = twPrintedCase(); blank.st.tw.companies['6446.TW'].seasons['115Q3'][0].columns[1][1] = null;
+  assert.equal(blocked(blank.s, blank.ctx), 'november-not-confirmed');
+  const restated = twPrintedCase(), list = restated.st.tw.companies['6446.TW'].seasons['114Q4'];
+  list.push(clone(list[0]));
+  assert.equal(blocked(restated.s, restated.ctx), 'restatement-signal');
+  // With the July row back, the baseline path decides and the print is not consulted (no printedCheck on the fill).
+  const july = twPrintedCase(), withRow = ctxOf(july.st, F.baseline);
+  const rj = res(july.s, withRow); assert.equal(rj.category, 'would-fill'); assert.equal(rj.fill.printedCheck, undefined);
+  // Direct call: the agreement test is the one passed in.
+  const c = twPrintedCase(), xs = { keyOf: () => '115Q3', latest: { '115Q3': c.st.tw.companies['6446.TW'].seasons['115Q3'][0] } };
+  assert.equal(X.twPrintedCheck(c.s, xs, '2026-09-30', 1, () => false).status, 'fill-value-differs-from-print');
+  assert.equal(X.twPrintedCheck(c.s, xs, '2026-09-30', 1, () => true).agree, true);
+});
+test('K2-TW printed check: a broken agreement or read-day check turns red (break once)', () => {
+  const disagree = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase().ctx }).result.fill.blocked, 'no-baseline');
+  disagree(twLib(s => s, {}, shiftedStore(1.002)));
+  assert.throws(() => disagree(twLib(s => replaceLine(s, "  if (!agree(value, v.priorQuarter)) return { ...evidence, status: 'fill-value-differs-from-print' };", ''), {}, shiftedStore(1.002))), assert.AssertionError);
+  breaks++;
+  const late = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase({ readAt: '2026-09-26T00:00:00.000Z' }).ctx }).result.fill.blocked, 'no-baseline');
+  late(X);
+  assert.throws(() => late(twLib(s => replaceLine(s, "  if (!isDay(firstRead) || !isDay(snapshotDay) || firstRead > snapshotDay) return { ...evidence, status: 'read-after-snapshot' };", ''))), assert.AssertionError);
+  breaks++;
+});
+test('K2-TW printed check: switch off restores the previous no-baseline result exactly; own switch, China unaffected', () => {
+  const c = twPrintedCase(), off = twLib(s => s, { printedQ3CheckTw: false });
+  const r = off.applyExchangeCheck(clone(c.s), { mode: 'shadow', context: c.ctx }).result;
+  assert.deepEqual(Object.keys(r.fill), ['period', 'index', 'blocked', 'nativeValue', 'otherwiseFillable']);
+  assert.equal(r.fill.blocked, 'no-baseline');
+  assert.equal(serial(off.applyExchangeCheck(clone(c.s), { mode: 'fill-only', context: c.ctx }).snapshot), serial(c.s));
+  const p = printedCase(), cnOff = twLib(s => s, { printedQ3CheckTw: false });
+  assert.equal(serial(cnOff.applyExchangeCheck(clone(p.s), { mode: 'shadow', context: p.ctx }).result), serial(res(p.s, p.ctx)), 'China path unchanged');
+  assert.equal(twLib(s => s, { printedQ3Check: false }).applyExchangeCheck(clone(c.s), { mode: 'shadow', context: c.ctx }).result.category, 'would-fill',
+    'the China switch does not gate Taiwan');
+  assert.equal(X.policy.printedQ3CheckTw, true, 'committed switch');
+  for (const bad of ['yes', 1, null]) assert.throws(() => X.validatePolicy({ ...X.policy, printedQ3CheckTw: bad }), /Invalid exchange-quarter policy/);
+  assert.equal(X.validatePolicy({ ...X.policy, printedQ3CheckTw: undefined }).mode, 'fill-only');
+});
+
 test('live files unchanged by this test run', () => {
   assert.deepEqual(LIVE.map(sha), liveBefore);
 });

@@ -98,6 +98,21 @@ record `fill.printedCheck.status`. Only `lib/exchange-quarter-check.js` reads th
 `loadStores` still returns cn and tw only). `false` restores the previous result and snapshot exactly. Measurement
 and gate: `docs/REPORT-K2-cn-printed-fill.md`.
 
+### Taiwan printed check without a July row (K2-TW, switch `printedQ3CheckTw`)
+
+`printedQ3CheckTw: true` opens the same single block for Taiwan: a 2025-09-30 fill that every guard above lets through
+and that stops only at `no-baseline`. It fills when the MOPS season of Q3 2026 (`115Q3`, already required to print a
+prior-year quarter by the November rule) prints the comparable prior-year quarter (column `114年第3季`), that print
+agrees with the filled MOPS single quarter within the fill tolerance (0.1 %, floor 500 TWD), and the season's first
+stored confirmation is on or before the snapshot day (`asOf`, else `fetchedAt`). The filled number is the MOPS single
+quarter the store derives (`taiwanSingleQuarters`); while the store prefers the newer filing's comparative it is that
+print, so the agreement holds by construction and keeps the fill closed if the derivation changes. Derivation stays
+`printed-quarter`; `exchangeFill.printedCheck` (source `MOPS`) names season, line, column, the printed figure and the
+first read, and the reason adds the season, line, column and printed figure as MOPS shows them. A missing season
+(`no-printed-report`), a late read (`read-after-snapshot`) or a disagreeing print (`fill-value-differs-from-print`)
+keep `no-baseline`; every other block is unchanged. It is a switch of its own, so Taiwan rolls back without the China
+path; `false` restores the previous result and snapshot exactly. Measurement: `docs/REPORT-K2-tw-printed-fill.md`.
+
 Store age is measured per company: the newest run that read one of the company's own keys again (China: a
 listed period the company has and is not absent for; Taiwan: an entry in the run's `read` list) must be within
 the limit of the snapshot's fetch time. A newer run that did not read the company (partial Taiwan pass) does not
@@ -118,7 +133,8 @@ Both reasons carry `whyText`; `no-own-read` also carries the sorted unique `noDa
 - other pair: "Vorjahresquartal ausgeblendet: Der Wert des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Er zählt nicht zur Beschleunigung des Umsatzwachstums."
 - growth withheld: "Umsatzwachstum ausgeblendet: Vorjahresquartal und Jahreswerte des Datenanbieters weichen von der Börsenmeldung ab oder sind nicht prüfbar (vermutlich berichtigte Vorjahreszahlen)."
 - fill: "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025)."
-- printed-check fill (K2): the fill text plus "Dass der Wert gleich abgegrenzt ist wie das aktuelle Quartal, belegt das im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) gedruckte Vorjahresquartal."
+- printed-check fill (K2), inverted printed growth (842 of 844 fills on 21.11.): the fill text plus "Der Wert passt zu der Veränderung gegenüber dem Vorjahresquartal (-44,44 %), die die Firma im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 31.10.2026) selbst angibt."; printed prior quarter: "… Der Wert entspricht dem im CNINFO-Bericht … gedruckten Vorjahresquartal."
+- Taiwan printed-check fill (K2-TW): the fill text plus "Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3), Zeile 營業收入合計, Spalte 114年第3季 (6,505,738 Tausend TWD)."
 
 Board history (active mode only): `pit.revenueQExchange: { filled, withheld }` with the original vendor values.
 
