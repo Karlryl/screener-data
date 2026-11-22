@@ -8,7 +8,11 @@ const sourceHashes = () => Object.fromEntries(['scripts/cn-printed-parser.js', '
   'scripts/cn-printed-shadow-report.js', 'tests/cn-printed-shadow-guard.test.js'].map(file =>
   [file, crypto.createHash('sha256').update(fs.readFileSync(path.join(H.ROOT, file))).digest('hex')]));
 const sourceBefore = sourceHashes();
-const allowed = new Set(['scripts/fetch-cn-printed.js', 'scripts/cn-printed-shadow-report.js', 'scripts/cn-printed-parser.js']);
+// K2 (deliberate change): lib/exchange-quarter-check.js is the ONE production reader. It reads the store only for the
+// printed-check fill (configs/exchange-quarter-policy.json printedQ3Check, docs/exchange-quarter-check.md) and uses
+// the printed value as evidence of the common basis, never as the filled number. Every other file stays a violation.
+const allowed = new Set(['scripts/fetch-cn-printed.js', 'scripts/cn-printed-shadow-report.js', 'scripts/cn-printed-parser.js',
+  'lib/exchange-quarter-check.js']);
 function trackedFiles(root) {
   return execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', windowsHide: true,
     maxBuffer: 32 * 1024 * 1024 }).split('\0').filter(Boolean);

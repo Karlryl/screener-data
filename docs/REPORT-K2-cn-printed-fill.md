@@ -1,11 +1,132 @@
-# K2: Fixloop am Parser-Tor gestoppt
+# K2: Parser-Tor bestanden, Füllweg gebaut und gemessen
 
 > **Auf einen Blick**
-> Der neue Füllweg wurde nicht gebaut oder aktiviert, weil der unabhängige Durchgang mit dem aktuellen Parser nur **175 von 300 Berichten (58,33 %)** erkannte und das vorgeschriebene 90-%-Tor damit verfehlte.
+> Der Parser `cn-q3-layout-v5` erkannte im neuen, unabhängigen Live-Durchgang **294 von 300 Berichten (98,00 %)**; das 90-%-Tor ist bestanden, alle übrigen Ticker sind abgerufen, und der neue Füllweg füllt am Datentag 21.11. **844 Quartale Q3 2025** zusätzlich.
 >
-> - Der Store wächst append-only von **600 auf 900 Ticker**, davon **523 auf 698 parsed**; die alten 600 Firmen und alle alten Abrufquellen bleiben inhaltlich unverändert.
-> - Von den **998 sichtbaren Q2/FY-Zielzeilen** sind jetzt **460 statt 168** erfasst, **330 statt 157** parsed; **538** wurden wegen des Stopps noch nicht abgerufen.
-> - **0 neue K2-Füllungen**. Alle **2.490** durch denselben Produktionsleser vorbereiteten A-share-Snapshots bleiben bytegleich; ein neuer Board-Rang-Replay wurde nicht durchgeführt.
+> - Von den **998 sichtbaren Q2/FY-Zielzeilen** sind jetzt alle abgerufen, **850 erkannt, 844 agree**. Sichtbares Wachstum der 2.490 A-Aktien: Q3 2026 **1.164 → 2.008**, Q2 2026 **1.100 → 257**, FY2025 213 → 212.
+> - Alle **698 bisher erkannten Ergebnisse** bleiben bei der Nachrechnung bytegleich. Mit Schalter aus sind alle 2.490 A-Aktien-Snapshots und alle Boards bytegleich mit dem heutigen Code.
+> - Boards: In den 26 HyperGrowth-Listen wechseln **51** Top-50-Plätze, in Rule of 40 **4**. Die größten Sprünge kommen von Firmen, deren Q3 deutlich anders wuchs als Q2 (etwa 003043.SZ von Rang 29 auf 1.342, Wachstum 45,73 % → -14,75 %).
+
+Stand 22.11.2026, gemessen auf dem Datentag 21.11.2026, Zählebene Ticker. Der Schalter `printedQ3Check` steht im Arbeitsstand auf `true`; live geht er erst nach der Prüfung durch die andere KI. Der frühere, am Tor gestoppte Lauf steht unverändert im Anhang.
+
+## 1. Ursache der 118 Lücken und Reparatur
+
+Die 118 Fälle `growth-row-unbound` haben eine gemeinsame Ursache: `pdftotext -layout` verteilt eine Tabellenzeile auf mehrere Textzeilen, weil Prozent- und Betragszellen in der PDF leicht unterschiedlich hoch stehen. Die Umsatz-Wachstumszelle steht dann je nach Bericht bis zu vier Zeilen unter, über oder neben dem Umsatzbetrag, oft sogar unter dem Gewinnbetrag der nächsten Zeile. v3 bindet sie nur über eine feste Liste bekannter Strukturen; neue Berichte bringen neue Strukturen. Gelesen wurden 001283.SZ, 001308.SZ, 002014.SZ, 000008.SZ, 000042.SZ, 000599.SZ und 600640.SS.
+
+Derselbe Bericht im Modus `pdftotext -table` hält jede Tabellenzeile auf einer Textzeile, etwa 001283.SZ: `2,069,643,151.66  27.08%  5,253,639,627.73  19.63%`. Der neue Parser `cn-q3-layout-v5` arbeitet so:
+
+- Zuerst läuft der unveränderte Layout-Weg (v1 bis v3). Was er erkennt, bleibt exakt so.
+- Nur wenn er an der Platzierung der Wachstumszelle scheitert (`growth-row-unbound`, `unknown-growth-offset`, `unknown-prior-column-layout`, `ambiguous-growth-column`, `growth-column-missing`, `unknown-restatement-ytd-layout`), liest er die zweite Extraktion. Dort muss **eine** Textzeile beide Eastmoney-Anker (Q3 und 9M, eindeutig, gleiche Einheit) enthalten, dazwischen null oder zwei Vorjahresbeträge und genau eine Wachstumszelle. Gesucht wird nie auf einer anderen Zeile.
+- Alle bisherigen Sperren gelten auch dort: Wertpapierkennung und Jahr im Kopf, erste Tabellenzeile, kein 营业总收入, sichtbare Beschriftung nur 营业收入, fremde Minuszeichen und Klammern, `--`/不适用, Prozentzeichen bei SZ, Rundungsprüfung gegen den gedruckten berichtigten Vorjahresbetrag, Nenner positiv. Neu: kein anderer Text zwischen den Ankern, und eine Zahl mit Tausenderkomma ohne `%` gilt nie als Wachstum.
+- Identitäts-, Anker-, Vorzeichen-, Markierungs- und Rechenablehnungen des Layout-Wegs werden nie überstimmt.
+
+Die B11c-Sicherheit bleibt erhalten: Die Wachstumszelle gehört zu ihrer eigenen Tabellenzeile, eine leere Umsatz-Wachstumszelle ergibt eine benannte Lücke. Leerzellenprobe auf allen 1.360 Cachetexten des jetzigen Stores: **0 von 1.030** Layout-Treffern und **0 von 309** Tabellen-Treffern übernehmen nach dem Leeren eine fremde Zahl.
+
+**Der ungeprüfte Codex-Stand ba54c54710 (v4) wurde verworfen.** Seine lokale Strukturregel erkannte 61 weitere Berichte, einen davon falsch: Bei [002093.SZ](https://static.cninfo.com.cn/finalpage/2026-10-29/1225633020.PDF) band sie das Gewinnwachstum `4.59%` statt des Umsatzwachstums `-0.57%` (Eastmoney-Abgleich mixed-basis). Der Tabellenweg erkennt dieselben 61 Berichte und liest dort `-0.57%` (agree). v4 wurde nie gespeichert; die neue Version heißt deshalb v5.
+
+## 2. Offline-Nachrechnung
+
+| Prüfung | Ergebnis |
+|---|---:|
+| Bisher erkannte Ergebnisse im Store | 698 |
+| davon mit Cachetext nachgerechnet (225 PDFs nachgeladen, PDF- und Text-Hash bestätigt) | 698 |
+| Werte, Status, Einheit und Belegzeilen identisch, ohne und mit Tabellentext | **698 von 698** |
+| v3 und v5 auf reinem Layouttext verschieden | 0 von 597 |
+| Gecachter Durchgang f5c4f2fb (300 Berichte) mit v3 | 175 (58,33 %) |
+| Derselbe Durchgang mit v5 | **294 (98,00 %)** |
+
+Diese 300 Berichte dienten zum Entwurf und sind keine unabhängige Messung. Ihre 125 gespeicherten Lücken bleiben append-only unverändert; v5 würde 119 davon erkennen.
+
+## 2a. Tor: neuer Live-Durchgang
+
+Abrufquelle `cn-printed-20261122T113623578Z-bdbdd359`, Beginn 22.11.2026 11:36 UTC, `--only-new=true`, `--as-of=2026-11-21`, 300 nie abgerufene Ticker aus den 538 offenen Zielzeilen (150 SZ, 150 SS), 899 Anfragen.
+
+| Börse | Berichte | erkannt | Quote |
+|---|---:|---:|---:|
+| SZ | 150 | 146 | 97,33 % |
+| SS | 150 | 148 | 98,67 % |
+| Gesamt | 300 | **294** | **98,00 %** |
+
+108 der 294 kamen über den Tabellenweg. Schattenvergleich: 293 agree, 1 mixed-basis (002891.SZ, siehe 2e), 0 printed-only. Lücken: 002645.SZ, 300093.SZ und 300143.SZ (`growth-row-unbound`, Tabellenzeile nicht gefunden), 603995.SS (`revenue-or-ytd-anchor-mismatch`), 300045.SZ (`ambiguous-revenue-anchors`), 603757.SS (CNINFO-Fehler 599). Wegen dieses einen Abruffehlers endet das Skript mit Exit-Code 1; das Tor (`gate300: true`) ist bestanden. Alle 299 Texte des Durchgangs ergeben mit dem endgültigen Parser bytegleiche Ergebnisse.
+
+Danach wurden die restlichen **240** no-baseline-Ticker abgerufen (`cn-printed-20261122T120916139Z-26c51677`): **228 erkannt (95,00 %)**, 225 agree, 3 mixed-basis. Der Store wächst append-only von 900 auf **1.440 Ticker, 1.220 erkannt**; alle 900 alten Firmen und alle alten Quellen sind unverändert (`assertAppendOnly` bestanden).
+
+| Umfang | erfasst | erkannt | agree | mixed-basis | unparsed |
+|---|---:|---:|---:|---:|---:|
+| 998 sichtbare Zielzeilen, vorher | 460 | 330 | 327 | 3 | 668 |
+| 998 sichtbare Zielzeilen, nachher | **998** | **850** | **844** | 6 | 148 |
+| 1.011 no-baseline-Kandidaten, nachher | 1.011 | 856 | 849 | 7 | 155 |
+
+Von den 148 offenen Zielzeilen sind 120 alte v3-Lücken (`growth-row-unbound`).
+
+## 2b. Füllweg
+
+In `lib/exchange-quarter-check.js` wird eine 2025-09-30-Füllung, die alle bisherigen Sperren passiert und nur an `no-baseline` scheitert, zulässig, wenn der CNINFO-Bericht zum Q3 2026 ein vergleichbares Vorjahresquartal druckt, das den einzufüllenden Eastmoney-Wert enthält. Geprüft wird genau der Vergleich des Schattenberichts (`printedEvidence`, jetzt gemeinsam genutzt): neueste Beobachtung, Anker gegen das heutige Eastmoney-9M und -H1, berichtigte Spalte oder Intervall aus dem gedruckten Wachstum, agree mit Eastmoney 9M − H1. Zusätzlich muss der gefüllte Wert selbst im Band liegen, und die Bekanntmachung muss vor dem Snapshot-Tag liegen. Gefüllt wird der Eastmoney-Wert, nie die gedruckte Zahl; Ableitung `printed-check`. Beispiel des Grundes:
+
+> Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 27.10.2025). Dass der Wert gleich abgegrenzt ist wie das aktuelle Quartal, belegt das im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 31.10.2026) gedruckte Vorjahresquartal.
+
+printed-only, mixed-basis, unparsed, fehlende oder zu späte Berichte bleiben `no-baseline`; alle anderen Sperren bleiben unverändert. Ein Schalter: `printedQ3Check` in `configs/exchange-quarter-policy.json`; `false` stellt das heutige Verhalten exakt her. Den Store liest nur `lib/exchange-quarter-check.js` und nur bei eingeschaltetem Schalter (`defaultContext().printed`); `loadStores` liefert weiter nur cn und tw.
+
+**Bewusste Teständerung:** `tests/cn-printed-shadow-guard.test.js` erlaubt genau diese eine Produktionsdatei als Leser. Jede andere Datei bleibt ein Verstoß, die acht absichtlichen Lecks werden weiter erkannt.
+
+## 2c. Vorher/Nachher am 21.11.
+
+Gleiche Eingaben in allen Armen: 15.769 Snapshots des Laufs 44891236922, Juli-Vintage board-history/2026-07-29, Stores cn und tw unverändert (cn.json SHA-256 `80eebf9a…`), derselbe Produktionsweg `prepareSnapshot`, Uhr 21.11.2026 11:22:31 UTC, jeder Arm mit eigener Kalibrierung wie im Tageslauf. Vorher = Schalter aus; dieser Arm ist mit dem heutigen Code bytegleich (Digest der 2.490 vorbereiteten A-Aktien-Snapshots `fba6ffc4…`, Digest aller Boards `cf052c28…`).
+
+| Sichtbare Wachstumsperiode der 2.490 A-Aktien | Vorher | Nachher |
+|---|---:|---:|
+| Q3 2026 | 1.164 | **2.008** |
+| Q2 2026 | 1.100 | **257** |
+| FY2025 (Jahr 2025-12-31) | 213 | 212 |
+| FY2025 (`yearNewerRecord`) | 2 | 2 |
+| Q1 2026 | 3 | 3 |
+| ältere Jahre oder kein Wachstum | 8 | 8 |
+
+Füllungen: Juli-Weg unverändert **1.086**, neu **844** `printed-check` (839 davon in den 998 Zielzeilen). Genau diese 844 Firmen ändern ihr Wachstum, keine andere. Herkunft der 844 Belege: 655 Layout-Weg (v1 73, v2 83, v3 170, v5 329), 189 Tabellenweg.
+
+| Board | Top-50 rein / raus | Rangänderungen |
+|---|---:|---:|
+| HyperGrowth, 26 Listen | 51 / 51 | 7.241 |
+| Rule of 40 | 4 / 4 | 476 |
+
+Größte Bewegungen mit neuer Füllung: 003043.SZ HyperGrowth Industrie profitabel 29 → 1.342, 688678.SS 40 → 1.439, 002039.SZ Versorger 2 → 284, 688198.SS Gesundheit 483 → 25, 301150.SZ Industrie 305 → 38. Rule of 40: rein TINS.JK, 300975.SZ, 300497.SZ (253 → 45), 688485.SS (neu gelistet, Rang 42); raus 300153.SZ (42 → 68), 688535.SS (48 → 51), 301099.SZ (49 → 126), 000155.SZ (50 → nicht mehr gelistet). Ein Teil der Wechsel um Rang 50 betrifft nicht gefüllte Firmen; das folgt aus der neuen Kalibrierung.
+
+## 2d. Zehn Belege
+
+Eastmoney ist 9M − H1 in CNY. Das Vorjahr aus dem Bericht ist hier überall das aus dem gedruckten Wachstum berechnete Rundungsintervall (`inverted-printed-growth`), keine gedruckte Zahl. Zum Wiederfinden mit Strg+F dienen Quartalsumsatz und Wachstum in der gedruckten Schreibweise.
+
+| Ticker / Bericht | Wachstum vorher (Q2 2026) | Wachstum nachher (Q3 2026) | Im Bericht: Q3 2026 / Wachstum | Vorjahr aus Bericht, CNY | Eastmoney Q3 2025, CNY |
+|---|---:|---:|---|---|---:|
+| [301150.SZ](https://static.cninfo.com.cn/finalpage/2026-10-28/1225630026.PDF), S. 2 | 49,96 % | 64,38 % | `2,503,012,468.25` / `64.38%` | 1.522.652.594,97 bis 1.522.745.227,84 | 1.522.700.840,62 |
+| [003043.SZ](https://static.cninfo.com.cn/finalpage/2026-10-28/1225627545.PDF), S. 1 | 45,73 % | -14,75 % | `289,419,802.73` / `-14.75%` | 339.475.459,18 bis 339.515.282,70 | 339.489.688,70 |
+| [688125.SS](https://static.cninfo.com.cn/finalpage/2026-10-29/1225636812.PDF), S. 1 | 46,50 % | 155,62 % | `405,274,685.78` / `155.62` | 158.542.664,36 bis 158.548.866,77 | 158.545.462,11 |
+| [002039.SZ](https://static.cninfo.com.cn/finalpage/2026-10-23/1225615240.PDF), S. 2 | 33,58 % | -41,53 % | `751,846,735.03` / `-41.53%` | 1.285.757.563,10 bis 1.285.977.482,31 | 1.285.849.028,49 |
+| [301218.SZ](https://static.cninfo.com.cn/finalpage/2026-10-23/1225616342.PDF), S. 2 | 201,14 % | 107,66 % | `331,793,495.40` / `107.66%` | 159.773.430,96 bis 159.781.125,14 | 159.776.208,50 |
+| [300497.SZ](https://static.cninfo.com.cn/finalpage/2026-10-24/1225618658.PDF), S. 2 | 88,80 % | 159,89 % | `661,889,395.99` / `159.89%` | 254.675.694,41 bis 254.685.493,97 | 254.677.075,45 |
+| [600509.SS](https://static.cninfo.com.cn/finalpage/2026-10-20/1225610945.PDF), S. 1 | 8,86 % | 37,81 % | `2,567,564,399.70` / `37.81` | 1.863.051.481,84 bis 1.863.186.676,61 | 1.863.098.390,89 |
+| [688198.SS](https://static.cninfo.com.cn/finalpage/2026-10-29/1225635591.PDF), S. 1 | -25,42 % | 20,16 % | `160,648,702.96` / `20.16` | 133.690.095,25 bis 133.701.221,73 | 133.694.698,14 |
+| [601595.SS](https://static.cninfo.com.cn/finalpage/2026-10-31/1225649247.PDF), S. 1 | 24,01 % | -49,63 % | `181,642,152.39` / `-49.63` | 360.579.955,11 bis 360.651.548,49 | 360.640.942,32 |
+| [000536.SZ](https://static.cninfo.com.cn/finalpage/2026-10-20/1225610811.PDF), S. 2 | -18,16 % | 3,47 % | `329,235,788.88` / `3.47%` | 318.179.066,32 bis 318.209.818,67 | 318.181.162,84 |
+
+301218.SZ, eines der früher genannten Beispiele, zeigt jetzt Q3 2026 (Rule of 40: 54 → 302, HyperGrowth IT-Dienste profitabel: 6 → 51).
+
+## 2e. Tests, Grenzen und offene Punkte
+
+- `node --test` mit den sieben Dateien des Briefs: 6 grün; rot nur `tests/yahoo-q4-known-cases.test.js` wegen der bekannten lokalen `.probe-unrouted.js`. Wird nur diese Datei im Speicher aus der Leserliste genommen, laufen alle 92 Prüfungen der Datei grün.
+- Einzeln: Parser 113 Prüfungen (5 neue Tabellen-Fixtures je mit Leerzelle, Markierung, fremdem Minus, fremdem Bericht und Identität; Break-once: ein Parser, der die nächste Zeile mit Wachstum nimmt, wird rot), B11c 330, B11b 130, Fetch 20, Schattenbericht 16, Schatten-Wächter grün, Exchange-Check 46 grün mit 29 Break-once (neu: Agreement- und Bandprüfung).
+- Alle 242 Testdateien, die einen geänderten Baustein laden, liefen mit `node <Datei>`: 239 grün. Außer der bekannten Datei sind `tests/rev-growth-basis.test.js` (D1) und `tests/export-w8-profit-split.test.js` (S5) rot; beide lesen den lokalen, veralteten Export und sind mit Schalter aus genauso rot, hängen also nicht an dieser Änderung (Sicherheit 90 %).
+- Der Layout-Weg kann weiter falsch binden: Bei 002891.SZ nahm eine alte v3-Struktur das Gewinnwachstum `-58.69%` statt `10.49%`; der Tabellenweg liest richtig. Gefüllt wird so ein Fall nie, weil der Eastmoney-Abgleich mixed-basis ergibt. Den Tabellenweg vorzuziehen würde vier gespeicherte, nachweislich falsche Ergebnisse ändern und ist ein eigener Schritt.
+- Die 125 alten Lücken des Durchgangs f5c4f2fb bleiben Lücken, weil nur neue Ticker abgerufen werden sollten; ein append-only Nachlesen mit v5 würde etwa 119 davon erkennen.
+- `scripts/exchange-check-report.js` und andere Messskripte bauen ihren Kontext über `loadStores` und sehen den neuen Weg nicht; das betrifft nur Berichte, nicht die Boards.
+- Die zweite Extraktion braucht denselben lokalen `pdftotext`; scheitert sie, wird `tableTextError` gespeichert und nur der Layout-Weg benutzt.
+
+Arbeitsdateien außerhalb des Repos: PDF- und Textcache unter `C:\Users\Anwender\AppData\Local\Temp\k2-cn-printed-cache-20261122` (`pdf-cache`, `replay-pdf-cache`, neu `table-cache`).
+
+---
+
+# Anhang: vorheriger Lauf am 22.11. (v3, am Tor gestoppt)
+
+> Der Füllweg wurde damals nicht gebaut, weil der Durchgang mit v3 nur 175 von 300 Berichten (58,33 %) erkannte. Der Store wuchs append-only von 600 auf 900 Ticker (523 auf 698 parsed); von den 998 Zielzeilen waren 460 erfasst und 330 parsed, 538 noch nicht abgerufen.
 
 ## Auftrag und Abbruchentscheidung
 

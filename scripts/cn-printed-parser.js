@@ -4,7 +4,11 @@
 // pdftotext -layout may lose the Chinese glyphs. Two independent amount anchors identify
 // the operating-revenue row and its scale; column geometry is only used AFTER both match.
 // v3 (B11c): growth bound to its table row by a finite set of layout structures taken from cached texts. Rows stored by v2 keep their own parserVersion (append-only).
-const VERSION = 'cn-q3-layout-v4';
+// v5 (K2): when that binding fails for geometry only, a second extraction (pdftotext -table)
+// keeps each table row on one physical line; the growth must sit on the SAME line between
+// both revenue anchors. The layout path runs first and is unchanged. (v4 was an unreviewed
+// WIP binding rule that took a profit growth for 002093.SZ; it was never stored and is dropped.)
+const VERSION = 'cn-q3-layout-v5';
 const finite = Number.isFinite;
 const amountPattern = /^-?\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/;
 const epsilon = n => Math.max(1e-7, Math.abs(n) * Number.EPSILON * 8);
@@ -379,32 +383,6 @@ const STAGGERED_GROWTH_ROWS = new Map([
   ["[\"[[[1,1],[2,2],[3,3]],[[0,0],[4,4],[6,6],[8,8]],[]]\",[8,24,57,74,24]]", 1],
 ]);
 
-// A local signature stops at the next amount row in each column. Later profit,
-// cash-flow and page-break positions cannot determine the revenue cell. Learn
-// only unanimous offsets from the existing, independently erased-cell-tested
-// structures; collisions stay unsupported. No growth tokens or values enter it.
-const localShape = shape => {
-  const [quarter, ytd, headers] = JSON.parse(shape);
-  return JSON.stringify([quarter.slice(0, 2), ytd.slice(0, 2), headers]);
-};
-const LOCAL_GROWTH_ROWS = new Map();
-for (const [shape, offset] of [...GROWTH_ROWS,
-  ...[...STAGGERED_GROWTH_ROWS].map(([key, value]) => [JSON.parse(key)[0], value])]) {
-  const key = localShape(shape);
-  LOCAL_GROWTH_ROWS.set(key, LOCAL_GROWTH_ROWS.has(key) && LOCAL_GROWTH_ROWS.get(key) !== offset
-    ? null : offset);
-}
-function localGrowthOffset(shape, q, y, prior) {
-  const headers = JSON.parse(shape)[2];
-  // A standalone percent header fixes the first cell's physical line, even if
-  // that cell is blank. Never advance to the next surviving numeric token.
-  if (headers.length === 1) return headers[0] + 1;
-  const learned = LOCAL_GROWTH_ROWS.get(localShape(shape));
-  if (learned !== null && learned !== undefined) return learned;
-  if (!headers.length && q.row === y.row && !q.wrapped && !y.wrapped && !prior.length) return 0;
-  return undefined;
-}
-
 function eastmoneyAnchor(store, ticker, year = 2026) {
   if (store?.market !== 'CN' || store.currency !== 'CNY' || store.unit !== 1) return null;
   const c = store.companies?.[ticker];
@@ -446,7 +424,7 @@ function cell(t, unit) {
     roundingHalfWidth: half(t.raw) * unit };
 }
 
-function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = false, local = false) {
+function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = false) {
   const gap = (reason, detail = {}) => ({ parseStatus: 'unparsed', reason, parserVersion: VERSION, ...detail });
   if (!anchor || !finite(anchor.current) || !finite(anchor.ytd) || anchor.line !== 'operate') return gap('operating-revenue-anchor-missing');
   if (typeof text !== 'string' || !text.trim()) return gap('text-empty');
@@ -496,8 +474,7 @@ function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = fals
     /^-?\d{1,3}(?:,\d{3})*\.\d{1,2}%?$/.test(t.raw) && (!ticker?.endsWith('.SZ') || t.raw.endsWith('%') || percentHeader) &&
     !amounts.some(a => a.wrapped && t.row >= a.row && t.row <= a.endRow && t.x >= a.x && t.end <= a.end));
   const shape = rowShape(lines, amounts, q, y, left, lo);
-  const offset = GROWTH_ROWS.get(shape) ?? STAGGERED_GROWTH_ROWS.get(JSON.stringify([shape, [q.x, q.end, y.x, y.end, left]])) ??
-    (local ? localGrowthOffset(shape, q, y, prior) : undefined);
+  const offset = GROWTH_ROWS.get(shape) ?? STAGGERED_GROWTH_ROWS.get(JSON.stringify([shape, [q.x, q.end, y.x, y.end, left]]));
   const growthRow = offset === undefined ? null : Math.min(q.row, y.row) + offset;
   // Unsupported negative notation is refused as a complete cell, never stripped
   // into a positive token. ASCII negatives retain their historical representation.
@@ -562,21 +539,94 @@ function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = fals
     anchor: { ...anchor } };
 }
 
+// Row binding on the -table extraction: one physical line carries the quarter anchor, the
+// optional prior column(s), the growth cell and the YTD anchor, in this order. Nothing is
+// searched on another line, so a blank revenue growth cell is a gap and can never borrow
+// the next row's growth. Identity, scale, sign, marker and rounding guards are the layout
+// path's, applied to this line.
+function parseTableRow(text, anchor, { ticker, year = 2026 } = {}) {
+  const gap = reason => ({ parseStatus: 'unparsed', reason, parserVersion: VERSION });
+  if (typeof text !== 'string' || !text.trim()) return gap('table-text-empty');
+  const lines = text.replace(/\r/g, '').split('\f').slice(0, 4).join('\f').split('\n');
+  const head = lines.slice(0, 20).join('\n');
+  if (ticker && !new RegExp('(^|\\D)' + ticker.slice(0, 6) + '(?:\\d{11}|\\d{6}|\\d{5})?(\\D|$)').test(head)) return gap('security-code-not-in-header');
+  if (!new RegExp('\\b' + year + '\\b').test(head)) return gap('report-year-not-in-header');
+  const rows = lines.map((line, row) => [...line.matchAll(/(?<!\S)-?[\d,]+(?:\.\d+)?%?(?!\S)/g)]
+    .map(m => ({ raw: m[0], row, x: m.index, end: m.index + m[0].length })));
+  const anchors = [];
+  for (const unit of [1, 1e3, 1e4, 1e6]) {
+    const matches = (t, v) => amountPattern.test(t.raw) &&
+      inside(v, number(t.raw) * unit - half(t.raw) * unit, number(t.raw) * unit + half(t.raw) * unit);
+    for (const r of rows) for (const q of r.filter(t => matches(t, anchor.current))) {
+      for (const y of r.filter(t => t.x > q.end && matches(t, anchor.ytd))) anchors.push({ q, y, unit });
+    }
+  }
+  if (anchors.length !== 1) return gap(anchors.length ? 'ambiguous-revenue-anchors' : 'table-revenue-row-not-found');
+  const { q, y, unit } = anchors[0], row = q.row, line = lines[row];
+  if (lines.slice(Math.max(0, row - 6), row + 9).some(l => /营业总收入/.test(l))) return gap('total-revenue-label-not-supported');
+  // Revenue is the first table row: no amount on the lines just above it.
+  if (rows.slice(Math.max(0, row - 6), row).some(r => r.some(t => amountPattern.test(t.raw)))) return gap('not-first-revenue-row');
+  // A visible label must be the revenue label; glyph-lost labels leave nothing or '/'.
+  const label = line.slice(0, q.x);
+  if (/\S/.test(label.replace(/营业收入|[（(]?(?:人民币)?(?:千|万|百万)?元[）)]?|\//g, ''))) return gap('table-row-label-not-revenue');
+  const between = line.slice(q.end, y.x);
+  if (/[−–‒]\d|[（(]\d[\d,.]*%?[）)]/.test(between)) return gap('growth-token-sign-unknown');
+  if (/--|不适用/.test(between)) return gap('growth-column-missing-marker');
+  const mid = rows[row].filter(t => t.x >= q.end && t.end <= y.x);
+  // Anything else between the anchors (glyph residue, footnote marks) is an unknown layout.
+  if (between.replace(/\s+/g, ' ').trim() !== mid.map(t => t.raw).join(' ')) return gap('table-row-residue');
+  const g = mid.at(-1), prior = mid.slice(0, -1);
+  if (!g || !/^-?\d{1,3}(?:,\d{3})*\.\d{1,2}%?$/.test(g.raw)) return gap('growth-column-missing');
+  // A comma-grouped cell without '%' may be an amount (e.g. a prior column); never a growth here.
+  if (g.raw.includes(',') && !g.raw.endsWith('%')) return gap('unknown-prior-column-layout');
+  if (!prior.every(t => amountPattern.test(t.raw))) return gap('unknown-prior-column-layout');
+  const above = lines.slice(Math.max(0, row - 8), row).join('\n');
+  const singlePrior = prior.length === 1 && new RegExp((year - 1) + '\\s+7-9').test(above) &&
+    new RegExp((year - 1) + '\\s+1-9').test(above);
+  if (prior.length !== 0 && prior.length !== 2 && !singlePrior) return gap('unknown-prior-column-layout');
+  if (ticker?.endsWith('.SZ') && !g.raw.endsWith('%') && !/(^|\s)[（(]?%[）)]?(\s|$)/.test(above)) return gap('growth-unit-unknown');
+  if (rows[row].filter(t => t.x > y.end && amountPattern.test(t.raw)).length !== prior.length) return gap('unknown-restatement-ytd-layout');
+  const current = cell(q, unit), growth = { printed: g.raw, value: number(g.raw),
+    decimals: g.raw.replace(/%$/, '').split('.')[1].length, roundingHalfWidth: half(g.raw.replace(/%$/, '')) };
+  if (growth.value - growth.roundingHalfWidth <= -100) return gap('growth-denominator-nonpositive');
+  const priorValues = prior.length ? { before: singlePrior ? null : cell(prior[0], unit), after: cell(prior.at(-1), unit) } : null;
+  if (priorValues) {
+    const p = priorValues.after, a = current;
+    if (p.value <= p.roundingHalfWidth) return gap('printed-prior-nonpositive');
+    const gMin = ((a.value - a.roundingHalfWidth) / (p.value + p.roundingHalfWidth) - 1) * 100;
+    const gMax = ((a.value + a.roundingHalfWidth) / (p.value - p.roundingHalfWidth) - 1) * 100;
+    if (gMin > growth.value + growth.roundingHalfWidth + 1e-8 || gMax < growth.value - growth.roundingHalfWidth - 1e-8) return gap('printed-prior-growth-inconsistent');
+  }
+  return { parseStatus: 'parsed', reason: null, parserVersion: VERSION, extraction: 'pdftotext-table',
+    layout: singlePrior ? 'table-single-prior' : prior.length ? 'table-restated' : 'table-row', unit,
+    unitName: ({ 1: '元', 1000: '千元', 10000: '万元', 1000000: '百万元' })[unit],
+    unitEvidence: 'scale-uniquely-matched-to-quarter-and-ytd-operating-revenue',
+    rowLabel: '营业收入', rowEvidence: 'OPERATE_INCOME-quarter-and-ytd-value-anchors-on-one-table-line',
+    current, ytd: cell(y, unit), growth, priorValues,
+    quoteLines: [{ line: row + 1, page: 1 + lines.slice(0, row + 1).filter(l => l.includes('\f')).length, text: line }],
+    anchor: { ...anchor } };
+}
+
+// Layout reasons that only say "the growth cell could not be placed". Identity, anchor,
+// sign, marker and arithmetic refusals of the layout path are never overridden.
+const TABLE_FALLBACK = new Set(['growth-row-unbound', 'unknown-growth-offset', 'unknown-prior-column-layout',
+  'ambiguous-growth-column', 'growth-column-missing', 'unknown-restatement-ytd-layout']);
+
 function parseText(text, anchor, options = {}) {
   const original = parseLayout(text, anchor, options);
   // Existing accepted observations retain their value, unit, growth and exact quote.
   // All identity, dual-anchor, first-row and rounding guards also run on new layouts.
   if (original.parseStatus === 'parsed') return original;
   const extended = parseLayout(text, anchor, options, true);
-  if (extended.parseStatus === 'parsed' || extended.reason !== 'growth-row-unbound') return extended;
-  const local = parseLayout(text, anchor, options, true, true);
-  return local.parseStatus === 'parsed' ? local : extended;
+  if (extended.parseStatus === 'parsed' || !TABLE_FALLBACK.has(extended.reason) || typeof options.tableText !== 'string') return extended;
+  const table = parseTableRow(options.tableText, anchor, options);
+  return table.parseStatus === 'parsed' ? table : { ...extended, tableReason: table.reason };
 }
 
 function comparable(parsed) {
   if (parsed?.parseStatus !== 'parsed') return null;
   const p = parsed.priorValues?.after;
-  if (p) return { method: parsed.layout === 'single-prior' ? 'printed-prior' : 'printed-adjusted-prior', value: p.value,
+  if (p) return { method: /(^|-)single-prior$/.test(parsed.layout) ? 'printed-prior' : 'printed-adjusted-prior', value: p.value,
     lower: p.value - p.roundingHalfWidth, upper: p.value + p.roundingHalfWidth };
   const c = parsed.current, g = parsed.growth;
   if (!c || !g || g.value - g.roundingHalfWidth <= -100) return null;

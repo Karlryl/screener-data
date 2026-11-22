@@ -6,5 +6,7 @@
   "restatementBaselineBefore": "2026-08-01",
   "maxStoreAgeDays": 8,
   "maxStoreAgeDaysInSeason": 2,
-  "reason": "P71: fill-only fills empty 2025-09-30 vendor cells at read time under the existing guards and never withholds; active retains fill plus withhold and still requires the council and the other AI's blind review."
+  "printedQ3Check": true,
+  "reason": "P71: fill-only fills empty 2025-09-30 vendor cells at read time under the existing guards and never withholds; active retains fill plus withhold and still requires the council and the other AI's blind review.",
+  "printedQ3CheckReason": "K2: true lets a 2025-09-30 fill that only lacks the July row use the CNINFO Q3-2026 report, whose printed comparable prior quarter must contain the Eastmoney 9M - H1 value (docs/exchange-quarter-check.md). false restores the previous behaviour exactly."
 }

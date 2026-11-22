@@ -23,6 +23,19 @@ function latestObservation(store, ticker, year) {
   return rows[0] || { parseStatus: 'unparsed', reason: 'not-fetched' };
 }
 
+// The one comparison of a printed report with Eastmoney, shared by this report and the K2 fill path
+// (lib/exchange-quarter-check.js): the latest observation, still anchored to today's Eastmoney 9M and H1,
+// against Eastmoney's prior-year 9M - H1 (operating revenue) within the parser's rounding band.
+function printedEvidence(store, cn, ticker, year) {
+  let obs = latestObservation(store, ticker, year);
+  if (obs.parseStatus === 'parsed') {
+    const a = P.eastmoneyAnchor(cn, ticker, year);
+    const match = (v, cell) => Number.isFinite(v) && Math.abs(v - cell.value) <= cell.roundingHalfWidth + Math.abs(v) * 2e-14;
+    if (!a || !match(a.current, obs.current) || !match(a.ytd, obs.ytd)) obs = { parseStatus: 'unparsed', reason: 'current-store-anchor-changed' };
+  }
+  return { obs, comparison: P.compare(obs, P.eastmoneyAnchor(cn, ticker, year - 1)) };
+}
+
 function snapshotInfo(snapshot, baseline, year) {
   const s = stripOwn(snapshot), t = s.meta?.ticker, ts = s.timeseries || {};
   const ends = ts.revenueQEnds || [], rows = ts.revenueQ || [];
@@ -70,13 +83,7 @@ function buildReport({ store, cn, snapshots = [], baseline, year = 2026, dataDay
   for (const ticker of tickers) {
     if (!A_SHARE.test(ticker)) continue;
     const info = infoMap.get(ticker);
-    let obs = latestObservation(store, ticker, year);
-    if (obs.parseStatus === 'parsed') {
-      const a = P.eastmoneyAnchor(cn, ticker, year);
-      const match = (v, cell) => Number.isFinite(v) && Math.abs(v - cell.value) <= cell.roundingHalfWidth + Math.abs(v) * 2e-14;
-      if (!a || !match(a.current, obs.current) || !match(a.ytd, obs.ytd)) obs = { parseStatus: 'unparsed', reason: 'current-store-anchor-changed' };
-    }
-    const comparison = P.compare(obs, P.eastmoneyAnchor(cn, ticker, year - 1));
+    const { obs, comparison } = printedEvidence(store, cn, ticker, year);
     const row = { ticker, cohort: info?.cohort || 'snapshot-unavailable', candidate: info?.candidate || false,
       status: comparison.status, reason: comparison.reason, layout: obs.layout || null,
       unit: obs.unit || null, current: obs.current || null, growth: obs.growth || null,
@@ -200,4 +207,4 @@ if (require.main === module) {
     process.exitCode = r.gate300 === false ? 1 : 0;
   } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { latestObservation, snapshotInfo, proposal, buildReport, markdown, main };
+module.exports = { latestObservation, printedEvidence, snapshotInfo, proposal, buildReport, markdown, main };
