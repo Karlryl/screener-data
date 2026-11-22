@@ -15,12 +15,12 @@ const { JOB_REIHENFOLGE } = require('../scripts/pipeline-status.js');
 
 const root = path.resolve(__dirname, '..');
 const JOB = 'feed-fill-waechter';
-const { floors, erklaertMax } = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8'));
+const { floors, erklaertMax, fcfAltMax } = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8'));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'feed-fill-guard-'));
 let floorsFiles = 0;
 const floorsFile = (rotstellen, extra = {}) => {
   const file = path.join(tmp, `floors-${floorsFiles++}.json`);
-  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen, erklaertMax, ...extra }));
+  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen, erklaertMax, fcfAltMax, ...extra }));
   return ['--floors', file];
 };
 
@@ -107,6 +107,8 @@ for (const [field, entry] of Object.entries(JSON.parse(fs.readFileSync(DEFAULT_F
 const G = require('../lib/market-cap-guard.js');
 const W = require('../scripts/write-filter-universe.js');
 const { explained } = require('../scripts/feed-fill-guard.js');
+const staleFcfCode = W.fcfLeerGrund({ meta: { fcfMarginTTMReason: 'vendor-ttm-stale' }, metrics: {} });
+assert.equal(staleFcfCode, 'fcf-alt', 'the real writer emits the exact stale-FCF code used by the guard');
 const OLD = '2026-10-02T15:35:06.000Z', FRESH = '2026-10-30T08:00:00.000Z';
 const priced = (stamp, ticker) => ({
   meta: { ticker, name: 'Company ' + ticker, sector: 'Technology', industry: 'Software', tradingCurrency: 'USD', reportingCurrency: 'USD',
@@ -128,7 +130,8 @@ for (const field of ['mc', 'ps', 'evs', 'pe', 'fpe', 'dy', 'd52', 'ath']) {
   assert.equal(explained(freshRow, field), false, field);
 }
 // r40: a withheld market cap makes the row data-suspect (B5), and the writer takes r40 only from rows that are not.
-assert.equal(require('../scripts/write-rule40-export.js').datenSuspekt(G.prepareMarketCap(priced(OLD, 'OLD'))), true, 'stale row is data-suspect');
+const r40 = require('../scripts/write-rule40-export.js');
+assert.equal(r40.datenSuspekt(G.prepareMarketCap(priced(OLD, 'OLD'))), true, 'stale row is data-suspect');
 // It counts only beside the two r40 inputs, so a stale row that could never have had r40 stays a gap.
 assert.equal(heldRow.g ?? heldRow.fcf, undefined, 'the fixture row has no r40 inputs');
 assert.equal(explained(heldRow, 'r40'), false, 'without g and fcf');
@@ -139,10 +142,50 @@ for (const field of ['g', 'roe', 'gm', 'fcf', 'po', 'sc', 'b']) assert.equal(exp
 assert.equal(explained({ aus: ['market-cap-missing', 'data-suspect'] }, 'mc'), false);
 assert.equal(explained({ aus: ['P/E wird nicht gezeigt, die Kursmeldung von Yahoo vom 02.10.2026 ist zu alt.'] }, 'fpe'), false, 'P/E hint is not the forward P/E hint');
 assert.equal(explained({}, 'mc'), false, 'a row without aus');
+assert.equal(explained({ g: 12, aus: [staleFcfCode] }, 'r40'), true, 'stale FCF with growth explains empty r40');
+assert.equal(explained({ aus: [staleFcfCode] }, 'r40'), false, 'stale FCF without growth does not explain r40');
+assert.equal(explained({ g: 12, fcf: 5, aus: [staleFcfCode] }, 'r40'), false, 'fcf-alt needs an empty FCF margin');
+assert.equal(explained({ g: 12, aus: ['not-' + staleFcfCode] }, 'r40'), false, 'only the exact writer code counts');
+for (const field of Object.keys(floors).filter(field => field !== 'r40')) assert.equal(explained({ g: 12, aus: [staleFcfCode] }, field), false, 'fcf-alt cannot explain ' + field);
+for (const sector of r40.SEKTOR_AUSSCHLUSS) assert.equal(explained({ s: sector, g: 12, aus: [staleFcfCode] }, 'r40'), false, 'sector excluded from r40: ' + sector);
 
 // The guard on such rows: 1000 rows, the first n stale (mc and d52 withheld with the writer's reasons).
 const staleAus = heldRow.aus;
 const staleFeed = (n, withReason = true) => feedWith((row, i) => { if (i < n) { delete row.mc; delete row.d52; if (withReason) row.aus = staleAus; } });
+const fcfAltFeed = n => feedWith((row, i) => { if (i < n) { delete row.r40; delete row.fcf; row.aus = [staleFcfCode]; } });
+assert.ok(fcfAltMax >= 20, 'the case below hides 20 % of rows; a lower cap needs a new case');
+const fcfAltRun = guard(fcfAltFeed(200));
+assert.equal(fcfAltRun.status, 0, fcfAltRun.stdout);
+assert.match(fcfAltRun.stdout, /^r40 .*100,0 %.*fcf-alt 20,0 % of all rows/m, 'r40 excludes only the explained rows');
+const fcfAltMeasure = checkFill(fcfAltFeed(200), floors, { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity });
+assert.equal(fcfAltMeasure.fcfAltShares.r40, 20);
+assert.equal(fcfAltMeasure.explainedShares.r40, 0);
+const noGrowth = checkFill(feedWith((row, i) => { if (i < 200) { delete row.r40; delete row.g; row.aus = [staleFcfCode]; } }), floors,
+  { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity });
+assert.equal(noGrowth.fcfAltShares.r40, 0, 'without growth no r40 row leaves the denominator');
+assert.equal(noGrowth.shares.r40, 80, 'without growth the 200 empty r40 rows remain in the denominator');
+const excludedSector = checkFill(feedWith((row, i) => { if (i < 100) { row.s = r40.SEKTOR_AUSSCHLUSS[0]; delete row.r40; delete row.fcf; row.aus = [staleFcfCode]; } }), floors,
+  { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity });
+assert.equal(excludedSector.fcfAltShares.r40, 0, 'sector exclusion does not count as stale FCF');
+assert.equal(excludedSector.shares.r40, 90, 'sector-excluded rows remain in the denominator');
+const bothReasons = checkFill(feedWith((row, i) => { if (i < 100) { delete row.r40; delete row.fcf; row.aus = [...staleAus, staleFcfCode]; } }), floors,
+  { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity });
+assert.equal(bothReasons.explainedShares.r40, 10, 'stale quote takes precedence when both reasons are present');
+assert.equal(bothReasons.fcfAltShares.r40, 0, 'the same row is never counted twice');
+assert.deepEqual(bothReasons.problems, []);
+const bothOverQuoteCap = guard(feedWith((row, i) => { if (i < erklaertMax * 10 + 1) { delete row.r40; delete row.fcf; row.aus = [...staleAus, staleFcfCode]; } }));
+assert.equal(bothOverQuoteCap.status, 1, 'the quote cap still fires for rows with both reasons');
+assert.match(bothOverQuoteCap.stdout, /::error::Das Feld r40 ist auf 12,1 % der 1000 Zeilen wegen eines zu alten Kurses ausgeblendet/);
+assert.ok(!bothOverQuoteCap.stdout.includes('weil der Free Cashflow veraltet ist'), 'both reasons do not use the fcf-alt cap');
+const atFcfAltCap = Math.floor(fcfAltMax * 10);
+assert.equal(guard(fcfAltFeed(atFcfAltCap)).status, 0, 'exactly at the fcf-alt cap');
+const overFcfAltCap = guard(fcfAltFeed(atFcfAltCap + 1));
+assert.equal(overFcfAltCap.status, 1, overFcfAltCap.stdout);
+assert.match(overFcfAltCap.stdout, /::error::Das Feld r40 ist auf 20,1 % der 1000 Zeilen ausgeblendet, weil der Free Cashflow veraltet ist; erlaubt sind höchstens 20,0 %/);
+assert.ok(!overFcfAltCap.stdout.includes('wegen eines zu alten Kurses'), 'fcf-alt does not use the quote cap');
+const massR40Loss = guard(feedWith((row, i) => { if (i < 600) { delete row.r40; if (i < 100) { delete row.fcf; row.aus = [staleFcfCode]; } } }));
+assert.equal(massR40Loss.status, 1, 'a real r40 loss on the other rows stays red');
+assert.match(massR40Loss.stdout, /::error::Das Feld r40 ist nur auf 44,4 % der 900 Zeilen gefüllt/);
 assert.ok(erklaertMax >= 10, 'the cases below hide 10 % of the rows; a lower cap needs new cases');
 const explainedRun = guard(staleFeed(100));
 assert.equal(explainedRun.status, 0, explainedRun.stdout);
@@ -166,8 +209,15 @@ const shownBeside = checkFill(feedWith((row, i) => { if (i < 100) row.aus = stal
 assert.equal(shownBeside.explainedShares.mc, 0); assert.equal(shownBeside.shares.mc, 100);
 // Fail-closed default: a caller without explainedMax allows none.
 assert.ok(checkFill(staleFeed(1), floors, { maxAgeHours: Infinity }).problems.some(p => p.includes('erlaubt sind höchstens 0,0 %')));
+assert.ok(checkFill(fcfAltFeed(1), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems.some(p => p.includes('Free Cashflow veraltet ist; erlaubt sind höchstens 0,0 %')),
+  'without fcfAltMax even one stale-FCF explanation is over the fail-closed cap');
 for (const bad of [{ erklaertMax: undefined }, { erklaertMax: -1 }, { erklaertMax: 51 }, { erklaertMax: 100 }, { erklaertMax: '12' }]) {
   assert.equal(guard(feedWith(), ...floorsFile({}, bad)).status, 2, JSON.stringify(bad));
+}
+for (const bad of [{ fcfAltMax: undefined }, { fcfAltMax: -1 }, { fcfAltMax: 51 }, { fcfAltMax: '20' }]) {
+  const result = guard(feedWith(), ...floorsFile({}, bad));
+  assert.equal(result.status, 2, JSON.stringify(bad));
+  assert.match(result.stderr, /fcfAltMax must be a percentage from 0 to 50/);
 }
 
 // Break once on the guard source, compiled in memory (nothing written; the live file is hashed before and after).
@@ -183,11 +233,13 @@ const broken = (anchor, replacement) => {
   m._compile(lines.map(l => (l === anchor ? replacement : l)).join('\n'), GUARD_FILE);
   return m.exports;
 };
-const reasonless = broken('  return STALE_FIELDS.has(field) && aus.some(a => a.endsWith(STALE_PRICE_RETURN));', '  return STALE_FIELDS.has(field);');
+const reasonless = broken("  return staleQuote ? 'quote' : null;", "  return STALE_FIELDS.has(field) ? 'quote' : null;");
 assert.deepEqual(reasonless.checkFill(feedWith((row, i) => { if (i < 100) delete row.mc; }), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a reasonless loss turns green');
 const uncapped = broken('    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen eines zu alten Kurses ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kurse deuten auf eine Störung beim Kursabruf, nicht auf einzelne Zeilen.`);', '');
 assert.ok(guard(staleFeed(500)).stdout.includes('erlaubt sind höchstens'), 'half the rows stale is red by the cap alone');
 assert.deepEqual(uncapped.checkFill(staleFeed(500), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass loss turns green');
+const uncappedFcfAlt = broken('    if (fcfAltShares[field] > fcfAltMax) problems.push(`Das Feld ${field} ist auf ${percent(fcfAltShares[field])} der ${rows.length} Zeilen ausgeblendet, weil der Free Cashflow veraltet ist; erlaubt sind höchstens ${percent(fcfAltMax)}. So viele veraltete Cashflows deuten auf eine Störung beim Abruf der Kapitalflussrechnung, nicht auf einzelne Zeilen.`);', '');
+assert.deepEqual(uncappedFcfAlt.checkFill(fcfAltFeed(atFcfAltCap + 1), floors, { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass stale-FCF loss turns green without its cap');
 assert.equal(sha(), before, 'the live guard file is unchanged');
 
 // Every field the writer can emit has a floor, so a new field is noticed in its pull request and not on its first day.
