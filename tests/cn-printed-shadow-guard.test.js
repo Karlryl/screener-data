@@ -13,6 +13,9 @@ const sourceBefore = sourceHashes();
 // the printed value as evidence of the common basis, never as the filled number. Every other file stays a violation.
 const allowed = new Set(['scripts/fetch-cn-printed.js', 'scripts/cn-printed-shadow-report.js', 'scripts/cn-printed-parser.js',
   'lib/exchange-quarter-check.js']);
+// GQS-00 seal records (protocol/gqs-00/**) name the parser and the shadow report only to pin their hashes
+// (dependencyFiles); only scripts/gqs00-freeze.js reads them, and it never loads the store.
+const sealRecord = /^protocol\/gqs-00\/[^/]+\/[^/]+\.json$/;
 function trackedFiles(root) {
   return execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', windowsHide: true,
     maxBuffer: 32 * 1024 * 1024 }).split('\0').filter(Boolean);
@@ -20,7 +23,7 @@ function trackedFiles(root) {
 function violations(root, tracked = trackedFiles(root)) {
   const result = [];
   for (const rel of tracked) {
-    if (/^(?:tests|external-data|docs)\//.test(rel) || /(?:^|\/)REPORT-[^/]+\.md$/.test(rel) || allowed.has(rel)) continue;
+    if (/^(?:tests|external-data|docs)\//.test(rel) || /(?:^|\/)REPORT-[^/]+\.md$/.test(rel) || allowed.has(rel) || sealRecord.test(rel)) continue;
     if (!/\.(?:js|cjs|mjs|ts|py|yml|yaml|sh|ps1|html|json)$/.test(rel)) continue;
     const file = path.join(root, rel);
     // A sparse checkout may omit tracked content; inspect its tracked blob instead.
@@ -59,6 +62,7 @@ for (const [rel, source] of [
   ['.github/workflows/daily-pull.yml', 'steps:\n  - run: node scripts/fetch-cn-printed.js'],
   ['index.html', '<script>fetch("external-data/exchange-quarters/cn-printed.json")</script>'],
   ['configs/x.json', '{"reader": "external-data/exchange-quarters/cn-printed.json"}'],
+  ['protocol/gqs-00/1.2.0-pending/reader.js', "const parser = require('../../../scripts/cn-printed-parser');"],
   ['discovery/module.ts', "const parser = require('../scripts/cn-printed-parser');"]
 ]) {
   const tree = H.sandbox(), destination = path.resolve(tree, rel);
@@ -73,4 +77,4 @@ for (const [rel, source] of [
   assert.deepEqual(sourceHashes(), sourceBefore); assert.deepEqual(H.liveHashes(), before);
 }
 assert.deepEqual(H.liveHashes(), before);
-console.log('Shadow guard green across tracked files including workflows; 8 intentional leaks detected; production store hashes unchanged.');
+console.log('Shadow guard green across tracked files including workflows; 9 intentional leaks detected; production store hashes unchanged.');
