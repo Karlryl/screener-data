@@ -21,6 +21,8 @@ const { displayFor } = require('./update-ath-state.js');
 const { mischVal, mischVerhaeltnisUnkorrigiert } = require('./write-board-history.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { filterToAuthorizedUniverse } = require('../src/scoring/run-screener.js');
+const { loadFrozenRuns, frozenReason, frozenFields, FROZEN_LABELS } = require('../lib/frozen-close.js');
+const { shownGrowthCheck } = require('../lib/shown-growth-check.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const SCHEMA = 'findash-export/v1';
@@ -189,12 +191,47 @@ function usableRule40(snapshot, generatedAt) {
   return end !== null && (Date.parse(generatedAt) - end) / 86400000 <= r40.MAX_FISCAL_AGE_DAYS;
 }
 
+// S11 Stufe 4 (22.11.2026): German reason when the shown revenue growth of a China A-share misses the exchange figures of
+// the same two periods (lib/shown-growth-check.js). No number in it: the feed shows none in its place.
+const GROWTH_REASON_LEG = { quarter: 'Quartal', year: 'Geschäftsjahr', yearNewerRecord: 'Geschäftsjahr' };
+/**
+ * German reason for a growth figure withheld by shownGrowthCheck.
+ * @param {{basis: string, periodEnd: string, priorPeriodEnd: string}} check A 'mixed' result of shownGrowthCheck.
+ * @param {boolean} withR40 Whether the row's Rule of 40 is withheld with it.
+ * @returns {string} One sentence naming the two periods, without a number in place of the value.
+ */
+function growthReason(check, withR40) {
+  const day = iso => iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4);
+  return (withR40 ? 'Umsatzwachstum und Rule of 40 werden' : 'Umsatzwachstum wird') + ' nicht gezeigt, weil das Wachstum ' +
+    `nicht zu den Umsätzen der Börsenmeldung (Eastmoney) für dieselben Zeiträume passt (${GROWTH_REASON_LEG[check.basis]} bis ` +
+    `${day(check.periodEnd)} gegen ${day(check.priorPeriodEnd)}, Abweichung mehr als 2 Prozentpunkte und mehr als 5 %).`;
+}
+// Field defaults a withheld price value leaves behind, so peSt and dySt stay consistent with their empty value.
+const FROZEN_STATUS = { pe: ['peSt', 'unbekannt'], dy: ['dySt', 'unbekannt'] };
+
+/**
+ * Withhold every shown value that rests on a frozen OTC close (lib/frozen-close.js), in place, with one German reason.
+ * Nothing happens without a shown market cap (a stale-quote hold or a missing value came first).
+ * @param {object} row Row before its null fields are dropped.
+ * @param {{since: string, days: number}|undefined} run Frozen run of the ticker.
+ * @returns {void}
+ */
+function withholdFrozen(row, run) {
+  if (!run || row.mc === null || row.mc === undefined) return;
+  const fields = Object.keys(FROZEN_LABELS).filter(key => row[key] !== null && row[key] !== undefined);
+  for (const key of fields) {
+    row[key] = null;
+    if (FROZEN_STATUS[key]) row[FROZEN_STATUS[key][0]] = FROZEN_STATUS[key][1];
+  }
+  row.aus.push(frozenReason(fields, run));
+}
+
 /**
  * Join every supplied snapshot with detached official board and exclusion records.
- * @param {object} input Prepared snapshots, board map, exclusion map, ATH entries and generation.
+ * @param {object} input Prepared snapshots, board map, exclusion map, ATH entries, frozen OTC closes and generation.
  * @returns {object} Compact v1 envelope; no score, input or board is mutated.
  */
-function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), athEntries = {}, generatedAt }) {
+function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), athEntries = {}, frozenCloses = new Map(), generatedAt }) {
   if (!text(generatedAt) || !finite(Date.parse(generatedAt))) throw new Error('Invalid generation');
   const eligible = new Set(snapshots.filter(s => usableRule40(s, generatedAt)));
   const bounds = eligible.size >= r40.MIN_WINSOR_SAMPLE
@@ -279,7 +316,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
     if (poBad) aus.push('po-implausible');
-    return Object.fromEntries(Object.entries({
+    const row = {
       t: ticker, n: text(board?.name ?? meta.name), b: official?.branch ?? null,
       sc: finite(board?.score) ? board.score : null, rk: finite(board?.rank) ? board.rank : null,
       c: text(board?.country ?? geo.country), rg: text(board?.region ?? geo.region), s: text(board?.sector ?? meta.sector),
@@ -299,7 +336,16 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       d52: zeige('Abstand zum 52-Wochen-Hoch', highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null),
       ath: athAlt ? null : round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
       aus: [...new Set(aus)],
-    }).filter(([, value]) => value !== null));
+    };
+    // S11 Stufe 4: growth that misses the exchange figures of its own two periods (China A-shares; null elsewhere).
+    const growthCheck = row.g !== null && row.g !== undefined ? shownGrowthCheck(snapshot) : null;
+    if (growthCheck?.status === 'mixed') {
+      // Rule of 40 adds this growth, so it goes with it.
+      row.aus.push(growthReason(growthCheck, row.r40 !== null && row.r40 !== undefined));
+      row.g = null; row.r40 = null;
+    }
+    withholdFrozen(row, frozenCloses.get(ticker));
+    return Object.fromEntries(Object.entries(row).filter(([, value]) => value !== null && value !== undefined));
   }).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t, 'en'));
   return { schema: SCHEMA, generated_at: generatedAt, snapshotCount: snapshots.length, ...(marketCapDropped ? { marketCapDropped } : {}), rows };
 }
@@ -359,6 +405,8 @@ function validateUniverse(feed, bytes) {
     if (row.aus.some(a => a.endsWith(STALE_PRICE_RETURN)) && ['pe', 'fpe', 'dy', 'd52'].some(k => row[k] != null)) errors.push(where + ': price-dependent value beside a stale quote hold');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
     if (row.r40 != null && (row.g == null || row.fcf == null)) errors.push(where + ': incomplete rule of 40');
+    // S11 Stufe 4: a frozen-close reason names exactly fields the row no longer carries.
+    if (row.aus.some(a => frozenFields(a).some(k => row[k] != null))) errors.push(where + ': price value beside a frozen-close hold');
   }
   return errors;
 }
@@ -368,7 +416,7 @@ function validateUniverse(feed, bytes) {
  * @param {object} options Snapshot/v1 directories, optional ATH file and scoring watchlist.
  * @returns {object} Written feed and its exact byte size.
  */
-function build({ snapshotsDir, v1Dir, athFile = path.join(ROOT, 'external-data', 'ath-state.json'), watchlistFile = path.join(ROOT, 'watchlist.json') }) {
+function build({ snapshotsDir, v1Dir, athFile = path.join(ROOT, 'external-data', 'ath-state.json'), watchlistFile = path.join(ROOT, 'watchlist.json'), pricesDir = path.join(ROOT, 'prices') }) {
   const index = readJson(path.join(v1Dir, 'index.json'));
   if (index.schema !== SCHEMA || !Array.isArray(index.branches) || !index.branches.length) throw new Error('Invalid board index');
   const boards = new Map(), excluded = new Map();
@@ -407,7 +455,8 @@ function build({ snapshotsDir, v1Dir, athFile = path.join(ROOT, 'external-data',
   let athEntries = {};
   try { athEntries = readJson(athFile).entries || {}; }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const feed = buildUniverse({ snapshots, boards, excluded, athEntries, generatedAt: index.generated_at });
+  const frozenCloses = loadFrozenRuns(pricesDir, snapshots);
+  const feed = buildUniverse({ snapshots, boards, excluded, athEntries, frozenCloses, generatedAt: index.generated_at });
   const bytes = Buffer.byteLength(JSON.stringify(feed));
   const errors = validateUniverse(feed, bytes);
   if (errors.length) throw new Error(errors.slice(0, 10).join('; ') + ' (measured ' + bytes + ' bytes)');
@@ -425,7 +474,7 @@ function build({ snapshotsDir, v1Dir, athFile = path.join(ROOT, 'external-data',
 function main(argv) {
   try {
     const options = { snapshotsDir: process.env.FINDASH_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots'), v1Dir: path.join(ROOT, 'outputs', 'findash-export', 'v1') };
-    const names = { '--snapshots': 'snapshotsDir', '--v1-dir': 'v1Dir', '--ath-file': 'athFile' };
+    const names = { '--snapshots': 'snapshotsDir', '--v1-dir': 'v1Dir', '--ath-file': 'athFile', '--prices-dir': 'pricesDir' };
     let check = false;
     for (let i = 0; i < argv.length; i++) {
       if (argv[i] === '--check') check = true;
@@ -447,4 +496,4 @@ function main(argv) {
 
 // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
 if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
-module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES, fcfLabel, fcfLeerGrund };
+module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES, fcfLabel, fcfLeerGrund, withholdFrozen, growthReason };

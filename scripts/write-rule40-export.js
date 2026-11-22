@@ -395,7 +395,45 @@ function ebitdaMargePct(snapshot, wachstumRoh) {
   const e = metricVal(snapshot, 'ebitdaMargins');
   if (!istZahl(e)) return null;
   if (einheitenVerdacht(wachstumRoh, e)) return null;
+  if (ebitdaUnterBetriebsergebnis(snapshot)) return null; // S11 Stufe 4: the reason travels as ebitdaMarginReason
   return e;
+}
+
+// S11 Stufe 4 (22.11.2026): EBITDA is operating income plus depreciation and amortisation, so its margin cannot lie below
+// the operating margin of the same twelve months. EBITDA_TOLERANZ_PP is the sample's margin tolerance: a Yahoo margin
+// more than 2 points under it is wrong by at least that much, before any depreciation is added.
+const EBITDA_TOLERANZ_PP = 2;
+const EBITDA_UMSATZ_ABWEICHUNG = 0.03; // Yahoo's twelve-month revenue within 3 % of the four quarters: same period
+const QUARTALSABSTAND_TAGE = [80, 100];
+const EBITDA_GRUND = 'EBITDA-Marge wird nicht gezeigt, weil Yahoos Wert unter der operativen Marge derselben vier Quartale liegt. '
+  + 'EBITDA ist das operative Ergebnis plus Abschreibungen und kann nicht darunter liegen, der Anbieter rechnet hier also anders als die Definition.';
+
+/**
+ * Whether Yahoo's EBITDA margin contradicts its own definition: more than EBITDA_TOLERANZ_PP below the operating margin
+ * of the newest four quarters (opIncQ and revenueQ with the same four consecutive ends), checked only when Yahoo's
+ * twelve-month revenue matches those quarters. Dorian LPG 21.11.2026: 67.5 % against 72.3 % operating margin (the
+ * vendor removed USD 93.7 million of vessel-sale gains that sit inside operating income).
+ * ponytail: only the lower bound is provable without quarterly depreciation; a margin far above (LUNR, extra add-backs)
+ * needs a quarterly D&A series first.
+ * @param {object} snapshot Prepared snapshot.
+ * @returns {boolean} True when the margin must be withheld.
+ */
+function ebitdaUnterBetriebsergebnis(snapshot) {
+  const e = metricVal(snapshot, 'ebitdaMargins'), umsatzTTM = metricVal(snapshot, 'revenueTTM');
+  const ts = snapshot && snapshot.timeseries;
+  if (!istZahl(e) || !istZahl(umsatzTTM) || !ts) return false;
+  const vier = (werte, enden) => {
+    const v = norm(snapshot, werte).slice(0, 4), d = Array.isArray(ts[enden]) ? ts[enden].slice(0, 4) : [];
+    return v.length === 4 && v.every(istZahl) && d.length === 4 ? { summe: v.reduce((a, b) => a + b, 0), enden: d } : null;
+  };
+  const umsatz = vier('revenueQ', 'revenueQEnds'), ergebnis = vier('opIncQ', 'opIncQEnds');
+  if (!umsatz || !ergebnis || !(umsatz.summe > 0) || !isDeepStrictEqual(umsatz.enden, ergebnis.enden)) return false;
+  for (let i = 0; i < 3; i++) {
+    const tage = (Date.parse(umsatz.enden[i]) - Date.parse(umsatz.enden[i + 1])) / 86400000;
+    if (!(tage >= QUARTALSABSTAND_TAGE[0] && tage <= QUARTALSABSTAND_TAGE[1])) return false;
+  }
+  if (Math.abs(umsatzTTM / umsatz.summe - 1) > EBITDA_UMSATZ_ABWEICHUNG) return false;
+  return e < 100 * ergebnis.summe / umsatz.summe - EBITDA_TOLERANZ_PP;
 }
 
 /**
@@ -684,6 +722,7 @@ function sammleKandidaten(opts = {}) {
         && Number.isFinite(generatedMs) && String(meta.fcfMarginTTMOld.until || '') >= new Date(generatedMs).toISOString().slice(0, 10)
         ? meta.fcfMarginTTMOld.value : null,
       ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
+      ebitdaMarginReason: ebitdaUnterBetriebsergebnis(snapshot) ? EBITDA_GRUND : null,
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
@@ -825,6 +864,7 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.fcfMarginPctOld = istZahl(k.fcfMarginPctOld) ? round1(k.fcfMarginPctOld) : null; // comparison only, never ranked
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
+      if (k.ebitdaMarginReason) zeile.ebitdaMarginReason = k.ebitdaMarginReason; // S11 Stufe 4, additive OPTIONAL
       zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich
       zeile.annualPairsShadow = k.annualPairsShadow || annualPairsShadowForSnapshot(null);
       zeile.industry = k.industry;
@@ -1170,6 +1210,11 @@ function check(opts = {}) {
           + r.ebitdaMarginPct + ' (= ' + summeE + ').');
       }
     }
+    // S11 Stufe 4: a withheld EBITDA margin carries its German reason and no number beside it.
+    if ('ebitdaMarginReason' in r && (typeof r.ebitdaMarginReason !== 'string' || !r.ebitdaMarginReason.trim()
+        || r.ebitdaMarginPct !== null || r.r40Ebitda !== null)) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): ebitdaMarginReason ohne Text oder neben einer EBITDA-Zahl.');
+    }
     if (r.r40Group !== 'software' && r.r40Group !== 'other') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): r40Group "' + r.r40Group + '" ist kein erlaubter Wert.');
     }
@@ -1249,7 +1294,7 @@ module.exports = {
   R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MIN_BASE_YEAR_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
-  basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
+  basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, ebitdaUnterBetriebsergebnis, EBITDA_GRUND, r40GruppeVon, datenSuspekt, mcapBelegt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig, r40SchattenTor, r40SchattenZeile,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, applyDupIssuerShadowRows, build, check, main,
