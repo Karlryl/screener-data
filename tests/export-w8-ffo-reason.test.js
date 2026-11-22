@@ -87,10 +87,10 @@ check('F5 the new key follows the growth fields, the shadow keys stay last, no o
   for (const r of rows) {
     const out = W.mapBoardRow(structuredClone(r), 0);
     if (!out.ffoReason) continue;
-    const keys = Object.keys(out).filter((k) => k !== 'revGrowthReason' && !G31_TRAILING_KEYS.includes(k));
+    const keys = Object.keys(out).filter((k) => k !== 'revGrowthReason' && k !== 'newerPeriod' && !G31_TRAILING_KEYS.includes(k)); // newerPeriod: Stufe 4 label
     assert.equal(keys.at(-1), 'ffoReason', r.ticker);
     assert.ok(keys.indexOf('revGrowthSourcePriorPeriodEnd') < keys.indexOf('ffoReason'), r.ticker);
-    assert.deepEqual(Object.keys(out).slice(-2), ['g31Shadow', 'g31OverviewShadow'], r.ticker);
+    assert.deepEqual(Object.keys(out).filter((k) => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow'], r.ticker);
     const again = W.mapBoardRow(structuredClone(r), 0);
     delete again.ffoReason; delete again.revGrowthReason;
     const without = { ...out }; delete without.ffoReason; delete without.revGrowthReason;

@@ -82,12 +82,12 @@ check('R4 survival rows and rows with a value carry no key', () => {
 
 check('R5 the key follows the growth fields and the FFO reason; the G31 keys stay last', () => {
   const keys = Object.keys(W.mapBoardRow(row('WEWORK.NS'), 0));
-  const older = keys.filter((k) => !G31_TRAILING_KEYS.includes(k));
+  const older = keys.filter((k) => k !== 'newerPeriod' && !G31_TRAILING_KEYS.includes(k)); // newerPeriod: Stufe 4 label, last key
   assert.equal(older.at(-1), 'revGrowthReason');
   assert.equal(older.at(-2), 'ffoReason', 'WEWORK.NS has an empty FFO pill too');
   assert.equal(older.at(-3), 'revAccelerationBasis', 'the acceleration basis label (07.11.2026) follows the growth labels');
   assert.equal(older.at(-4), 'revGrowthSourcePriorPeriodEnd');
-  assert.deepEqual(keys.slice(-2), ['g31Shadow', 'g31OverviewShadow']);
+  assert.deepEqual(keys.filter((k) => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   for (const k of G31_TRAILING_KEYS) if (keys.includes(k)) assert.ok(keys.indexOf(k) > keys.indexOf('revGrowthReason'), k);
 });
 

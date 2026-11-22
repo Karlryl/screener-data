@@ -195,7 +195,7 @@ function fcfSchattenFuer(ticker, formulaId) {
   return abl.fcfSchatten.get(alpha);
 }
 function mitFcfSchatten(formulaId) {
-  return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
+  return (row) => newerPeriodLast(g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) })));
 }
 
 // Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth. The score axes excuse it only on the 25
@@ -387,6 +387,8 @@ let _mcapGenullt = 0, _mcapGeprueft = 0, _mcapVerworfen = 0;
 const _snapCache = new Map();
 const marketCapGuard = require('../lib/market-cap-guard.js');
 const { g31Export, g31Variant = () => null, g31Last = row => row, withG31Variant = (variant, fn) => fn() } = require('../lib/g31-recency.js');
+// Stufe 4, 22.11.2026. Defaults keep isolated mappers inert where tests replace unknown modules (like g31-recency above).
+const { newestPublished = () => null, newerPeriodFacts, newerPeriodLabel = () => null, validNewerPeriod = () => true, NEWER_PERIOD_DAYS = 45 } = require('../lib/stale-period.js');
 const { overviewMetric } = require('../src/scoring/overview.js');
 const round3 = (x) => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null); // = score.js round3 of overview values
 function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
@@ -435,6 +437,8 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    // Stufe 4 label `newerPeriod`, compact facts only; inert in isolated extracts of this function (like g31Export above).
+    newerPeriodFacts: snap && typeof newerPeriodFacts === 'function' ? newerPeriodFacts(snap, dataDay()) : null,
     // Shared mappers only read existing derivations; HG builders request this once.
     get annualPairsShadow() {
       const value = annualPairsShadowForSnapshot(snap, snapFehler);
@@ -521,7 +525,13 @@ function heldNewerSibling(meta, ticker, shownEnd) {
 
 // A later report than the shown period counts when Yahoo's mostRecentQuarter lies more than NEWER_REPORT_DAYS after it: fiscal
 // quarter ends drift by a few days (27.09. against 30.09.), the next period is at least about 90 days later.
-const NEWER_REPORT_DAYS = 45;
+const NEWER_REPORT_DAYS = NEWER_PERIOD_DAYS; // 45, shared with lib/stale-period.js
+// Stufe 4: `newerPeriod` is the row's last key, behind the G31 block; lib/g31-recency.js (G31_TRAILING_KEYS) is a GQS-00 sealed
+// dependency and stays untouched. Function declaration on purpose: mitFcfSchatten above runs before this line is reached.
+function newerPeriodLast(row) {
+  if (row && Object.hasOwn(row, 'newerPeriod')) { const value = row.newerPeriod; delete row.newerPeriod; row.newerPeriod = value; }
+  return row;
+}
 const PERIOD_WORD = { quarter: 'das Quartal', halfYear: 'das Halbjahr', ttm: 'die vier Quartale', year: 'das Geschäftsjahr', yearNewerRecord: 'das Geschäftsjahr' };
 // The sentence lib/g31-recency.js g31Hinweis() appends when it shows an older quarter pair; that hint already explains the gap.
 const OLDER_PAIR_SENTENCE = 'Gezeigt wird der ältere ';
@@ -547,10 +557,9 @@ function newerReportHint(meta, leg, { existing = null, heldSibling = null, store
   if (heldSibling || existing?.reason?.includes(OLDER_PAIR_SENTENCE)) return null;
   const shown = day(leg?.periodEnd), word = PERIOD_WORD[leg?.basis];
   // Stored quarter ends are rounded to the month end (AEHR: stored 30.09.2026, reported 25.09.2026), so the stored end only wins
-  // when it is a truly later period than Yahoo's exact date, more than NEWER_REPORT_DAYS after it.
-  const yahoo = day(meta?.mostRecentQuarter), stored = day(storedQuarterEnd);
-  const later = (a, b) => Date.parse(a) - Date.parse(b) > NEWER_REPORT_DAYS * 864e5;
-  const latest = yahoo && stored ? (later(stored, yahoo) ? stored : yahoo) : yahoo || stored;
+  // when it is a truly later period than Yahoo's exact date, more than NEWER_REPORT_DAYS after it (lib/stale-period.js, shared
+  // with the label `newerPeriod`, so both name the same date).
+  const latest = newestPublished(meta, storedQuarterEnd)?.end ?? null;
   if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
   const tag = d => d.split('-').reverse().join('.');
   return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon Zahlen bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum fehlt in den Daten ein geprüfter Vorjahresvergleich des Umsatzes, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
@@ -627,6 +636,13 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
       }
       out.overviewPeriod = label;
     }
+  }
+  // Stufe 4 (22.11.2026): a shown growth or gross-profit period older than a newer published one says so with a fixed code
+  // (lib/stale-period.js). Label only, on every row except survival rows (they carry no growth).
+  if (!Object.hasOwn(out, 'runwayQuarters')) {
+    const kind = Object.hasOwn(out, 'overviewKind') ? out.overviewKind : out.overview?.kind;
+    const gp = kind === 'gp' && out.overviewPeriod && out.overviewPeriod.basis !== 'none' ? out.overviewPeriod.periodEnd : null;
+    out.newerPeriod = newerPeriodLabel(derivations.newerPeriodFacts, { revGrowth: out.revGrowthPeriodEnd, grossProfit: gp });
   }
   return out;
 }
@@ -1119,7 +1135,8 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
   // W8: ffoReason/revGrowthReason right after the growth fields, before the P88 and G31 shadow keys (both stay last);
   // inert (identity) in isolated legacy mappers that lack the helper, like g31Last below.
   const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
-  return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+  const last = typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+  return typeof newerPeriodLast === 'function' ? newerPeriodLast(last) : last;
 }
 
 function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
@@ -1143,7 +1160,8 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: s. mapBoardRow
   const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
-  return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+  const last = typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+  return typeof newerPeriodLast === 'function' ? newerPeriodLast(last) : last;
 }
 
 function mapSurvivalRow(r, i) {
@@ -2408,6 +2426,7 @@ function validateFile(mk, kind, errs, opts = {}) {
     checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
     checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
     checkScoreScale(mk.rows, kind, errs, false, opts.file);
+    mk.rows.forEach((r, i) => { if (r && 'newerPeriod' in r && !validNewerPeriod(r.newerPeriod)) errs.push(`overview[${i}]: newerPeriod outside its contract`); });
     return;
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
@@ -2435,6 +2454,8 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
+  checkFeldHomogen(alleZeilen, 'newerPeriod', kind, errs); // Stufe 4 label, lib/stale-period.js
+  alleZeilen.forEach((r, i) => { if (r && 'newerPeriod' in r && !validNewerPeriod(r.newerPeriod)) errs.push(`${kind}[${i}]: newerPeriod outside its contract`); });
   checkScoreScale(alleZeilen, kind, errs, opts.deliveryMode === 'full', opts.file); // opts.file: label for the warning
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.

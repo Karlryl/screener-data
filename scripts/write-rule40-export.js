@@ -72,6 +72,7 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { g31Variant, g31Shadow, g31Export, g31Last, withG31Variant } = require('../lib/g31-recency.js');
+const { newerPeriodFacts, newerPeriodLabel, validNewerPeriod } = require('../lib/stale-period.js'); // Stufe 4, 22.11.2026
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
@@ -514,6 +515,7 @@ function sammleKandidaten(opts = {}) {
   }
 
   const generatedMs = Date.parse(index.generated_at);
+  const generatedDay = Number.isFinite(generatedMs) ? new Date(generatedMs).toISOString().slice(0, 10) : null;
 
   // Die Vollboard-Zeilen, nach Ticker greifbar. Sie sind hier NICHT das Universum, sondern
   // die Quelle der Engine-Beigaben (score, lamps, axisBreakdown, Kohorte, geprueftes marketCap)
@@ -691,6 +693,7 @@ function sammleKandidaten(opts = {}) {
       fcfSchatten,
       annualPairsShadow: annualPairsShadowForSnapshot(snapshot),
       ...g31Export(snapshot),
+      newerPeriodFacts: newerPeriodFacts(snapshot, generatedDay), // Stufe 4 label `newerPeriod`
       fcfSchattenTor,
       behoerdenSchutz: schutzEintrag,
       provenanceInputs, provenanceError,
@@ -849,6 +852,8 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.overviewPeriodLegacy = row.overviewPeriodLegacy ?? null;
       // P267 rule 1: review hint for a newly admitted B1 pair, only where this row's growth is the labelled leg.
       zeile.g31Hinweis = k.wachstumBein ? k.g31Hinweis ?? null : null;
+      // Stufe 4 (22.11.2026, lib/stale-period.js): shown growth or FCF period older than a newer published one, with a fixed code.
+      zeile.newerPeriod = newerPeriodLabel(k.newerPeriodFacts, { revGrowth: zeile.revGrowthPeriodEnd, fcfMargin: zeile.fcfMarginPeriodEnd });
       // Tag 1401: marks only, never changes a value. On-board names carry the flags of their
       // full-board row (the main export wrote them from the same list); off-board names get them
       // from the list. No open item: no key (absence, not an empty array).
@@ -1143,6 +1148,7 @@ function check(opts = {}) {
     if (r.track !== 'profitable' && r.track !== 'unprofitable') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): track "' + r.track + '" ist kein erlaubter Wert.');
     }
+    if ('newerPeriod' in r && !validNewerPeriod(r.newerPeriod)) melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): newerPeriod ausserhalb seines Vertrags (lib/stale-period.js).');
     if (gesehen.has(r.ticker)) melde('[rule40] Ticker ' + r.ticker + ' steht zweimal im Brett.');
     gesehen.add(r.ticker);
     if (r.rank !== i + 1) melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): rank ' + r.rank + ' statt ' + (i + 1) + '.');

@@ -1489,6 +1489,38 @@ periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis }`. E
 versiegelten Achsencodes für undatierte Quartale und ungleiche Laufzeiten bleiben auch hier an. Nach Karls Regel läuft die alte
 Formel höchstens vier Wochen sichtbar mit; ab dem Datenstand 04.12.2026 (`RUN_DATE_UTC`, ohne ihn der UTC-Tag der Uhr) schreibt der Export das Feld nicht mehr, am 03.12.2026 noch. Reine Anzeige, kein Leser in findash.
 
+## 16c. `newerPeriod` / `np`: newer period published, not loaded (Stufe 4, 22.11.2026)
+
+Additive label, no v2 bump, no number changes (replay of the 21.11.2026 data day: every other leaf of all 52 export files identical, `docs/stale-period-label-vorher-nachher-2026-11-22.md`). Source `lib/stale-period.js`; guard `tests/stale-period-label.test.js`. No value, score, rank or membership reads it.
+
+**Rule.** A shown period gets the label when the newest period that our own data prove published lies more than 45 days after it (fiscal quarter ends drift by days; the same slack and the same date rule as `g31Hinweis` code `neuerer-bericht`, both read `newestPublished()`). Proof is only what the snapshot holds: the newest stored quarter of `timeseries.revenueQ` with a value, or Yahoo's `meta.mostRecentQuarter`; a stored month-end date beats Yahoo's exact date only when it lies more than 45 days later, and a date after the data day is ignored. Exchange stores (MOPS, Eastmoney, HK interims) are not read here. Nothing is guessed for the newer period.
+
+**Board rows** (`newerPeriod`, last key of an HG row behind the G31 block, key order carries no meaning; `null` when every shown period is current; every HG full, top, quality, overview and small-cap row, absent on survival rows; every Rule of 40 row):
+
+```
+{ "end": "2026-09-30",              // newest published period end (ISO)
+  "evidence": "quarter" | "yahoo",  // quarter: a stored value carries it; yahoo: only Yahoo's date (not checked at the primary source)
+  "fields": { "revGrowth": "<code>", "grossProfit": "<code>", "fcfMargin": "fcf-ttm-alt" },  // only the stale fields, at least one
+  "hint": "Neuerer Zeitraum [laut Yahoo ]veröffentlicht (bis 30.09.2026), hier noch nicht verwendet: Umsatzwachstum, weil ...; FCF-Marge, weil ...." }
+```
+
+Compared ends: `revGrowth` = `revGrowthPeriodEnd` (HG, Rule of 40; only where the row carries a growth label), `grossProfit` = `overviewPeriod.periodEnd` when the overview kind is `gp` and its basis is not `none` (HG only), `fcfMargin` = `fcfMarginPeriodEnd` (Rule of 40 only).
+
+**Filter feed** (`np`, absent = no label; byte budget): `{ "e": end, "b": "q" | "y", "g": code, "f": code }` with `g` = growth (`g`), `f` = FCF margin (`fp`); `np.g` only where `g` is present, `np.f` only where `fp` is. The growth end is the board row's `revGrowthPeriodEnd`, off board the leg of exactly the snapshot growth shown (`revGrowthLeg`).
+
+**Fixed codes** (full / compact, German reason after "weil"):
+
+| Code | Compact | Meaning |
+|---|---|---|
+| `vorjahr-fehlt` | `vf` | the newest quarter is stored with a value, its year-ago quarter is absent or empty at the vendor |
+| `boersenabgleich` | `ba` | as `vorjahr-fehlt`, and the exchange cross-check's own verdict for this CN/TW listing is `would-withhold*` (a vendor quarter deviates from the exchange filing), so G31 also keeps the older quarter pair closed; read via `lib/exchange-quarter-check.js evaluate`, `lib/g31-recency.js` (GQS-00 sealed) is unchanged |
+| `paar-gesperrt` | `pg` | both quarters are stored, but the pair fails a check (currency, duration, period gate, filed-value rule) |
+| `anbieter-verzug` | `av` | the series has quarterly values, but none for the newest published period (Yahoo has not delivered it yet) |
+| `nur-jahreswerte` | `nj` | the series has no quarterly or half-year value at all; only annual figures |
+| `fcf-ttm-alt` | `fa` | the twelve-month FCF figures (`lib/fcf-ttm.js`) end more than 45 days before the newest published period |
+
+**Display in findash.** Show `hint` (board rows) next to the period of the affected value; for `np` build the same sentence from the table above (`lib/stale-period.js REASONS`, `FIELDS`). With `evidence: "yahoo"` / `b: "y"` the sentence says "laut Yahoo". The value itself stays as it is; the label never replaces or hides it. The `--check` gates of all three writers reject a label outside this contract (`validNewerPeriod`).
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to
@@ -1518,6 +1550,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `fcf` | number or absent | TTM FCF margin after engine `fcfMarginValid` including G3, the pull suppression flag and the Rule40 ceiling of 100% (since 18.11.2026 the one definition of `lib/fcf-ttm.js`: SEC first, Yahoo trailing fallback) |
 | `fp` | ISO date or absent (18.11.2026) | last day of the twelve months of `fcf`; present exactly when `fcf` is |
 | `fq` | `s` or absent (18.11.2026) | `s` = `fcf` comes from SEC filings; absent while `fp` is present = Yahoo's twelve-month row |
+| `np` | object or absent (22.11.2026) | newer period published, not loaded: `{e, b, g?, f?}`, see section 16c |
 | `aus` codes `fcf-leer`, `fcf-alt`, `fcf-unplausibel` | (18.11.2026) | why `fcf` is absent: no twelve-month source, newest twelve months too old, or the figures are implausible |
 | `r40` | number or absent | `ruleOfX(snapshot,1,true,bounds)` only after valid FCF and shared Rule40 data/unit/base-period/freshness/sector gates |
 | `d52`, `ath` | number or absent | Percent distance from 52-week high and seeded ATH, negative below the high; missing price/high remains null; `d52` is clamped to at most 0 |
