@@ -4,7 +4,7 @@
 // pdftotext -layout may lose the Chinese glyphs. Two independent amount anchors identify
 // the operating-revenue row and its scale; column geometry is only used AFTER both match.
 // v3 (B11c): growth bound to its table row by a finite set of layout structures taken from cached texts. Rows stored by v2 keep their own parserVersion (append-only).
-const VERSION = 'cn-q3-layout-v3';
+const VERSION = 'cn-q3-layout-v4';
 const finite = Number.isFinite;
 const amountPattern = /^-?\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/;
 const epsilon = n => Math.max(1e-7, Math.abs(n) * Number.EPSILON * 8);
@@ -379,6 +379,32 @@ const STAGGERED_GROWTH_ROWS = new Map([
   ["[\"[[[1,1],[2,2],[3,3]],[[0,0],[4,4],[6,6],[8,8]],[]]\",[8,24,57,74,24]]", 1],
 ]);
 
+// A local signature stops at the next amount row in each column. Later profit,
+// cash-flow and page-break positions cannot determine the revenue cell. Learn
+// only unanimous offsets from the existing, independently erased-cell-tested
+// structures; collisions stay unsupported. No growth tokens or values enter it.
+const localShape = shape => {
+  const [quarter, ytd, headers] = JSON.parse(shape);
+  return JSON.stringify([quarter.slice(0, 2), ytd.slice(0, 2), headers]);
+};
+const LOCAL_GROWTH_ROWS = new Map();
+for (const [shape, offset] of [...GROWTH_ROWS,
+  ...[...STAGGERED_GROWTH_ROWS].map(([key, value]) => [JSON.parse(key)[0], value])]) {
+  const key = localShape(shape);
+  LOCAL_GROWTH_ROWS.set(key, LOCAL_GROWTH_ROWS.has(key) && LOCAL_GROWTH_ROWS.get(key) !== offset
+    ? null : offset);
+}
+function localGrowthOffset(shape, q, y, prior) {
+  const headers = JSON.parse(shape)[2];
+  // A standalone percent header fixes the first cell's physical line, even if
+  // that cell is blank. Never advance to the next surviving numeric token.
+  if (headers.length === 1) return headers[0] + 1;
+  const learned = LOCAL_GROWTH_ROWS.get(localShape(shape));
+  if (learned !== null && learned !== undefined) return learned;
+  if (!headers.length && q.row === y.row && !q.wrapped && !y.wrapped && !prior.length) return 0;
+  return undefined;
+}
+
 function eastmoneyAnchor(store, ticker, year = 2026) {
   if (store?.market !== 'CN' || store.currency !== 'CNY' || store.unit !== 1) return null;
   const c = store.companies?.[ticker];
@@ -420,7 +446,7 @@ function cell(t, unit) {
     roundingHalfWidth: half(t.raw) * unit };
 }
 
-function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = false) {
+function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = false, local = false) {
   const gap = (reason, detail = {}) => ({ parseStatus: 'unparsed', reason, parserVersion: VERSION, ...detail });
   if (!anchor || !finite(anchor.current) || !finite(anchor.ytd) || anchor.line !== 'operate') return gap('operating-revenue-anchor-missing');
   if (typeof text !== 'string' || !text.trim()) return gap('text-empty');
@@ -470,7 +496,8 @@ function parseLayout(text, anchor, { ticker, year = 2026 } = {}, extended = fals
     /^-?\d{1,3}(?:,\d{3})*\.\d{1,2}%?$/.test(t.raw) && (!ticker?.endsWith('.SZ') || t.raw.endsWith('%') || percentHeader) &&
     !amounts.some(a => a.wrapped && t.row >= a.row && t.row <= a.endRow && t.x >= a.x && t.end <= a.end));
   const shape = rowShape(lines, amounts, q, y, left, lo);
-  const offset = GROWTH_ROWS.get(shape) ?? STAGGERED_GROWTH_ROWS.get(JSON.stringify([shape, [q.x, q.end, y.x, y.end, left]]));
+  const offset = GROWTH_ROWS.get(shape) ?? STAGGERED_GROWTH_ROWS.get(JSON.stringify([shape, [q.x, q.end, y.x, y.end, left]])) ??
+    (local ? localGrowthOffset(shape, q, y, prior) : undefined);
   const growthRow = offset === undefined ? null : Math.min(q.row, y.row) + offset;
   // Unsupported negative notation is refused as a complete cell, never stripped
   // into a positive token. ASCII negatives retain their historical representation.
@@ -539,7 +566,11 @@ function parseText(text, anchor, options = {}) {
   const original = parseLayout(text, anchor, options);
   // Existing accepted observations retain their value, unit, growth and exact quote.
   // All identity, dual-anchor, first-row and rounding guards also run on new layouts.
-  return original.parseStatus === 'parsed' ? original : parseLayout(text, anchor, options, true);
+  if (original.parseStatus === 'parsed') return original;
+  const extended = parseLayout(text, anchor, options, true);
+  if (extended.parseStatus === 'parsed' || extended.reason !== 'growth-row-unbound') return extended;
+  const local = parseLayout(text, anchor, options, true, true);
+  return local.parseStatus === 'parsed' ? local : extended;
 }
 
 function comparable(parsed) {
