@@ -204,21 +204,23 @@ function growthReason(check, withR40) {
   const day = iso => iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4);
   return (withR40 ? 'Umsatzwachstum und Rule of 40 werden' : 'Umsatzwachstum wird') + ' nicht gezeigt, weil das Wachstum ' +
     `nicht zu den Umsätzen der Börsenmeldung (Eastmoney) für dieselben Zeiträume passt (${GROWTH_REASON_LEG[check.basis]} bis ` +
-    `${day(check.periodEnd)} gegen ${day(check.priorPeriodEnd)}, Abweichung mehr als 2 Prozentpunkte und mehr als 5 %).`;
+    `${day(check.periodEnd)} gegen ${day(check.priorPeriodEnd)}, Abweichung mehr als 2 Prozentpunkte und mehr als 5 % des Wachstums laut Börsenmeldung).`;
 }
 // Field defaults a withheld price value leaves behind, so peSt and dySt stay consistent with their empty value.
 const FROZEN_STATUS = { pe: ['peSt', 'unbekannt'], dy: ['dySt', 'unbekannt'] };
 
 /**
  * Withhold every shown value that rests on a frozen OTC close (lib/frozen-close.js), in place, with one German reason.
- * Nothing happens without a shown market cap (a stale-quote hold or a missing value came first).
+ * Whichever price-based fields the row still shows are withheld, with or without a market cap (38 frozen OTC rows on
+ * 21.11.2026 had no market cap but showed d52, dy or P/E on the frozen price); a row that shows none gets no reason.
  * @param {object} row Row before its null fields are dropped.
  * @param {{since: string, days: number}|undefined} run Frozen run of the ticker.
  * @returns {void}
  */
 function withholdFrozen(row, run) {
-  if (!run || row.mc === null || row.mc === undefined) return;
+  if (!run) return;
   const fields = Object.keys(FROZEN_LABELS).filter(key => row[key] !== null && row[key] !== undefined);
+  if (!fields.length) return;
   for (const key of fields) {
     row[key] = null;
     if (FROZEN_STATUS[key]) row[FROZEN_STATUS[key][0]] = FROZEN_STATUS[key][1];

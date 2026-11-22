@@ -89,13 +89,25 @@ check('frozen: a run needs 20 identical closes that equal the quote price (float
   assert.equal(FC.frozenRun(days(39, TOKSF_CLOSE), null), null);
 });
 
-check('frozen: loadFrozenRuns reads only OTC lines with a shown market cap and refuses a missing store', () => {
+check('frozen: loadFrozenRuns reads every OTC line, with or without a market cap, and refuses a missing store', () => {
   const dir = path.join(tmp, 'prices');
-  store.saveAll(dir, { TOKSF: days(39, TOKSF_CLOSE), '5423.T': days(39, 1705), MOVE: days(39, 3).map((r, i) => ({ ...r, close: 3 + i })) });
+  store.saveAll(dir, { TOKSF: days(39, TOKSF_CLOSE), NOCAP: days(39, TOKSF_CLOSE), '5423.T': days(39, 1705),
+    MOVE: days(39, 3).map((r, i) => ({ ...r, close: 3 + i })) });
   const noCap = otcSnapshot('NOCAP'); noCap.marketCap = { value: null };
   const runs = FC.loadFrozenRuns(dir, [otcSnapshot('TOKSF'), { ...otcSnapshot('5423.T', 1705, 'Tokyo') }, otcSnapshot('MOVE', 41), noCap]);
-  assert.deepEqual([...runs.keys()], ['TOKSF'], 'the home listing in Tokyo and a moving OTC line are no case');
+  assert.deepEqual([...runs.keys()].sort(), ['NOCAP', 'TOKSF'], 'the home listing in Tokyo and a moving OTC line are no case');
   assert.throws(() => FC.loadFrozenRuns(path.join(tmp, 'no-store'), []), /Price store missing/);
+});
+
+check('frozen: break once, a partial store (metadata stamped, wanted shard missing) throws instead of judging nothing', () => {
+  const dir = path.join(tmp, 'prices-partial');
+  store.saveAll(dir, { TOKSF: days(39, TOKSF_CLOSE), SPY: days(39, 500).map((r, i) => ({ ...r, close: 500 + i })) });
+  assert.deepEqual([...FC.loadFrozenRuns(dir, [otcSnapshot('TOKSF')]).keys()], ['TOKSF'], 'complete store');
+  fs.unlinkSync(store.shardPath(dir, store.shardOf('TOKSF')));
+  assert.throws(() => FC.loadFrozenRuns(dir, [otcSnapshot('TOKSF')]), /Price store partial: history-\d\d\.json missing/);
+  assert.throws(() => store.loadAll(dir), /partial store/, 'same behaviour as store.loadAll');
+  const blind = compiled(FILES[2], '    if (!fs.existsSync(store.shardPath(pricesDir, shard))) {', '    if (false) {');
+  assert.equal(blind.loadFrozenRuns(dir, [otcSnapshot('TOKSF')]).size, 0, 'broken: the partial store fails open silently');
 });
 
 check('frozen: the filter feed withholds every price value with one reason naming exactly them', () => {
@@ -106,18 +118,40 @@ check('frozen: the filter feed withholds every price value with one reason namin
   assert.equal(row.peSt, 'unbekannt'); assert.equal(row.dySt, 'unbekannt');
   const reason = row.aus.find(a => a.endsWith(FC.FROZEN_CLOSE_RETURN));
   assert.equal(reason, 'Börsenwert, P/S, EV/Sales, P/E, Forward P/E, Dividendenrendite und Abstand zum 52-Wochen-Hoch werden nicht gezeigt, '
-    + 'weil der Schlusskurs dieser OTC-Notierung seit dem 29.09.2026 unverändert ist (39 Handelstage). ' + FC.FROZEN_CLOSE_RETURN);
+    + 'weil der Schlusskurs dieser OTC-Notierung mindestens seit dem 29.09.2026 unverändert ist (39 Handelstage). '
+    + 'Ein so lange unveränderter Kurs ist kein aktueller Marktpreis. Die Werte kommen ' + FC.FROZEN_CLOSE_RETURN);
   assert.deepEqual(FC.frozenFields(reason), NAMED);
   assert.deepEqual(W.validateUniverse(feed, Buffer.byteLength(JSON.stringify(feed))), []);
   const plain = frozenFeed(W, new Map()).rows[0];
   for (const k of NAMED) assert.notEqual(plain[k], undefined, 'without a run the row keeps ' + k);
-  // Only one field shown: singular verb, and the guard sees only that field.
+  // Only one field shown: singular verb and singular return sentence, and the guard sees only that field.
   const one = otcSnapshot('ONE'); one.metrics = {};
   const oneRow = frozenFeed(W, new Map([['ONE', { since: '2026-09-29', days: 39 }]]), [one]).rows[0];
   const oneReason = oneRow.aus.find(a => a.endsWith(FC.FROZEN_CLOSE_RETURN));
-  assert.match(oneReason, /^Börsenwert wird nicht gezeigt, weil/);
+  assert.equal(oneReason, 'Börsenwert wird nicht gezeigt, weil der Schlusskurs dieser OTC-Notierung mindestens seit dem 29.09.2026 '
+    + 'unverändert ist (39 Handelstage). Ein so lange unveränderter Kurs ist kein aktueller Marktpreis. Der Wert kommt ' + FC.FROZEN_CLOSE_RETURN);
   assert.deepEqual(FC.frozenFields(oneReason), ['mc']);
   assert.deepEqual(FC.frozenFields('Börsenwert wird nicht gezeigt, weil etwas anderes. ' + 'x'), []);
+});
+
+check('frozen: a row without a market cap withholds the price values it shows (AUHEF class), the reason names only them', () => {
+  const noCap = otcSnapshot('AUHEF'); noCap.marketCap = { value: null };
+  const run = new Map([['AUHEF', { since: '2026-09-29', days: 39 }]]);
+  const plain = frozenFeed(W, new Map(), [noCap]).rows[0];
+  const shown = NAMED.filter(k => plain[k] !== undefined);
+  assert.ok(shown.includes('d52') && shown.includes('dy') && !shown.includes('mc'), 'fixture shows d52 and dy without mc: ' + shown);
+  const feed = frozenFeed(W, run, [noCap]);
+  const row = feed.rows[0];
+  for (const k of NAMED) assert.equal(row[k], undefined, k);
+  const reason = row.aus.find(a => a.endsWith(FC.FROZEN_CLOSE_RETURN));
+  assert.deepEqual(FC.frozenFields(reason), shown, 'exactly the fields that were shown');
+  assert.deepEqual(W.validateUniverse(feed, Buffer.byteLength(JSON.stringify(feed))), []);
+  // A frozen row that shows no price value gets no reason at all.
+  const bare = otcSnapshot('BARE'); bare.marketCap = { value: null }; bare.metrics = {};
+  assert.equal(frozenFeed(W, new Map([['BARE', { since: '2026-09-29', days: 39 }]]), [bare]).rows[0].aus
+    .some(a => a.endsWith(FC.FROZEN_CLOSE_RETURN)), false);
+  const blind = compiled(FILES[0], '  if (!run) return;', '  if (!run || row.mc === null || row.mc === undefined) return;');
+  assert.notEqual(frozenFeed(blind, run, [noCap]).rows[0].d52, undefined, 'broken: the old market-cap condition shows d52 again');
 });
 
 check('frozen: break once, the check refuses a named field beside the reason and the writer without the hold shows it', () => {
@@ -147,16 +181,38 @@ check('growth: the writer withholds g and r40 with the German reason; an agreein
     generatedAt: FRESH }).rows[0];
   const wrong = rowOf('601377.SS');
   assert.equal(wrong.g, undefined);
-  assert.ok(wrong.aus.some(a => /^Umsatzwachstum (?:und Rule of 40 werden|wird) nicht gezeigt, weil das Wachstum nicht zu den Umsätzen der Börsenmeldung \(Eastmoney\) für dieselben Zeiträume passt \(Quartal bis 30\.06\.2026 gegen 30\.06\.2025, Abweichung mehr als 2 Prozentpunkte und mehr als 5 %\)\.$/.test(a)), wrong.aus.join(' | '));
+  assert.ok(wrong.aus.some(a => /^Umsatzwachstum (?:und Rule of 40 werden|wird) nicht gezeigt, weil das Wachstum nicht zu den Umsätzen der Börsenmeldung \(Eastmoney\) für dieselben Zeiträume passt \(Quartal bis 30\.06\.2026 gegen 30\.06\.2025, Abweichung mehr als 2 Prozentpunkte und mehr als 5 % des Wachstums laut Börsenmeldung\)\.$/.test(a)), wrong.aus.join(' | '));
   assert.notEqual(rowOf('601901.SS').g, undefined, 'an agreeing broker keeps its growth');
   assert.equal(W.growthReason({ basis: 'year', periodEnd: '2025-12-31', priorPeriodEnd: '2024-12-31' }, true),
-    'Umsatzwachstum und Rule of 40 werden nicht gezeigt, weil das Wachstum nicht zu den Umsätzen der Börsenmeldung (Eastmoney) für dieselben Zeiträume passt (Geschäftsjahr bis 31.12.2025 gegen 31.12.2024, Abweichung mehr als 2 Prozentpunkte und mehr als 5 %).');
+    'Umsatzwachstum und Rule of 40 werden nicht gezeigt, weil das Wachstum nicht zu den Umsätzen der Börsenmeldung (Eastmoney) für dieselben Zeiträume passt (Geschäftsjahr bis 31.12.2025 gegen 31.12.2024, Abweichung mehr als 2 Prozentpunkte und mehr als 5 % des Wachstums laut Börsenmeldung).');
 });
 
 check('growth: break once, a check that always agrees lets the wrong rows through', () => {
   const blind = compiled(FILES[3], "  out.status = out.exchangePct.some(near) ? 'agree' : 'mixed';", "  out.status = 'agree';");
   assert.equal(blind.shownGrowthCheck(structuredClone(EQ.snapshots['601377.SS'])).status, 'agree');
   assert.equal(X.shownGrowthCheck(structuredClone(EQ.snapshots['601377.SS'])).status, 'mixed');
+});
+
+check('growth: exchangeValues reads the same exchange figures evaluate() compares, pair by pair, on the fixture', () => {
+  const EQC = require('../lib/exchange-quarter-check.js');
+  const ctx = EQC.defaultContext();
+  let quarters = 0, years = 0;
+  for (const t of china) {
+    const res = EQC.evaluate(structuredClone(EQ.snapshots[t]), ctx);
+    if (!res?.stratum || !res.line) continue;
+    const values = X.exchangeValues(ctx.stores.cn, t, [res.line]);
+    assert.ok(values, t + ': chain readable where evaluate() read it');
+    for (const p of res.pairs) {
+      assert.deepEqual([values[res.line].quarter[p.end] ?? null, values[res.line].quarter[p.priorEnd] ?? null], p.exchange, t + ' ' + p.end);
+      quarters++;
+    }
+    if (Array.isArray(res.growth?.periodsChecked) && Array.isArray(res.growth.exchange)) {
+      assert.deepEqual(res.growth.periodsChecked.map(e => values[res.line].fy[e] ?? null), res.growth.exchange, t + ' full years');
+      years++;
+    }
+  }
+  assert.ok(quarters >= 30, 'enough compared pairs: ' + quarters);
+  console.log('  compared ' + quarters + ' quarter pairs and ' + years + ' full-year pairs');
 });
 
 // ── ebitda ──────────────────────────────────────────────────────────────────
@@ -179,6 +235,15 @@ check('ebitda: a margin under the operating margin of the same four quarters is 
   assert.equal(R.ebitdaUnterBetriebsergebnis(lpg({ revenueQEnds: ['2026-09-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
     opIncQEnds: ['2026-09-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] })), false, 'not four consecutive quarters');
   assert.equal(R.ebitdaMargePct(lpg({ ebitdaMargins: 75 }), 78.4), 75);
+  // The reason names only this cause: a margin already dropped as a unit error (fraction instead of percent) gets none.
+  assert.equal(R.ebitdaGrund(lpg(), 78.4), R.EBITDA_GRUND);
+  assert.equal(R.ebitdaMargePct(lpg({ ebitdaMargins: 0.5 }), 0.3), null);
+  assert.equal(R.ebitdaGrund(lpg({ ebitdaMargins: 0.5 }), 0.3), null, 'unit error, not under the operating margin');
+  assert.equal(R.ebitdaGrund(lpg({ ebitdaMargins: 75 }), 78.4), null);
+  assert.match(R.EBITDA_GRUND, /^EBITDA-Marge und Rule of 40 mit EBITDA werden nicht gezeigt/);
+  const blind = compiled(FILES[1], "  return istZahl(e) && !einheitenVerdacht(wachstumRoh, e) && ebitdaUnterBetriebsergebnis(snapshot) ? EBITDA_GRUND : null;",
+    '  return ebitdaUnterBetriebsergebnis(snapshot) ? EBITDA_GRUND : null;');
+  assert.equal(blind.ebitdaGrund(lpg({ ebitdaMargins: 0.5 }), 0.3), blind.EBITDA_GRUND, 'broken: the unit error gets the wrong reason');
 });
 
 check('ebitda: the Rule of 40 board carries the reason and no EBITDA number, and its check holds both', () => {
@@ -196,6 +261,13 @@ check('ebitda: the Rule of 40 board carries the reason and no EBITDA number, and
     assert.deepEqual(errorsOf(), []);
     row.ebitdaMarginPct = 67.5; fs.writeFileSync(file, JSON.stringify(overview));
     assert.equal(errorsOf().length, 1, 'a number beside the reason is refused');
+    // Cap: one reason on a one-row board is allowed (ceil of 5 %), two of two are not.
+    row.ebitdaMarginPct = null;
+    overview.rows.push({ ...row, ticker: 'LPG2' }); fs.writeFileSync(file, JSON.stringify(overview));
+    const cap = /^\[rule40\] 2 von 2 Zeilen tragen ebitdaMarginReason, erlaubt sind hoechstens 1 \(5 %\)/;
+    assert.ok(errorsOf().some(e => cap.test(e)), errorsOf().join(' | '));
+    const uncapped = compiled(FILES[1], '  if (ohneEbitda > Math.ceil(EBITDA_GRUND_MAX_ANTEIL * rows.length)) {', '  if (false) {');
+    assert.equal(uncapped.check({ v1Dir: f.v1Dir, outDir: f.outDir }).errors.some(e => cap.test(e)), false, 'broken: no cap, no error');
   } finally { f.aufraeumen(); }
 });
 

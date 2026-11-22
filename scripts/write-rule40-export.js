@@ -399,13 +399,29 @@ function ebitdaMargePct(snapshot, wachstumRoh) {
   return e;
 }
 
+/**
+ * ebitdaMarginReason: EBITDA_GRUND exactly when ebitdaMargePct dropped the margin for being under the operating margin.
+ * A margin already dropped as a unit error (einheitenVerdacht) gets no reason, because EBITDA_GRUND would name the wrong cause.
+ * @param {object} snapshot Prepared snapshot.
+ * @param {number|null} wachstumRoh Raw growth, as for ebitdaMargePct.
+ * @returns {string|null} The German reason or null.
+ */
+function ebitdaGrund(snapshot, wachstumRoh) {
+  const e = metricVal(snapshot, 'ebitdaMargins');
+  return istZahl(e) && !einheitenVerdacht(wachstumRoh, e) && ebitdaUnterBetriebsergebnis(snapshot) ? EBITDA_GRUND : null;
+}
+
 // S11 Stufe 4 (22.11.2026): EBITDA is operating income plus depreciation and amortisation, so its margin cannot lie below
 // the operating margin of the same twelve months. EBITDA_TOLERANZ_PP is the sample's margin tolerance: a Yahoo margin
 // more than 2 points under it is wrong by at least that much, before any depreciation is added.
 const EBITDA_TOLERANZ_PP = 2;
 const EBITDA_UMSATZ_ABWEICHUNG = 0.03; // Yahoo's twelve-month revenue within 3 % of the four quarters: same period
 const QUARTALSABSTAND_TAGE = [80, 100];
-const EBITDA_GRUND = 'EBITDA-Marge wird nicht gezeigt, weil Yahoos Wert unter der operativen Marge derselben vier Quartale liegt. '
+// --check cap on rows that lose their EBITDA margin to EBITDA_GRUND: measured 10 of 484 rows (2.1 %) on 21.11.2026.
+// 5 % is about 2.4 times that; above it the quarterly operating income or revenue at Yahoo is more likely broken than
+// many single margins wrong, so the board stops. Rounded up, so a board of up to 20 rows may carry one.
+const EBITDA_GRUND_MAX_ANTEIL = 0.05;
+const EBITDA_GRUND = 'EBITDA-Marge und Rule of 40 mit EBITDA werden nicht gezeigt, weil Yahoos EBITDA-Marge unter der operativen Marge derselben vier Quartale liegt. '
   + 'EBITDA ist das operative Ergebnis plus Abschreibungen und kann nicht darunter liegen, der Anbieter rechnet hier also anders als die Definition.';
 
 /**
@@ -722,7 +738,7 @@ function sammleKandidaten(opts = {}) {
         && Number.isFinite(generatedMs) && String(meta.fcfMarginTTMOld.until || '') >= new Date(generatedMs).toISOString().slice(0, 10)
         ? meta.fcfMarginTTMOld.value : null,
       ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
-      ebitdaMarginReason: ebitdaUnterBetriebsergebnis(snapshot) ? EBITDA_GRUND : null,
+      ebitdaMarginReason: ebitdaGrund(snapshot, wachstumRoh),
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
@@ -1229,6 +1245,12 @@ function check(opts = {}) {
         + r.revGrowthPeriodEnd + ').');
     }
   });
+  // S11 Stufe 4: cap on rows whose EBITDA margin is withheld (EBITDA_GRUND_MAX_ANTEIL, measured 2.1 % on 21.11.2026).
+  const ohneEbitda = rows.filter(r => r && 'ebitdaMarginReason' in r).length;
+  if (ohneEbitda > Math.ceil(EBITDA_GRUND_MAX_ANTEIL * rows.length)) {
+    melde('[rule40] ' + ohneEbitda + ' von ' + rows.length + ' Zeilen tragen ebitdaMarginReason, erlaubt sind hoechstens '
+      + Math.ceil(EBITDA_GRUND_MAX_ANTEIL * rows.length) + ' (' + (100 * EBITDA_GRUND_MAX_ANTEIL) + ' %): eher sind Yahoos Quartalszahlen gestoert als so viele Margen falsch.');
+  }
 
   fehler.push(...provenanceErrors(path.dirname(outDir), ['rule40/overview.json'], opts.requireProvenance));
   return { ok: fehler.length === 0, errors: fehler, rows: rows.length };
@@ -1294,7 +1316,7 @@ module.exports = {
   R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MIN_BASE_YEAR_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
-  basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, ebitdaUnterBetriebsergebnis, EBITDA_GRUND, r40GruppeVon, datenSuspekt, mcapBelegt,
+  basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, ebitdaUnterBetriebsergebnis, ebitdaGrund, EBITDA_GRUND, EBITDA_GRUND_MAX_ANTEIL, r40GruppeVon, datenSuspekt, mcapBelegt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig, r40SchattenTor, r40SchattenZeile,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, applyDupIssuerShadowRows, build, check, main,

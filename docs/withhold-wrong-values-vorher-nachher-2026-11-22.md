@@ -2,9 +2,9 @@
 
 > **Auf einen Blick**
 >
-> **Drei der fünf falschen Werte aus der Stichprobe vom 22.11. (Dorian LPG, Tokyo Steel an der OTC, Huatai Securities) gehören zu Fehlerklassen, die sich genau abgrenzen lassen; diese drei Klassen werden jetzt leer mit deutschem Grund gezeigt, zusammen 480 Zeilen im Filter und 10 Zeilen im Rule-of-40-Brett.**
+> **Drei der fünf falschen Werte aus der Stichprobe vom 22.11. (Dorian LPG, Tokyo Steel an der OTC, Huatai Securities) gehören zu Fehlerklassen, die sich genau abgrenzen lassen; diese drei Klassen werden jetzt leer mit deutschem Grund gezeigt, zusammen 518 Zeilen im Filter und 10 Zeilen im Rule-of-40-Brett.**
 >
-> - **Eingefrorener OTC-Kurs:** 457 Zeilen verlieren Börsenwert und die Kurskennzahlen. Wo es eine Heimatnotierung gibt, lagen 77 % davon mehr als 5 % daneben; geschätzt 20 bis 25 % der geleerten Werte hätten zufällig noch gepasst (Sicherheit der Schätzung etwa 70 %).
+> - **Eingefrorener OTC-Kurs:** 495 Zeilen verlieren die Kurskennzahlen, 457 davon auch den Börsenwert. Wo es eine Heimatnotierung gibt, lagen 77 % davon mehr als 5 % daneben; geschätzt 20 bis 25 % der geleerten Werte hätten zufällig noch gepasst (Sicherheit der Schätzung etwa 70 %).
 > - **China-Wachstum gegen Börsenmeldung (23 Zeilen) und EBITDA-Marge unter der operativen Marge (10 Zeilen):** Hier trifft die Regel nach Aufbau nur Werte, die um mehr als 2 Punkte falsch sind (Sicherheit etwa 90 %).
 > - **Nicht umgesetzt:** Intuitive Machines (EBITDA zu günstig) und Helios Towers (Eigenkapitalrendite mit Minderheitsanteilen). Beide Klassen sind auf den Daten nicht sauber abgrenzbar; Messung und Empfehlung stehen unten.
 
@@ -23,7 +23,7 @@ Hinweis zu den Namen in `ergebnis.md`: TOKSF ist Tokyo Steel Manufacturing (Heim
 | Huatai Securities (601688.SS), Umsatzwachstum 4,38 % | Das Vorjahresquartal fehlt bei Yahoo, deshalb fällt das Wachstum auf das Geschäftsjahr 2025 gegen 2024 zurück, auf Yahoos Umsatzbegriff; die Börsenmeldung ergibt 6,83 % | ja |
 
 ## Umgesetzte Regeln
-**1. Eingefrorener OTC-Kurs** (`lib/frozen-close.js`, im Filter-Feed): Eine OTC-Notierung, deren letzte 20 gespeicherte Schlusskurse gleich sind und dem Kurs der Kursmeldung entsprechen, hat keinen aktuellen Marktpreis. Dann fehlen Börsenwert, P/S, EV/Sales, P/E, Forward P/E, Dividendenrendite und Abstand zum 52-Wochen-Hoch, mit einem Satz, der genau diese Felder und den ersten Tag ohne Kursänderung nennt. Ändert sich der Kurs, kommen die Werte von selbst zurück. Snapshots, Brett-Börsenwerte und Scores bleiben unverändert.
+**1. Eingefrorener OTC-Kurs** (`lib/frozen-close.js`, im Filter-Feed): Eine OTC-Notierung, deren letzte 20 gespeicherte Schlusskurse gleich sind und dem Kurs der Kursmeldung entsprechen, hat keinen aktuellen Marktpreis. Dann fehlen von Börsenwert, P/S, EV/Sales, P/E, Forward P/E, Dividendenrendite und Abstand zum 52-Wochen-Hoch alle, die die Zeile zeigen würde, auch ohne Börsenwert, mit einem Satz, der genau diese Felder nennt und den ersten Tag ohne Kursänderung als „mindestens seit“ (eine Lücke im Kursspeicher kann den echten letzten Handel verdecken). Fehlt im Kursspeicher eine benötigte Teildatei, bricht der Schreiber ab, statt nichts zu prüfen. Ändert sich der Kurs, kommen die Werte von selbst zurück. Snapshots, Brett-Börsenwerte und Scores bleiben unverändert.
 
 **2. China-Wachstum gegen Börsenmeldung** (`lib/shown-growth-check.js`, im Filter-Feed; ob eine Firma prüfbar ist, entscheidet wie bisher `lib/exchange-quarter-check.js`): Das gezeigte Wachstum einer A-Aktie wird mit den Umsätzen der Börsenmeldung für dieselben zwei Zeiträume verglichen. Liegt es bei keiner Umsatzzeile innerhalb von 2 Prozentpunkten oder 5 %, fehlen Wachstum und Rule of 40, mit Grund. Banken, Versicherer, Firmen mit Handtabelle und Firmen, deren Anbieterreihe die Börsenprüfung nicht lesen kann (am 21.11. zwei Zeilen, 001236.SZ und 001246.SZ), bleiben ungeprüft und zeigen ihren Wert weiter. Der Wert auf den Sektor-Brettern bleibt unverändert (siehe offene Punkte).
 
@@ -33,21 +33,21 @@ Hinweis zu den Namen in `ergebnis.md`: TOKSF ist Tokyo Steel Manufacturing (Heim
 | Ort | Feld | Zeilen mit Wert vorher | geleert | Regel |
 |---|---|---|---|---|
 | Filter | Börsenwert (mc) | 14.393 | 457 | 1 |
-| Filter | Abstand zum 52-Wochen-Hoch (d52) | 14.593 | 457 | 1 |
+| Filter | Abstand zum 52-Wochen-Hoch (d52) | 14.593 | 495 | 1 |
 | Filter | P/S (ps) | 13.921 | 380 | 1 |
-| Filter | Dividendenrendite (dy) | 10.910 | 296 | 1 |
+| Filter | Dividendenrendite (dy) | 10.910 | 312 | 1 |
 | Filter | EV/Sales (evs) | 13.019 | 284 | 1 |
-| Filter | P/E (pe) | 8.873 | 24 | 1 |
+| Filter | P/E (pe) | 8.873 | 26 | 1 |
 | Filter | Forward P/E (fpe) | 8.048 | 3 | 1 |
 | Filter | Umsatzwachstum (g) | 15.388 (davon 2.491 China) | 23 | 2 |
 | Rule-of-40-Brett | EBITDA-Marge und r40Ebitda | 484 | 10 | 3 |
 
-Von den 457 OTC-Zeilen steht keine auf einem Brett. Von den 23 China-Zeilen sind 20 Filterzeilen von Brett-Firmen (18 Finanzen, 2 Industrie), 3 davon mit Rang (601995.SS, 600150.SS, 603985.SS); ihr Wert auf dem Brett selbst bleibt. Die 10 EBITDA-Zeilen: INSW, INSM, LPG, LB, TNZ.TO, 4507.T, TNK, ZIM, 6861.T (Keyence, Yahoo liefert 0,0 %) und CENX.
+Von den 495 OTC-Zeilen steht keine auf einem Brett. 38 davon haben keinen Börsenwert, zeigten aber Abstand zum 52-Wochen-Hoch (38), Dividendenrendite (16) oder P/E (2) auf dem eingefrorenen Kurs, etwa AUHEF mit einem Abstand von 0 %; die erste Fassung ließ sie durch, die Prüfung vom 22.11. hat das gefunden. Von den 23 China-Zeilen sind 20 Filterzeilen von Brett-Firmen (18 Finanzen, 2 Industrie), 3 davon mit Rang (601995.SS, 600150.SS, 603985.SS); ihr Wert auf dem Brett selbst bleibt. Die 10 EBITDA-Zeilen: INSW, INSM, LPG, LB, TNZ.TO, 4507.T, TNK, ZIM, 6861.T (Keyence, Yahoo liefert 0,0 %) und CENX. Der Grund nennt ausdrücklich, dass auch die Rule of 40 mit EBITDA fehlt. Die Prüfung des Bretts hält an, wenn mehr als 5 % der Zeilen so geleert werden (gemessen 2,1 %).
 
-Füllstände nach dem Nachspiel (Anteil unter den Zeilen, die das Feld zeigen können; Untergrenzen unverändert): mc 98,5 % (vorher 98,5 %), ps 95,1 % (95,3), evs 88,9 % (89,1), dy 72,3 % (72,8), pe 57,0 % (57,1), d52 99,8 % (99,8), g 97,4 % (97,6, Untergrenze 93,2), r40 unverändert 55,0 % (keine der 23 Zeilen hatte eine Rule of 40). Der Feed wächst von 5,93 auf 6,06 MB (Grenze 6,5 MB).
+Füllstände nach dem Nachspiel (Anteil unter den Zeilen, die das Feld zeigen können; Untergrenzen unverändert): mc 98,5 % (vorher 98,5 %), ps 95,1 % (95,3), evs 88,9 % (89,1), dy 72,2 % (72,8), pe 57,0 % (57,1), d52 99,8 % (99,8), g 97,4 % (97,6, Untergrenze 93,2), r40 unverändert 55,0 % (im veröffentlichten Feed hatte keine der 23 Zeilen eine Rule of 40; im Nachspiel mit dem heutigen Code eine, 600150.SS). Der eigene Deckel für eingefrorene Kurse (5 % aller Zeilen) hält: am stärksten betroffen ist d52 mit 3,1 %, über fünf Wochen höchstens 3,7 %. Der Feed wächst von 5,93 auf 6,07 MB (Grenze 6,5 MB).
 
 ## Wie viele richtige Werte mitgeleert werden
-- **Regel 1:** Für 409 der 457 Zeilen gibt es eine Notierung mit gleichem Namen, die gehandelt wird. 94 davon (23 %) lagen trotz eingefrorenem Kurs innerhalb von 5 % ihres Börsenwerts, der Median der Abweichung ist 12,7 %. Zum Vergleich weichen gehandelte OTC-Notierungen bei 18 % der Fälle mehr als 5 % ab, weil der Namensabgleich ungenau ist (Aktienklassen, ADR-Verhältnisse). Schätzung daher etwa 100 der 457 Werte, die nach der Toleranz der Stichprobe noch gepasst hätten (Sicherheit etwa 70 %). Ein Kurs, der vier Wochen und länger steht (Median 42 Handelstage), ist auch dann kein aktueller Marktpreis. Mit 40 statt 20 Tagen sänke der Anteil auf etwa 18 %, TOKSF (39 Tage seit der letzten Dividendenanpassung) wäre dann nicht mehr erfasst. Über fünf Wochen schwankt die Zahl der Fälle zwischen 372 und 489.
+- **Regel 1:** Für 409 der 457 Zeilen mit Börsenwert gibt es eine Notierung mit gleichem Namen, die gehandelt wird. 94 davon (23 %) lagen trotz eingefrorenem Kurs innerhalb von 5 % ihres Börsenwerts, der Median der Abweichung ist 12,7 %. Zum Vergleich weichen gehandelte OTC-Notierungen bei 18 % der Fälle mehr als 5 % ab, weil der Namensabgleich ungenau ist (Aktienklassen, ADR-Verhältnisse). Schätzung daher etwa 100 der 457 Werte, die nach der Toleranz der Stichprobe noch gepasst hätten (Sicherheit etwa 70 %). Ein Kurs, der vier Wochen und länger steht (Median 44 Handelstage), ist auch dann kein aktueller Marktpreis. Mit 40 statt 20 Tagen sänke der Anteil auf etwa 18 %, TOKSF (39 Tage seit der letzten Dividendenanpassung) wäre dann nicht mehr erfasst. Über fünf Wochen schwankt die Zahl der Fälle zwischen 437 und 579 (alle OTC-Notierungen, ohne Abgleich mit der Kursmeldung gezählt, also eine Obergrenze).
 - **Regel 2:** Verglichen wird mit den Börsenzahlen derselben Zeiträume; ein richtiger Wert wird nur geleert, wenn der Börsenspeicher selbst falsch ist. Gegenprobe auf dem festen Prüfsatz vom 02.10.2026 (Fälle, die damals gegen die Meldungen geprüft wurden): alle 16 falschen Zeilen ohne Handtabelle sind „mixed“, alle 6 richtigen Vergleichsfälle „agree“. Geschätzt 0 bis 2 der 23 Werte richtig (Sicherheit etwa 90 %); einzeln gegen die Meldung geprüft ist nur Huatai.
 - **Regel 3:** Jede getroffene Marge liegt mindestens 2 Punkte unter dem, was die Definition mindestens ergibt, bevor die Abschreibungen dazukommen. Ein richtiger Wert wird nur geleert, wenn die Quartalszahlen bei Yahoo selbst falsch sind. Geschätzt 0 bis 1 der 10 Werte (Sicherheit etwa 85 %).
 
