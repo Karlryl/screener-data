@@ -9,7 +9,7 @@ const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { correctedBelowFloor, table: marketCapCases, priceAge, STALE_PRICE_SOURCE, STALE_PRICE_RETURN, STALE_PRICE_WEEKDAYS } = require('../lib/market-cap-guard.js');
 const { norm, metricVal } = require('../src/scoring/snapshot.js');
-const { annualPeriodEnds, staleReason, _tagesnummer } = require('../lib/annual-pairs.js');
+const { annualPeriodEnds, staleReason, _tagesnummer, dataDay } = require('../lib/annual-pairs.js');
 const { normalizeCountry } = require('../src/scoring/country.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { revGrowthLevel, ruleOfX } = require('../src/scoring/axes.js');
@@ -22,9 +22,10 @@ const { mischVal, mischVerhaeltnisUnkorrigiert } = require('./write-board-histor
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { filterToAuthorizedUniverse } = require('../src/scoring/run-screener.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
-const { newerPeriodFacts, newerPeriodLabel, compactNewerPeriod, validNewerPeriod } = require('../lib/stale-period.js'); // Stufe 4
+const { newerPeriodFacts, newerPeriodLabel, compactNewerPeriod, decodeNewerPeriod, reportCalendar } = require('../lib/stale-period.js'); // Stufe 4
 
 const ROOT = path.resolve(__dirname, '..');
+const nextReportOf = reportCalendar(path.join(ROOT, 'earnings-calendar.json')); // Stufe 4, the file the board writer reads
 const SCHEMA = 'findash-export/v1';
 // The master approved 6 MB for the complete universe; retain all fields. 18.11.2026: 6.5 MB for the FCF
 // period and source labels (G31; measured +0.2 MB after compaction, base 5.8 MB); findash reads up to
@@ -285,7 +286,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     // published one. Growth period: the board row's label, or the leg of exactly the snapshot growth shown off board.
     const g = board ? round(board.revGrowthYoYPct) : meta.financialDataIssue ? null : round(revGrowthLevel(snapshot));
     const fcfShown = fcfLabel(snapshot);
-    const np = compactNewerPeriod(newerPeriodLabel(newerPeriodFacts(snapshot, generatedAt.slice(0, 10)), {
+    // Date bound: the run's data day (RUN_DATE_UTC), the same as the board writers.
+    const np = compactNewerPeriod(newerPeriodLabel(newerPeriodFacts(snapshot, dataDay(), nextReportOf(ticker)), {
       revGrowth: g === null ? null : board ? board.revGrowthPeriodEnd : revGrowthLeg(snapshot).periodEnd, fcfMargin: fcfShown.fp }));
     return Object.fromEntries(Object.entries({
       t: ticker, n: text(board?.name ?? meta.name), b: official?.branch ?? null,
@@ -367,7 +369,8 @@ function validateUniverse(feed, bytes) {
     if (row.aus.some(a => a.endsWith(STALE_PRICE_RETURN)) && ['pe', 'fpe', 'dy', 'd52'].some(k => row[k] != null)) errors.push(where + ': price-dependent value beside a stale quote hold');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
     if (row.r40 != null && (row.g == null || row.fcf == null)) errors.push(where + ': incomplete rule of 40');
-    if (row.np != null && (!validNewerPeriod(row.np, true) || (row.np.g && row.g == null) || (row.np.f && row.fp == null))) errors.push(where + ': invalid np');
+    const np = row.np == null ? null : decodeNewerPeriod(row.np);
+    if (row.np != null && (!np || (np.fields.revGrowth && row.g == null) || (np.fields.fcfMargin && row.fp == null))) errors.push(where + ': invalid np');
   }
   return errors;
 }

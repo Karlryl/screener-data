@@ -387,8 +387,9 @@ let _mcapGenullt = 0, _mcapGeprueft = 0, _mcapVerworfen = 0;
 const _snapCache = new Map();
 const marketCapGuard = require('../lib/market-cap-guard.js');
 const { g31Export, g31Variant = () => null, g31Last = row => row, withG31Variant = (variant, fn) => fn() } = require('../lib/g31-recency.js');
-// Stufe 4, 22.11.2026. Defaults keep isolated mappers inert where tests replace unknown modules (like g31-recency above).
-const { newestPublished = () => null, newerPeriodFacts, newerPeriodLabel = () => null, validNewerPeriod = () => true, NEWER_PERIOD_DAYS = 45 } = require('../lib/stale-period.js');
+// Stufe 4, 22.11.2026: no fallbacks here, a missing helper fails loudly (tests/stale-period-label.test.js runs both writers).
+const { newestPublished, newerPeriodFacts, newerPeriodLabel, validNewerPeriod, reportCalendar, NEWER_PERIOD_DAYS } = require('../lib/stale-period.js');
+const nextReportOf = reportCalendar(path.join(ROOT, 'earnings-calendar.json')); // read on first use
 const { overviewMetric } = require('../src/scoring/overview.js');
 const round3 = (x) => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null); // = score.js round3 of overview values
 function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
@@ -437,8 +438,9 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
-    // Stufe 4 label `newerPeriod`, compact facts only; inert in isolated extracts of this function (like g31Export above).
-    newerPeriodFacts: snap && typeof newerPeriodFacts === 'function' ? newerPeriodFacts(snap, dataDay()) : null,
+    // Stufe 4 label `newerPeriod`, compact facts only. typeof: tests/smallcap-store-evidence-p159.test.js extracts this function
+    // without the module's bindings (like g31Export above); the writer itself always has the helper.
+    newerPeriodFacts: snap && typeof newerPeriodFacts === 'function' ? newerPeriodFacts(snap, dataDay(), nextReportOf(ticker)) : null,
     // Shared mappers only read existing derivations; HG builders request this once.
     get annualPairsShadow() {
       const value = annualPairsShadowForSnapshot(snap, snapFehler);
@@ -558,7 +560,7 @@ function newerReportHint(meta, leg, { existing = null, heldSibling = null, store
   const shown = day(leg?.periodEnd), word = PERIOD_WORD[leg?.basis];
   // Stored quarter ends are rounded to the month end (AEHR: stored 30.09.2026, reported 25.09.2026), so the stored end only wins
   // when it is a truly later period than Yahoo's exact date, more than NEWER_REPORT_DAYS after it (lib/stale-period.js, shared
-  // with the label `newerPeriod`, so both name the same date).
+  // with the label `newerPeriod`; the label also checks Yahoo's date against the report calendar, this hint stays as it was).
   const latest = newestPublished(meta, storedQuarterEnd)?.end ?? null;
   if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
   const tag = d => d.split('-').reverse().join('.');
@@ -637,13 +639,21 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
       out.overviewPeriod = label;
     }
   }
-  // Stufe 4 (22.11.2026): a shown growth or gross-profit period older than a newer published one says so with a fixed code
-  // (lib/stale-period.js). Label only, on every row except survival rows (they carry no growth).
-  if (!Object.hasOwn(out, 'runwayQuarters')) {
-    const kind = Object.hasOwn(out, 'overviewKind') ? out.overviewKind : out.overview?.kind;
-    const gp = kind === 'gp' && out.overviewPeriod && out.overviewPeriod.basis !== 'none' ? out.overviewPeriod.periodEnd : null;
-    out.newerPeriod = newerPeriodLabel(derivations.newerPeriodFacts, { revGrowth: out.revGrowthPeriodEnd, grossProfit: gp });
-  }
+  // Stufe 4 (22.11.2026): label only, on every row except survival rows (they carry no growth).
+  if (!Object.hasOwn(out, 'runwayQuarters')) setNewerPeriod(out, derivations.newerPeriodFacts);
+  return out;
+}
+// findash reads a board file up to 8 MiB (data-layer/http-get.js DEFAULT_MAX_BYTES); full/industrials.json measured 7.01 MB on 21.11.2026.
+const FINDASH_READ_CAP = 8 * 1024 * 1024, READ_CAP_WARN = 0.9;
+function warnNearReadCap(name, bytes) {
+  if (bytes > READ_CAP_WARN * FINDASH_READ_CAP) console.warn(`::warning::[findash-export] ${name}: ${bytes} Byte, über ${READ_CAP_WARN * 100} % der Lesegrenze von findash (${FINDASH_READ_CAP} Byte).`);
+}
+// A shown growth or gross-profit period older than a newer published one says so with a fixed code (lib/stale-period.js). Called
+// again by applyOverviewHold: a held gross-profit value is not shown, so it carries no label either.
+function setNewerPeriod(out, facts) {
+  const kind = Object.hasOwn(out, 'overviewKind') ? out.overviewKind : out.overview?.kind;
+  const gp = kind === 'gp' && out.overviewPeriod && out.overviewPeriod.basis !== 'none' ? out.overviewPeriod.periodEnd : null;
+  out.newerPeriod = newerPeriodLabel(facts, { revGrowth: out.revGrowthPeriodEnd, grossProfit: gp });
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
@@ -1107,6 +1117,7 @@ function applyOverviewHold(out, snapshotStore) {
   if (Object.hasOwn(out, 'overviewValueLegacy')) out.overviewValueLegacy = null;
   if (Object.hasOwn(out, 'overviewPeriodLegacy')) out.overviewPeriodLegacy = null;
   if (out.g31OverviewShadow) out.g31OverviewShadow = { value: null, reason: hold.reason };
+  if (Object.hasOwn(out, 'newerPeriod')) setNewerPeriod(out, snapAbleitungenFuer(out.ticker, snapshotStore === 'smallcap' ? 'smallcap' : 'main').newerPeriodFacts);
   out.financialDataReasons = [...new Set([...(out.financialDataReasons || []), hold.reason])];
   return out;
 }
@@ -1295,15 +1306,15 @@ function buildFullBoards(coverage, opts = {}) {
           !Object.prototype.hasOwnProperty.call(cohortCounts, id))) {
         throw new Error(`[findash-export] full/${id}: index.json cohort count missing`);
       }
-      writeJsonAtomic(path.join(outFullDir, id + '.json'),
-        buildBoard(id, coverage, {
-          srcDir: hgFullDir,
-          sourceBoard: opts.sourceBoards?.[id],
-          rangOpts: woptsRang,
-          deliveryMode: 'full',
-          cohortCounts: cohortCounts === undefined ? undefined : cohortCounts[id],
-        }),
-        { assertFinite: true, indent: 0 });
+      const board = buildBoard(id, coverage, {
+        srcDir: hgFullDir,
+        sourceBoard: opts.sourceBoards?.[id],
+        rangOpts: woptsRang,
+        deliveryMode: 'full',
+        cohortCounts: cohortCounts === undefined ? undefined : cohortCounts[id],
+      });
+      writeJsonAtomic(path.join(outFullDir, id + '.json'), board, { assertFinite: true, indent: 0 });
+      warnNearReadCap('full/' + id + '.json', Buffer.byteLength(JSON.stringify(board))); // indent 0: the written byte count
     }
   } finally {
     const nachher = waehrungsWaechterBilanz();

@@ -72,7 +72,8 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { g31Variant, g31Shadow, g31Export, g31Last, withG31Variant } = require('../lib/g31-recency.js');
-const { newerPeriodFacts, newerPeriodLabel, validNewerPeriod } = require('../lib/stale-period.js'); // Stufe 4, 22.11.2026
+const { newerPeriodFacts, newerPeriodLabel, validNewerPeriod, reportCalendar } = require('../lib/stale-period.js'); // Stufe 4, 22.11.2026
+const nextReportOf = reportCalendar(path.join(__dirname, '..', 'earnings-calendar.json')); // the file the board writer reads, on first use
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
@@ -515,7 +516,7 @@ function sammleKandidaten(opts = {}) {
   }
 
   const generatedMs = Date.parse(index.generated_at);
-  const generatedDay = Number.isFinite(generatedMs) ? new Date(generatedMs).toISOString().slice(0, 10) : null;
+  const labelDay = require('../lib/annual-pairs.js').dataDay(); // Stufe 4: the run's data day (RUN_DATE_UTC), like the board writer
 
   // Die Vollboard-Zeilen, nach Ticker greifbar. Sie sind hier NICHT das Universum, sondern
   // die Quelle der Engine-Beigaben (score, lamps, axisBreakdown, Kohorte, geprueftes marketCap)
@@ -693,7 +694,7 @@ function sammleKandidaten(opts = {}) {
       fcfSchatten,
       annualPairsShadow: annualPairsShadowForSnapshot(snapshot),
       ...g31Export(snapshot),
-      newerPeriodFacts: newerPeriodFacts(snapshot, generatedDay), // Stufe 4 label `newerPeriod`
+      newerPeriodFacts: newerPeriodFacts(snapshot, labelDay, nextReportOf(ticker)), // Stufe 4 label `newerPeriod`
       fcfSchattenTor,
       behoerdenSchutz: schutzEintrag,
       provenanceInputs, provenanceError,
