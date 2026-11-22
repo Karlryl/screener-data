@@ -19,7 +19,7 @@ const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const dateValid = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
 const emptyStore = () => ({ schemaVersion: 1, market: 'CN-PRINTED', currency: 'CNY', shadow: true,
-  about: 'Nur Schatten. Q3-Berichte von CNINFO;营业收入 gegen OPERATE_INCOME. Keine Quelle fuer Scoring oder Boards.', sources: {}, companies: {} });
+  about: 'Q3-Berichte von CNINFO;营业收入 gegen OPERATE_INCOME. Nur Beleg fuer die printed-check-Fuellung des Vorjahresquartals 2025-09-30 (lib/exchange-quarter-check.js, Schalter printedQ3Check): der gefuellte Wert bleibt der Eastmoney-Wert. Keine eigene Zahlenquelle fuer Scoring oder Boards.', sources: {}, companies: {} });
 
 function loadPrinted(file) {
   if (!fs.existsSync(file)) return emptyStore();

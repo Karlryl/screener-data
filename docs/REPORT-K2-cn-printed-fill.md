@@ -120,6 +120,17 @@ Eastmoney ist 9M − H1 in CNY. Das Vorjahr aus dem Bericht ist hier überall da
 - `scripts/exchange-check-report.js` und andere Messskripte bauen ihren Kontext über `loadStores` und sehen den neuen Weg nicht; das betrifft nur Berichte, nicht die Boards.
 - Die zweite Extraktion braucht denselben lokalen `pdftotext`; scheitert sie, wird `tableTextError` gespeichert und nur der Layout-Weg benutzt.
 
+## 2f. Nachbesserung nach Prüfung (22.11.)
+
+Die blinde Prüfung fand keinen Zahlenfehler; nachgebessert wurden Text, Berichtskontexte und Herkunftsangabe.
+
+- Begründungstext je Methode: 842 der 844 Füllungen stützen sich auf die gedruckte Veränderungsrate, nicht auf ein gedrucktes Vorjahresquartal. Der Satz lautet jetzt etwa „Der Wert passt zu der Veränderung gegenüber dem Vorjahresquartal (-44,44 %), die die Firma im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 31.10.2026) selbst angibt.“ (Rate mit Vorzeichen, Komma und der gedruckten Stellenzahl, dafür neu `printedCheck.growth`). Die 2 Füllungen mit gedrucktem Vorjahreswert behalten „… entspricht dem im CNINFO-Bericht … gedruckten Vorjahresquartal.“
+- `scripts/exchange-check-report.js` (Schatten- und Fill-only-Bericht) und `scripts/g31-replay.js` laden bei eingeschaltetem Schalter den Printed-Store über `loadPrinted`; der Punkt aus 2e ist damit erledigt. Fehlt der Store in einem Kontext, warnt `printedCheck` einmal je Prozess, statt still nicht zu füllen.
+- `about` im Printed-Store (über `serialiseStore`, nur Zeile 4 geändert, keine Beobachtung angefasst) und in der Vorlage des Abrufskripts sagt jetzt, dass der Store nur Beleg für die printed-check-Füllung ist. `shadow: true` bleibt als Formkennzeichen, weil Abrufskript, Schattenbericht und Prüfweg es lesen; ein eigenes Feld hätte keine Wirkung auf Zahlen.
+- Herkunft (`lib/export-provenance.js`): printed-check-Füllungen tragen den CNINFO-Link als Dokument statt „source link missing“; Anbieter bleibt Eastmoney.
+- Neue Tests: Satz je Methode (auch negatives Vorzeichen und Tausenderpunkt), `asOf` vor `fetchedAt` bei der Datumsprüfung, Warnung bei fehlendem Store (einmal, nicht bei Schalter aus), CNINFO-Link in der Herkunft.
+- Gleicher Datenstand vorher und nachher (2.490 A-Aktien-Snapshots, Schalter an, Bibliothek von `edba4aa724` gegen die nachgebesserte): wieder 844 Füllungen (842 Veränderungsrate, 2 gedruckter angepasster Vorjahreswert); nach Herausnehmen von Begründungstext und `printedCheck.growth` sind alle Snapshots und Ergebnisse byte-gleich.
+
 Arbeitsdateien außerhalb des Repos: PDF- und Textcache unter `C:\Users\Anwender\AppData\Local\Temp\k2-cn-printed-cache-20261122` (`pdf-cache`, `replay-pdf-cache`, neu `table-cache`).
 
 ---

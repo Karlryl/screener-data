@@ -124,7 +124,10 @@ function fillOnlyReport(outFile) {
   const reference = read(referencePath), manifest = read(path.join(dirs.snapshots, '_manifest.json'));
   if (!Array.isArray(reference.census) || !Array.isArray(reference.boardRows)) throw new Error('Invalid reference shadow report');
   const stores = X.loadStores(dirs.store), baseline = X.loadBaseline(dirs['board-history']);
-  if (stores.warnings.length || baseline.warnings.length) throw new Error([...stores.warnings, ...baseline.warnings].join('; '));
+  // K2: with the switch on, the printed-check fill needs the CNINFO store in this context too (as defaultContext).
+  const printed = X.policy.printedQ3Check ? X.loadPrinted(dirs.store) : { store: undefined, warnings: [] };
+  if (stores.warnings.length || baseline.warnings.length || printed.warnings.length) throw new Error([...stores.warnings, ...baseline.warnings, ...printed.warnings].join('; '));
+  // ponytail: the printed store is read through X.loadPrinted only (the shadow guard test allows no other reader), so it is not in the input hashes.
   for (const k of ['cn', 'tw']) read(path.join(dirs.store, k + '.json'));
   for (const f of fs.readdirSync(path.join(dirs['board-history'], baseline.date)).filter(f => f.endsWith('.json')).sort()) {
     read(path.join(dirs['board-history'], baseline.date, f));
@@ -135,7 +138,7 @@ function fillOnlyReport(outFile) {
     return value;
   });
   if (!B.lists) throw new Error('No exported ranked lists');
-  const ctx = { stores, baseline }, results = new Map(), fills = [], rows = [];
+  const ctx = { stores, baseline, ...(printed.store ? { printed: printed.store } : {}) }, results = new Map(), fills = [], rows = [];
   const counts = { board: { rows: 0, filled: 0, withheld: 0, otherChanged: 0 }, all: { rows: 0, filled: 0, withheld: 0, otherChanged: 0 } };
   const warn = console.warn; console.warn = () => {};
   try {
@@ -264,15 +267,17 @@ function main() {
   const outputs = path.resolve(arg('outputs', path.join(ROOT, 'outputs')));
   const activeOutputs = arg('active-outputs') ? path.resolve(arg('active-outputs')) : null;
   const must = (arg('must-withhold', '') || '').split(',').filter(Boolean);
-  const stores = X.loadStores(path.resolve(arg('store', path.join(ROOT, 'external-data', 'exchange-quarters'))));
+  const storeDir = path.resolve(arg('store', path.join(ROOT, 'external-data', 'exchange-quarters')));
+  const stores = X.loadStores(storeDir);
   const baseline = X.loadBaseline(path.resolve(arg('board-history', path.join(ROOT, 'board-history'))));
-  const ctx = { stores, baseline };
+  const printed = X.policy.printedQ3Check ? X.loadPrinted(storeDir) : { store: undefined, warnings: [] };
+  const ctx = { stores, baseline, ...(printed.store ? { printed: printed.store } : {}) };
   const B = boardsOf(outputs), A = activeOutputs ? boardsOf(activeOutputs) : null;
   const report = { schema: 'exchange-check-shadow/v1', generatedAt: new Date().toISOString(), mode: 'shadow',
     committedMode: X.policy.mode, tolerance: X.policy.tolerance, fillPeriods: X.policy.fillPeriods,
     inputs: { snapshots: snapDir, outputs, activeOutputs, storeFetchedAt: Object.fromEntries(['cn', 'tw'].map(k =>
       [k, stores[k] ? Object.values(stores[k].sources).map(s => s.fetchedAt).sort().at(-1) : null])), baselineDate: baseline.date },
-    warnings: [...stores.warnings, ...baseline.warnings], counts: {}, boardRows: [], census: [], mustWithhold: null, gapBlockedBoardRows: null, twins: null };
+    warnings: [...stores.warnings, ...baseline.warnings, ...printed.warnings], counts: {}, boardRows: [], census: [], mustWithhold: null, gapBlockedBoardRows: null, twins: null };
   if (!B.lists) report.warnings.push('no exported lists under ' + path.join(outputs, 'findash-export', 'v1') + ': no board rows');
   const cnt = (bucket, key) => { report.counts[bucket] = report.counts[bucket] || {}; report.counts[bucket][key] = (report.counts[bucket][key] || 0) + 1; };
   const checked = [], hk = [], results = new Map();

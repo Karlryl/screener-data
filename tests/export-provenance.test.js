@@ -379,6 +379,23 @@ test('actual exchange-filled revenue retains its source and retrieval time', () 
   const r = p.captureSnapshot(filled).inputs[1];
   assert.equal(r.provider, 'MOPS t164sb04'); assert.equal(r.sourceType, 'exchange');
   assert.equal(r.retrievedAt, '2026-10-01T00:00:00Z');
+  assert.deepEqual(r.qualityWarnings, ['source link missing']); assert.equal(r.documentUrl, undefined);
+});
+
+test('K2 printed-check fill links the CNINFO report that confirmed the Eastmoney value', () => {
+  const { applyResult } = require('../lib/exchange-quarter-check.js');
+  const url = 'https://static.cninfo.com.cn/finalpage/2026-10-28/1225600001.PDF';
+  const fillOf = printedCheck => { const s = snapshot(); s.meta.reportingCurrency = 'CNY'; s.meta.tradingCurrency = 'CNY';
+    return p.captureSnapshot(applyResult(s, { withhold: [], category: 'would-fill', line: 'revenue', fill: {
+      index: 4, period: '2025-06-30', nativeValue: 100, derivation: 'printed-check', operands: [], printedCheck,
+      source: 'Eastmoney', sourceId: 'fixture', dataDate: '2025-10-30', fetchedAt: '2026-10-29T00:00:00Z', reason: 'Fixture',
+    } })).inputs[1]; };
+  const r = fillOf({ agree: true, status: 'agree', source: 'CNINFO', url, announcementId: '1225600001', noticeDate: '2026-10-28' });
+  assert.equal(r.provider, 'Eastmoney'); assert.equal(r.sourceType, 'vendor'); assert.equal(r.nativeValue, 100);
+  assert.equal(r.documentUrl, url); assert.deepEqual(r.qualityWarnings, []);
+  assert.match(r.documentTitle, /^CNINFO-Bericht zum 3\. Quartal 2026/);
+  const noUrl = fillOf({ agree: true, status: 'agree', source: 'CNINFO', url: null });
+  assert.deepEqual(noUrl.qualityWarnings, ['source link missing']); assert.equal(noUrl.documentUrl, undefined);
 });
 
 test('own cell and matched period times survive reload; unstamped cells never inherit snapshot time', () => {

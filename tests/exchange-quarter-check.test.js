@@ -749,7 +749,7 @@ test('fill-only break-once: fills, all four withholding paths, default policy an
 // ── K2: printed-check fill without a July row (constructed from the 000002.SZ fixture) ───────────────────────
 // The Q3-2026 9M row is a copy of the Q3-2025 9M row (as in the no-baseline case above); the printed report carries
 // the anchored quarter and a growth whose inverted rounding band contains the Eastmoney Q3-2025 single quarter.
-function printedCase({ growthShift = 0, parseStatus = 'parsed', notice = '2026-10-28', totalShift = 0, company = true } = {}) {
+function printedCase({ growthShift = 0, parseStatus = 'parsed', notice = '2026-10-28', totalShift = 0, company = true, priorLayout = null } = {}) {
   const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
   y['2026-09-30'] = [{ ...q3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
   q3.confirmedBy = [q3.confirmedBy[0], { ...q3.confirmedBy[0], src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }];
@@ -764,12 +764,49 @@ function printedCase({ growthShift = 0, parseStatus = 'parsed', notice = '2026-1
     ...(parseStatus === 'parsed' ? { layout: 'table-row', unit: 1, current: cell(current), ytd: cell(y['2026-09-30'][0].operate),
       growth: { printed: g.toFixed(2) + '%', value: g, decimals: 2, roundingHalfWidth: 0.005 }, priorValues: null } : {}),
     confirmedBy: [{ src: 'p', fetchedAt: '2026-11-22T00:00:00.000Z' }] };
+  if (priorLayout) Object.assign(obs, { layout: priorLayout, priorValues: { after: cell(prior) } }); // report prints the prior quarter
   const printed = { schemaVersion: 1, market: 'CN-PRINTED', currency: 'CNY', shadow: true,
     sources: { p: { year: 2026, fetchedAt: '2026-11-22T00:00:00.000Z', mode: 'live', read: ['000002.SZ'], errors: [] } },
     companies: company ? { '000002.SZ': { reports: { [obs.announcementId]: [obs] } } } : {} };
   const s = base(); s.meta.fetchedAt = '2026-10-29T09:00:00.000Z';
-  return { s, ctx: { ...ctxOf(st, nb), printed }, prior, st };
+  return { s, ctx: { ...ctxOf(st, nb), printed }, prior, st, obs, g };
 }
+test('K2 printed-check: the reason names what the report prints, per method (review 22.11.)', () => {
+  const head = 'Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (';
+  const c = printedCase(), r = res(c.s, c.ctx), pct = '+' + c.g.toFixed(2).replace('.', ',') + ' %';
+  assert.ok(c.g > 0 && r.fill.reason.startsWith(head), r.fill.reason);
+  assert.equal(r.fill.printedCheck.growth, c.obs.growth.printed);
+  assert.ok(r.fill.reason.endsWith(` Der Wert passt zu der Veränderung gegenüber dem Vorjahresquartal (${pct}), die die Firma im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) selbst angibt.`), r.fill.reason);
+  assert.doesNotMatch(r.fill.reason, /gedruckte|abgegrenzt/);
+  c.obs.growth.printed = '-1,234.50%'; // text only: the band uses growth.value
+  assert.match(res(c.s, c.ctx).fill.reason, /Vorjahresquartal \(-1\.234,50 %\)/);
+  c.obs.growth.printed = '0.0'; assert.match(res(c.s, c.ctx).fill.reason, /Vorjahresquartal \(0,0 %\)/);
+  for (const [layout, method] of [['single-prior', 'printed-prior'], ['table-row-restated-prior', 'printed-adjusted-prior']]) {
+    const p = printedCase({ priorLayout: layout }), rp = res(p.s, p.ctx);
+    assert.equal(rp.category, 'would-fill', layout); assert.equal(rp.fill.printedCheck.method, method);
+    assert.equal(rp.fill.printedCheck.growth, undefined); assert.equal(rp.fill.nativeValue, p.prior);
+    assert.ok(rp.fill.reason.endsWith(' Der Wert entspricht dem im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) gedruckten Vorjahresquartal.'), rp.fill.reason);
+  }
+});
+test('K2 printed-check: asOf, not fetchedAt, is the snapshot day of the notice check', () => {
+  const status = (asOf, fetchedAt) => { const c = printedCase(); c.s.meta.asOf = asOf; c.s.meta.fetchedAt = fetchedAt;
+    return X.printedCheck(c.s, c.ctx, '2026-09-30', c.prior).status; };
+  assert.equal(status('2026-10-28T09:00:00.000Z', '2026-10-29T09:00:00.000Z'), 'notice-not-before-snapshot');
+  assert.equal(status('2026-10-29T09:00:00.000Z', '2026-10-28T09:00:00.000Z'), 'agree');
+});
+test('K2 printed-check: a context without the printed store warns once per process when the switch is on', () => {
+  const fresh = () => moduleCopy('lib/exchange-quarter-check.js', s => s);
+  const warnings = lib => { const c = printedCase(), seen = [], warn = console.warn; delete c.ctx.printed; console.warn = m => seen.push(String(m));
+    try { for (let i = 0; i < 3; i++) assert.equal(lib.printedCheck(c.s, c.ctx, '2026-09-30', c.prior).status, 'printed-store-missing'); } finally { console.warn = warn; }
+    return seen; };
+  const seen = warnings(fresh());
+  assert.equal(seen.length, 1); assert.match(seen[0], /printedQ3Check is on but the context has no cn-printed store/);
+  const off = moduleCopy('lib/exchange-quarter-check.js', s => s, { '../configs/exchange-quarter-policy.json': { ...X.policy, printedQ3Check: false } });
+  assert.deepEqual(warnings(off), [], 'switch off: no warning');
+  const c = printedCase(), seen2 = [], warn = console.warn; console.warn = m => seen2.push(m);
+  try { fresh().printedCheck(c.s, c.ctx, '2026-09-30', c.prior); } finally { console.warn = warn; }
+  assert.deepEqual(seen2, [], 'store present: no warning');
+});
 test('K2 printed-check: an agreeing printed prior quarter fills the Eastmoney value, with CNINFO reason', () => {
   const c = printedCase(), r = res(c.s, c.ctx);
   assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.derivation, 'printed-check');
