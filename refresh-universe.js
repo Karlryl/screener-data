@@ -657,13 +657,6 @@ async function fetchExchangePage(kanal, minLokal, maxLokal, offset, attempt) {
   }
 }
 
-async function fetchWithMcap(symbol) {
-  try {
-    const q = await yf.quote(symbol);
-    return q;
-  } catch (e) { return null; }
-}
-
 // FIX 1 (Karl-Audit univ-cap, 2026-07-18): dead-registry eviction MUST run before the
 // MAX_UNIVERSE cap slices allTickers down. Previously the cap ran first, so a dead ticker
 // could occupy a cap slot and only got deleted afterwards — the universe then ended up
