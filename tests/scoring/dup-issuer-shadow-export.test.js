@@ -25,6 +25,7 @@ function writer(apply = shadow.applyDupIssuerShadow, loader = shadow.loadDupIssu
       // P184 is additive; isolate its helpers while exercising the real duplicate mapper.
       if (id === '../configs/g31-hinweise.json') return { definitionen: [] }; // Definition hints stay inert in this fixture.
       if (id === '../lib/g31-recency.js') return { g31Export: () => ({ g31Shadow: null, g31Overview: {} }), g31Variant: () => null, g31Last: row => row };
+      if (id === '../lib/stale-period.js') return require('../../lib/stale-period.js'); // Stufe 4 label: the real module, no inert stub
       return { displayFor: () => null, financialReasons: () => [], safeSnapshotFilename: (ticker) => ticker + '.json', overviewGrowthHold: () => null, sealedEraSnapshot: () => false }; // P186 hold stays inert in this fixture
     },
   };
