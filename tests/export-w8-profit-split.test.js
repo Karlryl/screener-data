@@ -9,6 +9,9 @@ const os = require('os');
 const path = require('path');
 
 const FIX = path.join(__dirname, 'fixtures', 'export-w8');
+// Hermetic small-cap store (23.11.2026): without it the writer reads a working copy's gitignored snapshots-smallcap/,
+// whose named thin-coverage rows (46 on 23.11.) disagree with the fixture's counters (26), red there and green in CI.
+process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'w8-split-sc-'));
 const W = require('../scripts/write-findash-export.js');
 const formulas = require('../src/scoring/formulas');
 const smallcapFormulas = require('../src/scoring/formulas/smallcap');
