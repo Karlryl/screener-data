@@ -221,7 +221,7 @@ const q2 = () => ({ meta: { ticker: 'RERX', mostRecentQuarter: '2026-06-30' }, t
   revenueQ: [140, 120, 110, 100, 95].map(v), revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
   grossProfitQ: [55, 50, 45, 40, 38].map(v), grossProfitQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] } });
 
-test('calendar: a report due on or before the data day, more than 95 days after the shown end, labels the row with its date', () => {
+test('calendar: a report due on or before the data day, more than 105 days after the shown end, labels the row with its date', () => {
   const label = L.newerPeriodLabel(L.newerPeriodFacts(q2(), '2026-11-21', '2026-11-19'), { revGrowth: '2026-06-30', fcfMargin: '2026-06-30' });
   assert.deepEqual(label, { end: '2026-11-19', evidence: 'kalender', fields: { revGrowth: 'anbieter-verzug', fcfMargin: 'fcf-ttm-alt' },
     hint: 'Neuerer Bericht laut Termin-Kalender am 19.11.2026 erwartet, hier noch nicht verwendet: Umsatzwachstum, weil die Quartalswerte des Anbieters noch nicht so weit reichen; FCF-Marge, weil die Zwölfmonatswerte des Free Cashflow noch nicht so weit reichen.' });
@@ -235,8 +235,9 @@ test('calendar: a report due on or before the data day, more than 95 days after 
 test('calendar: no label for the report of the shown quarter itself, a report after the data day, no data day, or a current row', () => {
   const lbl = (due, today = '2026-11-21', shown = '2026-06-30') => L.newerPeriodLabel(L.newerPeriodFacts(q2(), today, due), { revGrowth: shown });
   assert.equal(lbl('2026-08-28'), null, '59 days after the shown end: the report of that quarter (measured 58 to 72 days)');
-  assert.equal(lbl('2026-10-03'), null, '95 days: still inside the lag');
-  assert.notEqual(lbl('2026-10-04'), null, '96 days: a later period');
+  assert.equal(lbl('2026-10-13'), null, '105 days: still the report of the shown period (GDS.PA 98, EXA.PA 101 days on 21.11.2026)');
+  assert.equal(lbl('2026-10-03'), null, '95 days');
+  assert.notEqual(lbl('2026-10-14'), null, '106 days: a later period');
   assert.equal(lbl('2026-11-24'), null, 'due after the data day: not yet expected');
   assert.equal(lbl('2026-11-19', null), null, 'without a data day the calendar is not read');
   assert.equal(lbl('2026-11-19', '2026-11-21', '2026-09-30'), null, 'a shown Q3 is not older than a report due 50 days later');
