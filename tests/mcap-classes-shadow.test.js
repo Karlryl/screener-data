@@ -16,6 +16,8 @@ const REGISTRY = path.join(FIXTURE, 'registry.json');
 const MODULE = path.join(ROOT, 'lib', 'mcap-classes-shadow.js');
 const REPORT = path.join(ROOT, 'scripts', 'mcap-classes-shadow-report.js');
 process.env.FINDASH_SNAPSHOTS_DIR = SNAPSHOTS;
+// Hermetic: the frozen mapping must not follow the live external-data/ath-state.json (a new seed turned ath on).
+process.env.FINDASH_ATH_STATE = path.join(FIXTURE, 'ath-state-empty.json');
 const { loadRegistry, computeClassesShadow, deviationPct } = require(MODULE);
 const writer = require('../scripts/write-findash-export.js');
 // P184 shadows and the G31 comparison fields (switch 18.10.2026) trail every older key.
