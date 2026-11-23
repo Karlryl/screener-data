@@ -187,7 +187,9 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
     'der Tiefen-Lauf sieht einen neu erfundenen Schluessel IM freien Behaelter nicht — dann ist '
     + 'er blind fuer genau den Weg, den Anklage A1.3 beschreibt');
   fremd.clear();
-  const wurzel = path.join(REPO, 'outputs', 'findash-export', 'v1');
+  // The real walk runs only on an export named in ROW_KEYS_V1_DIR (23.11.2026): an export that happens to lie in a
+  // working copy (gitignored, from some older run) turned this file red there and green in CI.
+  const wurzel = process.env.ROW_KEYS_V1_DIR || path.join(REPO, 'outputs', 'findash-export', 'v1');
   // These root directories have their own schema and validator. Never exclude a
   // nested directory, a similarly named directory or a sibling export root.
   const ROOTS = ['druckenmiller', 'provenance', path.join('rule40', 'provenance')];
@@ -199,10 +201,11 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
     for (const other of [path.join(wurzel, 'full', name), path.join(wurzel, name + '-extra'),
       path.join(wurzel, '..', 'v1-other', name)]) assert.ok(!AUSGENOMMEN.has(other), 'exclusion escaped its exact root directory');
   }
-  if (!fs.existsSync(wurzel)) {
-    console.log('       (keine Auslieferung auf der Platte — nur der Waechter selbst geprueft)');
+  if (!process.env.ROW_KEYS_V1_DIR) {
+    console.log('       (keine Auslieferung benannt (ROW_KEYS_V1_DIR) — nur der Waechter selbst geprueft)');
     return;
   }
+  if (!fs.existsSync(wurzel)) throw new Error('ROW_KEYS_V1_DIR=' + wurzel + ' existiert nicht');
   // AUSGENOMMEN: v1/druckenmiller/ (Chunk 1). Der Unterordner traegt eine EIGENE
   // Schema-Id (findash-druckenmiller/v1), einen eigenen --check und eine eigene weisse
   // Liste (scripts/write-druckenmiller-export.js, tests/druckenmiller/write-export.test.js);

@@ -302,15 +302,14 @@ test('enumerated production quarterly readers have active hooks or an explicit e
   const root = path.resolve(__dirname, '..'), policy = require('./fixtures/yahoo-q4-reader-policy.json');
   const files = new Map();
   const read = relative => files.set(relative, fs.readFileSync(path.join(root, relative), 'utf8'));
-  function walk(dir) {
-    for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
-      const p = dir + '/' + e.name;
-      if (e.isDirectory()) walk(p);
-      else if (e.name.endsWith('.js') && !/test/.test(e.name)) read(p);
-    }
+  // Tracked files only (23.11.2026): a gitignored scratch file in a working copy (.probe-unrouted.js) counted as an
+  // unclassified reader there and turned this file red, while CI, which only has tracked files, stayed green.
+  const ls = spawnSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' });
+  assert.equal(ls.status, 0, 'git ls-files failed: ' + (ls.stderr || ls.error));
+  for (const p of ls.stdout.split('\0').filter(Boolean)) {
+    const name = p.split('/').at(-1);
+    if ((/^(?:lib|methods|src|scripts)\//.test(p) || !p.includes('/')) && name.endsWith('.js') && !/test/.test(name)) read(p);
   }
-  for (const dir of ['lib', 'methods', 'src', 'scripts']) walk(dir);
-  for (const e of fs.readdirSync(root, { withFileTypes: true })) if (e.isFile() && e.name.endsWith('.js') && !/test/.test(e.name)) read(e.name);
   const scan = source => /revenueQ|opIncQ|grossProfitQ/.test(source) ||
     [...source.matchAll(/require\(([^;]+?)\)/g)].some(m =>
       /['"/](?:snapshot|router|score|run-screener|smallcap-route|quality-route)(?:\.js)?['"]/.test(m[1]));

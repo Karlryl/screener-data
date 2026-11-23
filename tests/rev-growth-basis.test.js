@@ -5,16 +5,17 @@
 //     on synthetic snapshots for all four bases, including a 9992.HK-type newer-year record.
 // (B) the export only labels a number it can reproduce; otherwise the fields stay null.
 // (C) the --check guard fires in both directions (presence and absence) on broken test rows.
-// (D) on a REAL export (outputs/findash-export/v1 + snapshots/, or REV_GROWTH_V1_DIR and
-//     FINDASH_SNAPSHOTS_DIR) every labelled row agrees with a fresh recomputation from its
-//     snapshot, and no row with a number is unlabelled. Skips visibly when no export is on disk.
+// (D) on a REAL export, named explicitly (REV_GROWTH_V1_DIR, snapshots from FINDASH_SNAPSHOTS_DIR or snapshots/),
+//     every labelled row agrees with a fresh recomputation from its snapshot, and no row with a number is unlabelled.
+//     Opt-in since 23.11.2026: whatever export and snapshots happen to lie in a working copy (gitignored, from
+//     different runs) turned this file red there and green in CI (16,889 rows "disagreed" on 23.11.). Skips visibly.
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const realV1 = process.env.REV_GROWTH_V1_DIR || path.join(root, 'outputs', 'findash-export', 'v1');
+const realV1 = process.env.REV_GROWTH_V1_DIR || null;
 const realSnaps = process.env.FINDASH_SNAPSHOTS_DIR || path.join(root, 'snapshots');
 // Hermetic snapshot dirs for (B); the real ones are only read in (D), through realSnaps.
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rev-growth-basis-'));
@@ -231,8 +232,10 @@ function exportFiles(dir, rel = '') {
   }
   return out;
 }
-if (!fs.existsSync(path.join(realV1, 'overview.json')) || !fs.existsSync(realSnaps)) {
-  console.log('SKIP D: no real export on disk (' + realV1 + ') - only (A)-(C) checked');
+if (!realV1) {
+  console.log('SKIP D: no export named (set REV_GROWTH_V1_DIR, and FINDASH_SNAPSHOTS_DIR for its snapshots) - only (A)-(C) checked');
+} else if (!fs.existsSync(path.join(realV1, 'overview.json')) || !fs.existsSync(realSnaps)) {
+  throw new Error('D: REV_GROWTH_V1_DIR=' + realV1 + ' has no overview.json, or no snapshots at ' + realSnaps);
 } else {
   check('D1 every row of the real export: label and number agree with a fresh recomputation', () => {
     const cache = new Map();
