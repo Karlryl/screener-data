@@ -225,7 +225,7 @@ test('real ranking and mappers keep the live overview and append separate shadow
   assert.deepEqual(flat.overviewPeriod, row.overviewPeriod);
   assert.equal(row.overviewPeriod.basis, 'quarter'); assert.equal(row.overviewPeriod.periodEnd, '2026-06-30');
   assert.deepEqual(row.g31OverviewShadow, flat.g31OverviewShadow);
-  for (const output of [row, flat]) assert.deepEqual(Object.keys(output).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
+  for (const output of [row, flat]) assert.deepEqual(Object.keys(output).filter(k => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow']); // newerPeriod: Stufe 4 label, last key
   // P184b omits unavailable V2 from delivery; the complete diagnostic remains in g31Shadow().
   assert.ok(Object.hasOwn(row.g31Shadow, 'v1')); assert.equal(Object.hasOwn(row.g31Shadow, 'v2'), false);
   assert.equal(G.g31Shadow(null).v2.pct, null);
