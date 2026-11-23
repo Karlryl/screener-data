@@ -5478,7 +5478,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
       const previousHistory = _parsedSnapshot && yahooQ4.applyKnownCases(_parsedSnapshot).snapshot;
       if (previousHistory) {
-        require('./lib/reload-history.js').preserveReloadHistory(canonical, previousHistory);
+        // Class R (A): a manual full pull (voll_pull_ticker) replaces the stored record on purpose, so it keeps no slid quarters.
+        require('./lib/reload-history.js').preserveReloadHistory(canonical, previousHistory, { keepSlidQuarters: !_vollPullTicker.has(stock.ticker) });
         const unsafeGaps = (canonical.meta.reloadHistoryGaps || []).filter(g => ['statement-basis-unverified', 'period-revised'].includes(g.reason));
         if (unsafeGaps.length) _log('WARN', `${stock.ticker}: Historische Werte mit abweichender Aussagebasis; ${unsafeGaps.length} Luecken mit Grund im Snapshot`);
       }

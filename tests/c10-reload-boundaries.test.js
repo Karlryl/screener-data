@@ -57,12 +57,12 @@ cases['window-slide'] = async () => {
   ];
   const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows });
   const before = f.files.get(cp).toString(), m = await f.run();
-  // Class R (23.11.2026): this slide drops 2025-03-31, the year-ago quarter of the shown growth (Q1 2026), so the shown
-  // growth would move back; the reload is retained ('shown growth period regressed'). Keeping such a quarter is branch A.
-  assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
-  assert.equal(m.results[0].fundamentalsRetainedReason, 'shown growth period regressed');
-  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), vals(s.timeseries.revenueQ));
-  assert.equal(f.files.get(cp).toString(), before, 'a retained reload leaves the cache');
+  assert.equal(m.results[0].status, 'ok'); assert.equal(m.n_stale_quarter_reload_failed, 0);
+  // Class R (A) 23.11.2026: 2025-03-31 slid out of the window but is the year-ago quarter of 2026-03-31, so it is kept
+  // as a dated value (tests/reload-keep-yago.test.js); before, the slide dropped it.
+  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), [110, 100, 90, 1]);
+  assert.equal(f.stored('OLD').timeseries.revenueQEnds.at(-1), '2025-03-31');
+  assert.notEqual(f.files.get(cp).toString(), before, 'legitimate cache window slide must write');
 };
 // Class R (23.11.2026, 006800.KS): the newest quarter arrives without revenue; the shown growth must not move back.
 cases['shown-growth-regression'] = async () => {
