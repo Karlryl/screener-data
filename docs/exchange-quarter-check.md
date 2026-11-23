@@ -2,7 +2,7 @@
 
 `lib/exchange-quarter-check.js` compares the vendor's quarterly revenue with the exchange store
 (`docs/exchange-quarters-store.md`, Tag 1399). **Committed mode: `fill-only`** (`configs/exchange-quarter-policy.json`, P71).
-Readers see only eligible fills of empty 2025-09-30 cells and never a withheld cell; the measurement runs in mode `shadow` through `scripts/exchange-check-report.js`.
+Readers see eligible fills of empty 2025-09-30 cells and a withheld cell only where S1 (`withholdThenFill`) pairs it with a fill; the measurement runs in mode `shadow` through `scripts/exchange-check-report.js`.
 
 ## Modes and placement
 
@@ -121,7 +121,7 @@ board fell back to fiscal 2025). Those cells are withheld with the usual `exchan
 acceleration reason, and the fill check above runs on that withheld state with every guard unchanged. Only if it
 yields a fill does the result become `would-fill` with a non-empty `withhold` (and `fill.afterWithhold` naming the
 withheld periods); `applyResult` then withholds first and fills second, also in `fill-only` mode. A blocked fill
-leaves the result `would-withhold` and the snapshot untouched, exactly as before. `false` restores the previous result
+leaves the result `would-withhold` and the snapshot untouched, exactly as before. Since the withheld cell is the one the July baseline would otherwise vouch for, the fill also needs the printed proof of the next year's Q3 report (CNINFO `printedCheck`, MOPS `twPrintedCheck`); without it `withholdThenFillBlocked` records why (review 23.11.). The withheld cell's reason names its quarter ("Vorjahresquartal 2. Quartal 2025 ausgeblendet: …"). `false` restores the previous result
 and snapshot exactly. Measurement: `docs/REPORT-S1-withhold-then-fill.md`.
 
 Store age is measured per company: the newest run that read one of the company's own keys again (China: a

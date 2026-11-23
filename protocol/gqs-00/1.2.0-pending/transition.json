@@ -601,7 +601,7 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/exchange-quarter-check.js": "a3922e313d56b41e1a1d8481fc328cc5118812d63f13203ecfc71921774989cb",
+    "lib/exchange-quarter-check.js": "5c7d9415b1dfbd9817176be4b294d6d7475655e45b5f1019fcd38a0500687d09",
     "scripts/cn-printed-parser.js": "d97c07398d051928a44667cb4125c67b60fd6e5227284e286b8326f9d143baba",
     "scripts/cn-printed-shadow-report.js": "2f00001be9007157f3f8d07e18d8136aaa4efc035b2fce8ebf457602aadc5a9f",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
@@ -765,11 +765,11 @@
       "lib/exchange-quarter-check.js": "a3922e313d56b41e1a1d8481fc328cc5118812d63f13203ecfc71921774989cb"
     },
     "dependencySha256LF": {
-      "lib/exchange-quarter-check.js": "19f35dd385454c5605d771338558024e32228c7c2345c55ef6b0b756b167b213"
+      "lib/exchange-quarter-check.js": "5c7d9415b1dfbd9817176be4b294d6d7475655e45b5f1019fcd38a0500687d09"
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "goldenImpact": "None: verify() rebuilds the 25 golden traces unchanged (golden snapshots carry no exchange fill).",
-    "evidence": "Before/after on the data day 21.11.2026 in docs/REPORT-S1-withhold-then-fill.md: 22 A-shares move from would-withhold to would-fill (Q2-2025 vendor cell withheld, Q3-2025 filled); their growth moves from FY 2025 to Q3 2026 and all 14 with a parsed CNINFO Q3-2026 report agree with the printed growth within 1 point. With withholdThenFill false all boards are identical with the code before (only generated_at differs). Tests: tests/exchange-quarter-check.test.js.",
+    "evidence": "Before/after on the data day 21.11.2026 with fixed calibration in docs/REPORT-S1-withhold-then-fill.md (version 2 after the Opus blind review: the S1 fill also needs the printed proof of the Q3-2026 report): 12 A-shares move from would-withhold to would-fill (Q2-2025 vendor cell withheld, Q3-2025 filled); their growth moves from FY 2025 to Q3 2026 and all 12 agree with the CNINFO-printed growth within 0.014 points. With withholdThenFill false all boards are identical with the code before (only generated_at differs). Tests: tests/exchange-quarter-check.test.js.",
     "review": "Build registration only; the Codex blind review decides the draft. The builder does not merge.",
     "rollback": "Set withholdThenFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
   }
