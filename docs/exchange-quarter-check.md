@@ -10,7 +10,7 @@ Readers see only eligible fills of empty 2025-09-30 cells and never a withheld c
 |---|---|---|
 | `off` | nobody since P71 (the committed mode before) | strips the step's own markers (none exist) and returns the identical object |
 | `shadow` | `scripts/exchange-check-report.js` only | computes the result, returns the snapshot unchanged |
-| `fill-only` | every reader (committed, P71) | applies eligible fills at read time, never withholds |
+| `fill-only` | every reader (committed, P71) | applies eligible fills at read time; withholds only together with a fill (S1, `withholdThenFill`) |
 | `active` | nobody yet (G2c = the one-line switch in the policy) | applies guard and fill at read time |
 
 - Read time only: `prepareSnapshot` (`lib/yahoo-q4-known-cases.js`) appends the step after the zero guard, so
@@ -112,6 +112,17 @@ first read, and the reason adds the season, line, column and printed figure as M
 (`no-printed-report`), a late read (`read-after-snapshot`) or a disagreeing print (`fill-value-differs-from-print`)
 keep `no-baseline`; every other block is unchanged. It is a switch of its own, so Taiwan rolls back without the China
 path; `false` restores the previous result and snapshot exactly. Measurement: `docs/REPORT-K2-tw-printed-fill.md`.
+
+### Withhold then fill (S1, switch `withholdThenFill`)
+
+`withholdThenFill: true` covers a company whose only vendor/exchange disagreements are acceleration legs: no level
+pair, no fill-period cell (the 22 A-shares of 21.11.2026 had Yahoo's Q2-2025 off Eastmoney and Q3-2025 empty, so the
+board fell back to fiscal 2025). Those cells are withheld with the usual `exchange-pair-mismatch` marker and the
+acceleration reason, and the fill check above runs on that withheld state with every guard unchanged. Only if it
+yields a fill does the result become `would-fill` with a non-empty `withhold` (and `fill.afterWithhold` naming the
+withheld periods); `applyResult` then withholds first and fills second, also in `fill-only` mode. A blocked fill
+leaves the result `would-withhold` and the snapshot untouched, exactly as before. `false` restores the previous result
+and snapshot exactly. Measurement: `docs/REPORT-S1-withhold-then-fill.md`.
 
 Store age is measured per company: the newest run that read one of the company's own keys again (China: a
 listed period the company has and is not absent for; Taiwan: an entry in the run's `read` list) must be within

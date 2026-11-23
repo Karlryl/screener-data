@@ -944,6 +944,62 @@ test('K2-TW printed check: switch off restores the previous no-baseline result e
   assert.equal(X.validatePolicy({ ...X.policy, printedQ3CheckTw: undefined }).mode, 'fill-only');
 });
 
+// ── S1 withhold then fill (policy.withholdThenFill) ──────────────────────────
+// 000002.SZ with its Q1-2025 vendor cell off the exchange by 5 %: only the acceleration pair Q1-2026/Q1-2025 is mixed,
+// Q3-2025 is empty and otherwise fillable (the 22 A-shares of 21.11.2026 have this shape with Q2-2025).
+const accelOff = () => scaleCell(base(), '2025-03-31', 1.05);
+const wtfLib = on => twLib(s => s, { withholdThenFill: on });
+test('S1 withhold then fill: an acceleration-only mismatch is withheld and Q3-2025 filled in fill-only mode', () => {
+  const s = accelOff(), before = serial(s), f = run(s, 'fill-only');
+  assert.equal(f.result.category, 'would-fill'); assert.deepEqual(f.result.withhold.map(w => w.period), ['2025-03-31']);
+  assert.equal(f.result.fill.period, '2025-09-30'); assert.deepEqual(f.result.fill.afterWithhold, ['2025-03-31']);
+  const ends = s.timeseries.revenueQEnds, held = f.snapshot.timeseries.revenueQ[ends.indexOf('2025-03-31')];
+  assert.equal(held.value, null); assert.equal(held.financialMissing.reasonCode, 'exchange-pair-mismatch');
+  assert.equal(held.financialMissing.reason, X.REASONS.acceleration);
+  assert.equal(v(held.financialMissing.originalVendorRow), v(s.timeseries.revenueQ[ends.indexOf('2025-03-31')]));
+  const filled = f.snapshot.timeseries.revenueQ[ends.indexOf('2025-09-30')];
+  assert.equal(filled.exchangeFill.nativeValue, res(base()).fill.nativeValue, 'same Eastmoney value as without the mismatch');
+  assert.equal(revGrowthLeg(f.snapshot).periodEnd, '2026-06-30');
+  const rec = X.exchangeRecord(f.snapshot);
+  assert.deepEqual([rec.filled.map(x => x.period), rec.withheld.map(x => x.period)], [['2025-09-30'], ['2025-03-31']]);
+  assert.deepEqual(run(s, 'active').snapshot, f.snapshot, 'active applies the same');
+  assert.equal(serial(s), before, 'input untouched');
+  assert.equal(serial(run(f.snapshot, 'off').snapshot), before, 'off restores every vendor cell');
+  assert.equal(serial(run(f.snapshot, 'fill-only').snapshot), serial(f.snapshot), 'idempotent');
+});
+test('S1 withhold then fill: level or fill-period mismatches and a blocked fill keep the previous result', () => {
+  const lvl = scaleCell(base(), '2025-06-30', 1.05); // Q2-2026/Q2-2025 is the level pair
+  const rl = res(lvl); assert.equal(rl.category, 'would-withhold'); assert.equal(rl.fill, null);
+  assert.equal(serial(run(lvl, 'fill-only').snapshot), serial(lvl), 'fill-only changes nothing');
+  const st = clone(F.store), list = st.cn.companies['000002.SZ'].ytd['2024-12-31'];
+  list.push({ ...list[0], total: list[0].total + 1e6, operate: list[0].operate + 1e6 }); // restatement signal blocks the fill
+  const rb = res(accelOff(), ctxOf(st)); assert.equal(rb.category, 'would-withhold'); assert.equal(rb.fill, null);
+  assert.equal(serial(run(accelOff(), 'fill-only', ctxOf(st)).snapshot), serial(accelOff()), 'blocked fill: nothing withheld');
+});
+test('S1 withhold then fill: switch off restores the previous would-withhold result exactly; malformed switch throws', () => {
+  const off = wtfLib(false), s = accelOff();
+  const a = off.applyExchangeCheck(clone(s), { mode: 'fill-only', context: CTX });
+  assert.equal(a.result.category, 'would-withhold'); assert.equal(a.result.fill, null);
+  assert.equal(serial(a.snapshot), serial(s));
+  assert.equal(X.policy.withholdThenFill, true, 'committed switch');
+  for (const bad of ['yes', 1, null]) assert.throws(() => X.validatePolicy({ ...X.policy, withholdThenFill: bad }), /Invalid exchange-quarter policy/);
+});
+test('S1 withhold then fill: a broken gate or a fill without its withhold turns red (break once)', () => {
+  const ok = lib => { const f = lib.applyExchangeCheck(accelOff(), { mode: 'fill-only', context: CTX });
+    assert.equal(f.result.category, 'would-fill');
+    const at = end => f.snapshot.timeseries.revenueQ[f.snapshot.timeseries.revenueQEnds.indexOf(end)];
+    assert.equal(v(at('2025-03-31')), null, 'wrong cell withheld'); assert.ok(at('2025-09-30')?.exchangeFill, 'Q3-2025 filled'); };
+  ok(X);
+  const line = "  if (res.withhold.length && res.category === 'would-fill') s = withholdQuarters(s, res); // S1: withhold, then fill";
+  assert.throws(() => ok(mutant(line, line.replace('s = withholdQuarters(s, res);', 's = s;'))), /wrong cell withheld/); // fill without withhold
+  assert.throws(() => ok(mutant(line, line.replace('if (res.withhold.length &&', 'if (false &&'))), /Q3-2025 filled/); // withhold without fill
+  breaks += 2;
+  const lvl = lib => assert.equal(lib.applyExchangeCheck(scaleCell(base(), '2025-06-30', 1.05), { mode: 'shadow', context: CTX }).result.category, 'would-withhold', 'level stays withheld');
+  lvl(X);
+  assert.throws(() => lvl(mutant("      !res.withhold.some(w => w.level || w.fillPeriod || policy.fillPeriods.includes(w.period))) {", '      true) {')), /level stays withheld/);
+  breaks++;
+});
+
 test('live files unchanged by this test run', () => {
   assert.deepEqual(LIVE.map(sha), liveBefore);
 });
