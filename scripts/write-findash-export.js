@@ -303,14 +303,83 @@ const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase',
 // geseedet vom lokalen Max-Batch, täglich billig fortgeschrieben; Split-Wächter -> null).
 // Reine ANZEIGE, nie Score-Input (Grundgesetz 1). --check validiert die FORM wenn present
 // (nicht Pflicht — Abwesenheit ist legitim, Präzedenz coverageAxes/B1).
-const { displayFor } = require('./update-ath-state.js');
+const { displayFor, athReasonFor } = require('./update-ath-state.js');
 let _athEntries = null;
-function athFor(ticker) {
+function athEntryFor(ticker) {
   if (_athEntries === null) {
     const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
     _athEntries = (st && st.entries) || {};
   }
-  return displayFor(_athEntries[ticker]);
+  return _athEntries[ticker];
+}
+function athFor(ticker) { return displayFor(athEntryFor(ticker)); }
+
+// Card data contract (23.11.2026, findash S7 company card): per row, additive, display only, never a
+// score input and read after ranking, so no rank or score can move. Each value comes with its own
+// reason when it is null (G2), never a 0:
+//   athReason            why ath is null (scripts/update-ath-state.js athReasonFor)
+//   price12m / price12mReason   12-month change of the close from the same 400-day store the ATH
+//                        distance reads (lib/price12m.js)
+//   fcfMarginPct / fcfMarginSource / fcfMarginPeriodEnd / fcfMarginReason   the FCF margin with its
+//                        twelve months and source on every board, through the rule40 data gates
+//                        (lib/fcf-ttm.js fcfMargeVertrauenswuerdig, MAX_FCF_MARGIN_PCT)
+const priceStore = require('../lib/price-history-store.js');
+const { price12mFor } = require('../lib/price12m.js');
+const { MAX_FCF_MARGIN_PCT, fcfMargeVertrauenswuerdig, isCalendarDay } = require('../lib/fcf-ttm.js');
+const PRICES_DIR = process.env.FINDASH_PRICES_DIR || path.join(__dirname, '..', 'prices');
+let _priceHistory = null, _priceStoreFehler = null;
+/**
+ * ATH, its reason and the 12-month change of one ticker (also used by the rule40 board, which keeps
+ * its own FCF margin). @param {string} ticker Row ticker.
+ * @returns {{ath:(object|null), athReason:(string|null), price12m:(object|null), price12mReason:(string|null)}}
+ */
+function athUndKurs(ticker) {
+  if (_priceHistory === null) {
+    // An unreadable store is named as such, not as "no series for this stock".
+    try { _priceHistory = priceStore.loadAll(PRICES_DIR) || {}; } catch (e) { _priceHistory = {}; _priceStoreFehler = e; }
+    // loadAll answers a missing store with {}: that is a store problem, not "no series for this stock".
+    if (!_priceStoreFehler && Object.keys(_priceHistory).length === 0) _priceStoreFehler = new Error('empty price store ' + PRICES_DIR);
+  }
+  const kurs = _priceStoreFehler
+    ? { price12m: null, price12mReason: 'Kursspeicher leer oder nicht lesbar: der 12-Monats-Verlauf fehlt für alle Zeilen dieses Laufs.' }
+    : price12mFor(_priceHistory[ticker]);
+  const entry = athEntryFor(ticker);
+  return { ath: displayFor(entry), athReason: athReasonFor(entry), ...kurs };
+}
+/** Card fields of one board row (see above). @param {string} ticker Row ticker. @param {string} [snapshotStore] 'smallcap' or main. */
+function kartenFelder(ticker, snapshotStore) {
+  const { ath: _ath, ...rest } = athUndKurs(ticker); // row.ath is already set by athFor (same entry)
+  const abl = snapAbleitungenFuer(ticker, snapshotStore === 'smallcap' ? 'smallcap' : 'main');
+  return { ...rest, ...(abl.fcfAnzeige || fcfAnzeigeAus(null)) };
+}
+
+const FCF_ERSATZ_LEER = { fcfMarginPct: null, fcfMarginSource: null, fcfMarginPeriodEnd: null };
+/**
+ * The FCF margin of one snapshot for the card, with source and period, or null with a German reason.
+ * @param {object|null} snap Snapshot after the FCF overlay (scripts/fcf-ttm-overlay.js), null when none.
+ * @returns {{fcfMarginPct:(number|null), fcfMarginSource:(string|null), fcfMarginPeriodEnd:(string|null), fcfMarginReason:(string|null)}}
+ */
+function fcfAnzeigeAus(snap) {
+  const leer = (grund) => ({ ...FCF_ERSATZ_LEER, fcfMarginReason: grund });
+  if (!snap) return leer('Keine Firmendaten für diese Aktie geladen.');
+  const meta = snap.meta || {};
+  if (meta.fcfMarginTTMSuppressed) return leer('FCF-Marge zurückgehalten: der Wert ist nicht plausibel.');
+  const v = metricVal(snap, 'fcfMarginTTM');
+  if (!Number.isFinite(v)) {
+    const code = typeof meta.fcfMarginTTMReason === 'string' ? meta.fcfMarginTTMReason : '';
+    return leer(/stale/.test(code) ? 'FCF-Marge veraltet: der letzte Zwölfmonatszeitraum liegt mehr als ein Quartal hinter den neuesten Zahlen.'
+      : /invalid|over-200|negative/.test(code) ? 'FCF-Marge zurückgehalten: der Wert ist nicht plausibel.'
+      : 'Keine FCF-Marge über zwölf Monate gemeldet.');
+  }
+  if (!fcfMargeVertrauenswuerdig(v, norm(snap, 'annualFCF'), norm(snap, 'annualOCF'))) {
+    return leer('FCF-Marge nicht belastbar: die Jahresreihe des freien Cashflows fehlt oder widerspricht der Marge.');
+  }
+  if (v > MAX_FCF_MARGIN_PCT) return leer('FCF-Marge über dem Umsatz: kein operativer Wert.');
+  const m = snap.metrics && snap.metrics.fcfMarginTTM;
+  const source = m && typeof m.source === 'string' ? m.source : null;
+  if (source !== 'sec-ttm' && source !== 'yahoo-fts-ttm') return leer('FCF-Marge ohne bekannte Zwölfmonatsquelle (weder SEC noch Yahoo-TTM).');
+  if (!isCalendarDay(m.periodEnd)) return leer('FCF-Marge ohne Zeitraum.');
+  return { fcfMarginPct: Math.round(v * 10) / 10, fcfMarginSource: source, fcfMarginPeriodEnd: m.periodEnd, fcfMarginReason: null };
 }
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
@@ -436,6 +505,8 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    // Card data contract 23.11.2026; inert where this function is extracted without the module (P159 test).
+    fcfAnzeige: typeof fcfAnzeigeAus === 'function' ? fcfAnzeigeAus(snap) : null,
     // Stufe 4 label `newerPeriod`, compact facts only. typeof: tests/smallcap-store-evidence-p159.test.js extracts this function
     // without the module's bindings (like g31Export above); the writer itself always has the helper.
     newerPeriodFacts: snap && typeof newerPeriodFacts === 'function' ? newerPeriodFacts(snap, dataDay(), nextReportOf(ticker)) : null,
@@ -676,7 +747,7 @@ function overviewPeriodFor(kind, period) {
 // depreciation per position, newest present year, next present year) in the same order of exits and names the
 // exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
 // re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
-const { norm } = require('../src/scoring/snapshot.js');
+const { norm, metricVal } = require('../src/scoring/snapshot.js');
 const { annualPeriodEnds, staleReason } = require('../lib/annual-pairs.js');
 const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'jahreVeraltet', 'grundNichtImDatenstand']);
 const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
@@ -1140,6 +1211,7 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, snapshotStore)); // card contract 23.11.
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: Belegpunkte neben der Coverage-Behauptung
   // W8: ffoReason/revGrowthReason right after the growth fields, before the P88 and G31 shadow keys (both stay last);
   // inert (identity) in isolated legacy mappers that lack the helper, like g31Last below.
@@ -1167,6 +1239,7 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, snapshotStore)); // card contract 23.11.
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: s. mapBoardRow
   const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
   const last = typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
@@ -1186,6 +1259,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, 'main')); // card contract 23.11.
   return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), 'main')); // P88 additive shadow, last keys.
 }
 
@@ -2088,6 +2162,43 @@ function validateGeo(r, where, errs) {
       if (!Number.isFinite(r.ath.monthsAgo) || r.ath.monthsAgo < 0) errs.push(`${where}: ath.monthsAgo`);
     }
   }
+  checkKartenFelder(r, where, errs);
+}
+
+/**
+ * Card data contract (23.11.2026), additive OPTIONAL: when present, every value has its reason
+ * exactly when it is null, and a shown value carries its own dates and source.
+ * @param {object} r Export row. @param {string} where Row locator. @param {string[]} errs Collected errors.
+ */
+function checkKartenFelder(r, where, errs) {
+  const satz = (v) => typeof v === 'string' && v.trim() !== '';
+  const paar = (wert, grund, name) => {
+    if (!(grund in r)) return;
+    if (r[wert] === null && !satz(r[grund])) errs.push(`${where}: ${wert} null without ${grund}`);
+    if (r[wert] !== null && r[wert] !== undefined && r[grund] !== null) errs.push(`${where}: ${grund} next to a ${name}`);
+  };
+  paar('ath', 'athReason', 'shown ATH');
+  if ('price12m' in r && r.price12m !== null) {
+    const p = r.price12m;
+    const tag = (d) => typeof d === 'string' && isCalendarDay(d);
+    if (typeof p !== 'object' || !tag(p.fromDate) || !tag(p.toDate) || !(p.fromDate < p.toDate)
+        || !(Number.isFinite(p.fromClose) && p.fromClose > 0) || !(Number.isFinite(p.toClose) && p.toClose > 0)
+        || !satz(p.source) || !Number.isFinite(p.changePct)
+        || Math.abs(p.changePct - Math.round((p.toClose / p.fromClose - 1) * 1000) / 10) > 0.05) {
+      errs.push(`${where}: price12m malformed or changePct does not follow from its closes`);
+    }
+  }
+  paar('price12m', 'price12mReason', 'price12m');
+  if ('fcfMarginReason' in r) {
+    if (r.fcfMarginPct !== null) {
+      if (!Number.isFinite(r.fcfMarginPct) || r.fcfMarginPct > MAX_FCF_MARGIN_PCT) errs.push(`${where}: fcfMarginPct=${r.fcfMarginPct}`);
+      if (r.fcfMarginSource !== 'sec-ttm' && r.fcfMarginSource !== 'yahoo-fts-ttm') errs.push(`${where}: fcfMarginSource=${JSON.stringify(r.fcfMarginSource)}`);
+      if (!isCalendarDay(r.fcfMarginPeriodEnd)) errs.push(`${where}: fcfMarginPeriodEnd missing, the margin would have no period`);
+    } else if (r.fcfMarginSource !== null || r.fcfMarginPeriodEnd !== null) {
+      errs.push(`${where}: fcfMarginSource/PeriodEnd without a margin`);
+    }
+    paar('fcfMarginPct', 'fcfMarginReason', 'shown FCF margin');
+  }
 }
 
 // Belegbarkeits-Gate, BEIDE Richtungen — der eigentliche Waechter der Regel:
@@ -2944,4 +3055,6 @@ module.exports = {
   // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
   profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
   buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps, heldNewerSibling,
+  // Card data contract 23.11.2026.
+  athUndKurs, kartenFelder, fcfAnzeigeAus, checkKartenFelder,
 };
