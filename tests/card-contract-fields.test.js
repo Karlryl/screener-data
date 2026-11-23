@@ -36,7 +36,7 @@ const imKind = (env, code) => {
   return r.stdout;
 };
 
-test('price12m: start is the last close ON or BEFORE the day one year back; closes rounded, change from the raw closes', () => {
+test('price12m: start is the last close ON or BEFORE the day one year back; closes rounded, change from the shown closes', () => {
   // 2025-11-22 is a Saturday: start = Friday 21.11. (80), not Monday 24.11. (120).
   const s = [{ date: '2025-11-20', close: 70 }, { date: '2025-11-21', close: 80 }, { date: '2025-11-24', close: 120 }, { date: '2026-11-22', close: 100 }];
   const r = price12mFor(s);
@@ -81,8 +81,9 @@ const snap = (metric, extra = {}) => ({
 
 test('FCF margin: shown only with a TTM source and its period; every refusal has its code', () => {
   assert.deepEqual(exp.fcfAnzeigeAus(snap({ value: 12.345, source: 'sec-ttm', periodEnd: '2026-09-30' })),
-    { fcfMarginPct: 12.3, fcfMarginSource: 'sec-ttm', fcfMarginPeriodEnd: '2026-09-30', fcfMarginReason: null });
-  const leer = (s) => { const r = exp.fcfAnzeigeAus(s); assert.equal(r.fcfMarginPct, null); assert.equal(r.fcfMarginSource, null); assert.equal(r.fcfMarginPeriodEnd, null); return r.fcfMarginReason; };
+    { fcfMarginPct: 12.3, fcfMarginSource: 'sec-ttm', fcfMarginPeriodEnd: '2026-09-30' }, 'a shown margin has no reason key');
+  // Compact wire format: without a margin only the reason key.
+  const leer = (s) => { const r = exp.fcfAnzeigeAus(s); assert.deepEqual(Object.keys(r), ['fcfMarginReason']); return r.fcfMarginReason; };
   assert.equal(leer(null), 'no-snapshot');
   assert.equal(leer(snap({ value: 12, source: 'sec-ttm', periodEnd: '2026-09-30' }, { meta: { fcfMarginTTMSuppressed: true } })), 'suppressed');
   assert.equal(leer(snap(undefined, { meta: { fcfMarginTTMReason: 'vendor-ttm-stale' } })), 'stale');
@@ -101,7 +102,9 @@ store.saveAll(pricesDir, { [T]: [{ date: '2025-11-21', close: 40 }, { date: '202
 fs.writeFileSync(path.join(snapDir, safeSnapshotFilename(T)), JSON.stringify(snap({ value: 8.04, source: 'yahoo-fts-ttm', periodEnd: '2026-06-30' })));
 
 test('row mappers and the rule40 rows carry the card keys (wiring)', () => {
-  const KEYS = ['athReason', 'price12m', 'price12mReason', 'fcfMarginPct', 'fcfMarginSource', 'fcfMarginPeriodEnd', 'fcfMarginReason'];
+  // ZZCARD: no ATH (reason), a 12-month change (no reason key), a margin (no reason key).
+  const KEYS = ['athReason', 'price12m', 'fcfMarginPct', 'fcfMarginSource', 'fcfMarginPeriodEnd'];
+  const OHNE = ['price12mReason', 'fcfMarginReason'];
   const roh = { ticker: T, score: 80, track: 'profitable', lamps: [], overview: { kind: 'gp', value: 0.5, companion: null }, marketCap: null, name: 'Card Test' };
   const zeilen = {
     mapBoardRow: exp.mapBoardRow(roh, 0),
@@ -111,6 +114,7 @@ test('row mappers and the rule40 rows carry the card keys (wiring)', () => {
   for (const [name, z] of Object.entries(zeilen)) {
     assert.ok(z, name + ' returned no row');
     for (const k of KEYS) assert.ok(Object.hasOwn(z, k), `${name} lacks ${k}`);
+    for (const k of OHNE) assert.ok(!Object.hasOwn(z, k), `${name} carries an empty ${k}`);
     assert.equal(z.athReason, 'not-seeded', name);
     assert.equal(z.price12m.changePct, 50, name);
     assert.equal(z.fcfMarginPct, 8, name);
@@ -118,16 +122,21 @@ test('row mappers and the rule40 rows carry the card keys (wiring)', () => {
   const rule40 = require('../scripts/write-rule40-export.js');
   const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'mcap-classes-shadow', 'rule40-before.json'), 'utf8'));
   for (const row of rule40.baueZeilen(structuredClone(fixture.candidates)).rows) {
-    for (const k of ['ath', 'athReason', 'price12m', 'price12mReason']) assert.ok(Object.hasOwn(row, k), `rule40 ${row.ticker} lacks ${k}`);
+    assert.ok(Object.hasOwn(row, 'ath') && Object.hasOwn(row, 'price12m'), `rule40 ${row.ticker} lacks ath/price12m`);
+    assert.ok(row.ath !== null || Object.hasOwn(row, 'athReason'), `rule40 ${row.ticker}: null ath without athReason`);
+    assert.ok(row.price12m !== null || Object.hasOwn(row, 'price12mReason'), `rule40 ${row.ticker}: null price12m without price12mReason`);
+    const e = []; exp.checkKartenFelder(row, 'rule40', e); assert.deepEqual(e, []);
   }
 });
 
 test('check: unknown code, reason next to a value, window, source, changePct, FCF bounds and period', () => {
   const gut = { ath: null, athReason: 'not-seeded', price12m: { fromDate: '2025-11-21', fromClose: 40, toDate: '2026-11-21', toClose: 60, changePct: 50, source: 'yahoo-price-store' },
-    price12mReason: null, fcfMarginPct: 8, fcfMarginSource: 'sec-ttm', fcfMarginPeriodEnd: '2026-09-30', fcfMarginReason: null };
+    fcfMarginPct: 8, fcfMarginSource: 'sec-ttm', fcfMarginPeriodEnd: '2026-09-30' };
   const fehler = (r) => { const e = []; exp.checkKartenFelder(r, 'row', e); return e; };
   assert.deepEqual(fehler(gut), []);
   assert.deepEqual(fehler({ ...gut, price12m: null, price12mReason: 'short-series:2026-03-02' }), []);
+  assert.deepEqual(fehler({ ath: null, athReason: 'not-seeded', price12m: null, price12mReason: 'no-series', fcfMarginReason: 'none' }), []);
+  assert.equal(fehler({ ...gut, price12mReason: null }).length, 1, 'a reason key next to a shown value, even null');
   assert.equal(fehler({ ...gut, athReason: null }).length, 1);
   assert.equal(fehler({ ...gut, athReason: 'Allzeithoch fehlt' }).length, 1, 'a sentence is no code');
   assert.equal(fehler({ ...gut, ath: { distancePct: -3 } }).length, 1, 'reason next to a shown ATH');
@@ -138,6 +147,7 @@ test('check: unknown code, reason next to a value, window, source, changePct, FC
   assert.equal(fehler({ ...gut, fcfMarginPeriodEnd: null }).length, 1);
   assert.equal(fehler({ ...gut, fcfMarginPct: -5000 }).length, 1);
   assert.equal(fehler({ ...gut, fcfMarginPct: null }).length, 2, 'source without margin and no reason');
+  assert.equal(fehler({ ...gut, fcfMarginReason: 'none' }).length, 1, 'reason next to a shown margin');
   assert.deepEqual(fehler({ ticker: 'OLD' }), [], 'older rows without the fields stay legal');
 });
 

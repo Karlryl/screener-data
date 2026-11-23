@@ -375,8 +375,11 @@ function price12mAusStore(ticker) {
 function athUndKurs(ticker) {
   const entry = athEntryFor(ticker);
   const ath = displayFor(entry);
-  const athReason = ath !== null ? null : (_athStateLesbar ? athReasonFor(entry) : 'state-unreadable');
-  return { ath, athReason, ...price12mAusStore(ticker) };
+  const { price12m, price12mReason } = price12mAusStore(ticker);
+  // Compact on the wire (the full boards sit near findash's read limit): a reason key only next to a
+  // null value, never "reason": null. Absent = null for every reader (contract: additive OPTIONAL).
+  return { ath, ...(ath === null ? { athReason: _athStateLesbar ? athReasonFor(entry) : 'state-unreadable' } : {}),
+    price12m, ...(price12m === null ? { price12mReason } : {}) };
 }
 /** Card fields of one board row (see above). @param {string} ticker Row ticker. @param {string} [snapshotStore] 'smallcap' or main. */
 function kartenFelder(ticker, snapshotStore) {
@@ -385,14 +388,14 @@ function kartenFelder(ticker, snapshotStore) {
   return { ...rest, ...(abl.fcfAnzeige || fcfAnzeigeAus(null)) };
 }
 
-const FCF_ERSATZ_LEER = { fcfMarginPct: null, fcfMarginSource: null, fcfMarginPeriodEnd: null };
 /**
- * The FCF margin of one snapshot for the card, with source and period, or null with a reason code.
+ * The FCF margin of one snapshot for the card with source and period, or (no margin keys) its reason code.
  * @param {object|null} snap Snapshot after the FCF overlay (scripts/fcf-ttm-overlay.js), null when none.
- * @returns {{fcfMarginPct:(number|null), fcfMarginSource:(string|null), fcfMarginPeriodEnd:(string|null), fcfMarginReason:(string|null)}}
+ * @returns {{fcfMarginPct:number, fcfMarginSource:string, fcfMarginPeriodEnd:string}|{fcfMarginReason:string}}
  */
 function fcfAnzeigeAus(snap) {
-  const leer = (code) => ({ ...FCF_ERSATZ_LEER, fcfMarginReason: code });
+  // Compact like athUndKurs: without a margin only the reason, with a margin no reason key.
+  const leer = (code) => ({ fcfMarginReason: code });
   if (!snap) return leer('no-snapshot');
   const meta = snap.meta || {};
   if (meta.fcfMarginTTMSuppressed) return leer('suppressed');
@@ -408,7 +411,7 @@ function fcfAnzeigeAus(snap) {
   const source = m && typeof m.source === 'string' ? m.source : null;
   if (source !== 'sec-ttm' && source !== 'yahoo-fts-ttm') return leer('unknown-source');
   if (!isCalendarDay(m.periodEnd) || (dataDay() && m.periodEnd > dataDay())) return leer('no-period');
-  return { fcfMarginPct: Math.round(v * 10) / 10, fcfMarginSource: source, fcfMarginPeriodEnd: m.periodEnd, fcfMarginReason: null };
+  return { fcfMarginPct: Math.round(v * 10) / 10, fcfMarginSource: source, fcfMarginPeriodEnd: m.periodEnd };
 }
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
@@ -2200,14 +2203,15 @@ function validateGeo(r, where, errs) {
  * @param {object} r Export row. @param {string} where Row locator. @param {string[]} errs Collected errors.
  */
 function checkKartenFelder(r, where, errs) {
+  if (!('price12m' in r)) return; // a row from before the card contract
   const code = (v, erlaubt) => typeof v === 'string' && erlaubt.includes(v.split(':')[0]);
-  const paar = (wert, grund, codes) => {
-    if (!(grund in r)) return;
-    if (r[wert] === null && !code(r[grund], codes)) errs.push(`${where}: ${wert} null without a known ${grund} (${JSON.stringify(r[grund])})`);
-    if (r[wert] !== null && r[wert] !== undefined && r[grund] !== null) errs.push(`${where}: ${grund} next to a shown ${wert}`);
+  const wert = (k) => (r[k] === undefined ? null : r[k]);
+  const paar = (feld, grund, codes) => {
+    if (wert(feld) === null && !code(r[grund], codes)) errs.push(`${where}: ${feld} null without a known ${grund} (${JSON.stringify(r[grund])})`);
+    if (wert(feld) !== null && grund in r) errs.push(`${where}: ${grund} next to a shown ${feld}`);
   };
-  paar('ath', 'athReason', [...ATH_REASON_CODES_EXPORT]);
-  if ('price12m' in r && r.price12m !== null) {
+  paar('ath', 'athReason', ATH_REASON_CODES_EXPORT);
+  if (r.price12m !== null) {
     const p = r.price12m;
     const ok = p && typeof p === 'object' && isCalendarDay(p.fromDate) && isCalendarDay(p.toDate)
       && Number.isFinite(p.fromClose) && p.fromClose > 0 && Number.isFinite(p.toClose) && p.toClose > 0
@@ -2220,18 +2224,17 @@ function checkKartenFelder(r, where, errs) {
       fenster = abstand >= 0 && abstand <= PRICE12M_GAP_DAYS;
     }
     if (!ok || !fenster) errs.push(`${where}: price12m malformed, outside its 12-month window, or changePct does not follow from its closes`);
-    if (r.ath && typeof r.ath.lastDate === 'string' && ok && p.toDate !== r.ath.lastDate) {
-      _price12mNebenAth.n++; // reported once per run (see warnePrice12mStand), not a schema error
-    }
+    if (r.ath && typeof r.ath.lastDate === 'string' && ok && p.toDate !== r.ath.lastDate) _price12mNebenAth.n++; // report-only (warnePrice12mStand)
   }
   paar('price12m', 'price12mReason', ['no-series', 'short-series', 'gap', 'jump', 'stale-series', 'store-unreadable']);
-  if ('fcfMarginReason' in r) {
-    if (r.fcfMarginPct !== null) {
+  // FCF: the rule40 rows carry their own margin (always shown there) and no reason key.
+  if ('fcfMarginReason' in r || ('fcfMarginPct' in r && !('r40' in r))) {
+    if (wert('fcfMarginPct') !== null) {
       if (!Number.isFinite(r.fcfMarginPct) || r.fcfMarginPct > MAX_FCF_MARGIN_PCT || r.fcfMarginPct < -SUPPRESS_ABS_PCT) errs.push(`${where}: fcfMarginPct=${r.fcfMarginPct}`);
       if (r.fcfMarginSource !== 'sec-ttm' && r.fcfMarginSource !== 'yahoo-fts-ttm') errs.push(`${where}: fcfMarginSource=${JSON.stringify(r.fcfMarginSource)}`);
       if (!isCalendarDay(r.fcfMarginPeriodEnd)) errs.push(`${where}: fcfMarginPeriodEnd missing, the margin would have no period`);
       else if (dataDay() && r.fcfMarginPeriodEnd > dataDay()) errs.push(`${where}: fcfMarginPeriodEnd ${r.fcfMarginPeriodEnd} after the data day`);
-    } else if (r.fcfMarginSource !== null || r.fcfMarginPeriodEnd !== null) {
+    } else if (wert('fcfMarginSource') !== null || wert('fcfMarginPeriodEnd') !== null) {
       errs.push(`${where}: fcfMarginSource/PeriodEnd without a margin`);
     }
     paar('fcfMarginPct', 'fcfMarginReason', FCF_REASON_CODES);
