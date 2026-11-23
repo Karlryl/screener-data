@@ -84,6 +84,29 @@ test('break once: without the rate factor, or without the native comparison, the
   assert.throws(() => ok(libCopy("        const differs = (k, a, b) => fxPrior !== fxNext && rescale !== null && MONEY.has(k) ? !sameNative(a, b) : a !== b;",
     "        const differs = (k, a, b) => a !== b;")), /rate factor/);
 });
+// Before/after of 23.11.2026 found LOG.MC: Yahoo switched the revenue line and left FY2025 empty; the stored FY2025 of the old
+// line must not be restored into the new series (it produced +664.9 % growth).
+test('LOG.MC: a series on another line at the shared years restores nothing, the empty year stays a gap', () => {
+  const L = require('./fixtures/reload-fx-refill-logmc.json'), p = clone(L.snapshot), next = clone(p);
+  next.meta.fxRateApplied = L.fx20261123;
+  const ends = Object.keys(L.yahoo20261123).sort().reverse();
+  next.annual.annualRevEnds = ends.slice();
+  next.annual.annualRev = ends.map(e => L.yahoo20261123[e] === null ? null : { value: L.yahoo20261123[e] * 1e6 * L.fx20261123 });
+  next.meta.statementPeriods = { annualRev: ends.map(e => ({ end: e, duration: '12M', currency: 'EUR', unit: 'currency', basis: 'yahoo-statement' })) };
+  H.preserveReloadHistory(next, p);
+  assert.equal(next.annual.annualRev[ends.indexOf('2025-09-30')], null, 'old-line FY2025 not restored');
+  assert.ok(next.meta.reloadHistoryGaps.some(g => g.field === 'annualRev' && g.end === '2025-09-30' && g.reason === 'statement-basis-unverified'));
+});
+test('break once: without the series check, the LOG.MC year is restored and the check turns red', () => {
+  const L = require('./fixtures/reload-fx-refill-logmc.json');
+  const run = lib => { const p = clone(L.snapshot), next = clone(p); next.meta.fxRateApplied = L.fx20261123;
+    const ends = Object.keys(L.yahoo20261123).sort().reverse(); next.annual.annualRevEnds = ends.slice();
+    next.annual.annualRev = ends.map(e => L.yahoo20261123[e] === null ? null : { value: L.yahoo20261123[e] * 1e6 * L.fx20261123 });
+    next.meta.statementPeriods = { annualRev: ends.map(e => ({ end: e, duration: '12M', currency: 'EUR', unit: 'currency', basis: 'yahoo-statement' })) };
+    lib.preserveReloadHistory(next, p); assert.equal(next.annual.annualRev[1], null, 'series check'); };
+  run(H);
+  assert.throws(() => run(libCopy("  const basisOK = seriesBasisAgrees(next, previous, rescale);", "  const basisOK = () => true;")), /series check/);
+});
 test('live module unchanged by this test run', () => assert.equal(sha(), liveBefore));
 
 console.log(`reload-fx-refill: ${pass} passed, ${fail} failed`);

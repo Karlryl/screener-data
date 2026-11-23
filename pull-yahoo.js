@@ -5562,6 +5562,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           reloadStats.fetch_failed++;
           return await reloadFailed('reported annual or quarterly period regressed');
         }
+        // Class R (23.11.2026, 006800.KS): a reload whose newest quarter arrives without revenue moved the shown growth
+        // back from Q2 2026 to fiscal 2025. A reload never makes the period of the shown revenue growth older.
+        const shownEnd = s => { try { return require('./lib/rev-growth-basis.js').revGrowthLeg(yahooQ4.prepareSnapshot(s, { atPull: true })).periodEnd || null; }
+          catch (_) { return null; } };
+        const priorShown = shownEnd(_parsedSnapshot), nextShown = shownEnd(canonical);
+        // Only a strictly older shown period counts; no growth at all after a fiscal-year change keeps the old behaviour.
+        if (priorShown && nextShown && nextShown < priorShown) {
+          reloadStats.fetch_failed++;
+          return await reloadFailed('shown growth period regressed');
+        }
       }
       if (reloadOnly && !reportingHold && require('./lib/reload-history.js').historyIsThinner(canonical, previousHistory)) {
         reloadStats.fetch_failed++;
