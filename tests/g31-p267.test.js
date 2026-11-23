@@ -8,6 +8,7 @@
 // Run: node tests/g31-p267.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { onDay, G31_LEGACY_SHOWN_DAY } = require('./helpers/comparison-day.js'); // G31 legacy arm ends 16.11.2026 (lib/comparison-ends.js)
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -53,7 +54,7 @@ const dave = real('DAVE'); dave.meta.ticker = '_P267_DAVE'; writeSnap(dave);
 const engineRow = overview => produceRankings([{ ticker: dave.meta.ticker, action: 'route', formulaId: 'software-comm-services',
   track: 'profitable', score: 70, revGrowthYoYPct: axes.revGrowthLevel(dave), overview }]).branches['software-comm-services'].profitable[0];
 
-test('GP period travels with its value: overviewMetric -> score output -> both writer shapes (positive case)', () => {
+test('GP period travels with its value: overviewMetric -> score output -> both writer shapes (positive case)', () => onDay(G31_LEGACY_SHOWN_DAY, () => {
   const metric = overviewMetric(dave);
   assert.deepEqual(metric.period, { basis: 'quarter', periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30', reason: null });
   const ranked = engineRow(metric);
@@ -67,7 +68,7 @@ test('GP period travels with its value: overviewMetric -> score output -> both w
   assert.deepEqual(row.overviewPeriodLegacy, { basis: 'year', periodEnd: dave.annual.annualGPEnds[0], priorPeriodEnd: dave.annual.annualGPEnds[1], reason: null });
   const errs = []; W.validateBoardRow(row, row.ticker, errs);
   assert.deepEqual(errs.filter(e => /overviewPeriod/.test(e)), []);
-});
+}));
 
 test('mismatched GP value and period: the label is emptied with its reason; revenue keeps its label (P267 repro)', () => {
   // Codex repro: GP 0.704 (another input state) arriving with the quarter period of 30.06.2026 (true value 0.299).
@@ -327,7 +328,7 @@ test('r2 P2-3: in the legacy arm the label is checked against the legacy candida
 });
 
 // ---- P267 round 3: the writer's derivation cache follows the active arm ----
-test('r3 P2-3: one writer instance switching arms keeps both labels and comparisons (v1-legacy-v1, legacy-v1-legacy)', () => {
+test('r3 P2-3: one writer instance switching arms keeps both labels and comparisons (v1-legacy-v1, legacy-v1-legacy)', () => onDay(G31_LEGACY_SHOWN_DAY, () => {
   const ends = dave.annual.annualGPEnds;
   const expect = {
     v1: { value: 0.299, period: { basis: 'quarter', periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30', reason: null } },
@@ -351,6 +352,6 @@ test('r3 P2-3: one writer instance switching arms keeps both labels and comparis
   const broken = compile(wfile, ws.replace(anchor, '  const cacheKey = `${snapshotDir}:${ticker}`;'));
   step(broken, 'v1');
   assert.throws(() => step(broken, 'legacy'), assert.AssertionError);
-});
+}));
 
 test.after(() => { assert.deepEqual(liveHashes(), before); fs.rmSync(tmp, { recursive: true, force: true }); });
