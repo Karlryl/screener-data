@@ -174,8 +174,8 @@ check('D1 buildBoard: legacy shadow order stays fixed before trailing G31 fields
   const board = W.buildBoard('semiconductors', null, { srcDir });
   const row = board.profitable[0];
   // P184 appends separate shadows and the G31 switch its comparison fields; every older key keeps its order.
-  const keys = Object.keys(row).filter(key => !require('../lib/g31-recency.js').G31_TRAILING_KEYS.includes(key));
-  assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
+  const keys = Object.keys(row).filter(key => key !== 'newerPeriod' && !require('../lib/g31-recency.js').G31_TRAILING_KEYS.includes(key)); // newerPeriod: Stufe 4 label, last key
+  assert.deepEqual(Object.keys(row).filter(k => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   // PR #72's comparison periodGateShadow sits between them until the data day 04.12.2026 (Codex R31), then it is gone.
   const pg = W.periodGateShadowShown() ? ['periodGateShadow'] : [];
   assert.deepEqual(keys.slice(-2 - pg.length), ['annualPairsShadow', ...pg, 'fcfShadow']);
