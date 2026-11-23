@@ -1,6 +1,6 @@
 {
   "schema": "cadence-heartbeat/v1",
   "comment": "TASK 0.10 Dead-Man-Marker. Jeder erfolgreiche Kadenz-Lauf stempelt sein Feld (ISO-UTC) via scripts/cadence-marker.js + commit/push. heartbeat.yml liest diese Datei taeglich: non-null aber stale (>9d weekly / >38d monthly) -> rotes X. null = noch-nie-gefeuert (Bootstrap) -> nur ::warning::, nie rot.",
-  "last_weekly_run": "2026-11-16T13:49:56.479Z",
+  "last_weekly_run": "2026-11-23T16:14:31.688Z",
   "last_monthly_run": "2026-11-03T14:38:03.862Z"
 }
