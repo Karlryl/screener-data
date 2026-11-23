@@ -60,6 +60,15 @@ test('the same rate keeps the old path: refill unchanged and without a rate note
   assert.equal(v(next.timeseries.opIncQ[k]), v(p.timeseries.opIncQ[k]));
   assert.equal(next.meta.reloadHistoryRetained.find(r => r.field === 'opIncQ').fxRescaled, undefined);
 });
+test('review 23.11. M1: a record of the statement-currency hand table keeps the identical-rate rule (no refill at a new rate)', () => {
+  for (const side of ['prior', 'next']) {
+    const p = prior(), next = candidate(p), k = p.timeseries.opIncQEnds.indexOf(END);
+    (side === 'prior' ? p : next).meta.statementCurrencyOriginal = 'BRL';
+    H.preserveReloadHistory(next, p);
+    assert.equal(next.timeseries.opIncQ[k], null, side);
+    assert.ok(next.meta.reloadHistoryGaps.some(g => g.field === 'opIncQ' && g.end === END && g.reason === 'statement-basis-unverified'), side);
+  }
+});
 test('no refill at a new rate: other original currency, a sibling revised in BRL, a cell with a marker', () => {
   const ccy = prior(), n1 = candidate(ccy); n1.meta.reportingCurrencyOriginal = 'EUR';
   H.preserveReloadHistory(n1, ccy);
