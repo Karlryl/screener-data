@@ -3036,8 +3036,10 @@ jobs:
       # bricht den Schritt, statt still aus der Statusmeldung zu fallen.
       # STARTED_AT: faellt der prep-Ausgang leer aus (prep abgebrochen, bevor sein erster
       # Schritt lief), wird die Zeit NICHT erfunden, sondern der Abschlusszeitpunkt
-      # eingesetzt. findash rendert started_at nicht; der Vertrag verlangt nur eine
-      # gueltige Zeitangabe mit Zone.
+      # eingesetzt. findash (seit ec1391a, 23.11.2026) liest started_at: es muss der
+      # Laufbeginn VOR dem Board-Deploy sein, daran waehlt findash den Text seines
+      # Hinweisbanners. Diesen Feldvertrag (Name, Bedeutung "Start des Laufs", gueltige
+      # Zeitangabe mit Zone) stabil halten; jede Aenderung erst mit findash abstimmen.
       - name: Statusmarker schreiben
         if: always()
         env:
