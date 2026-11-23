@@ -22,14 +22,16 @@ const hgRow = (t, i) => ({ ticker: t, name: 'N' + t, country: i % 3 ? 'United St
   overview: i % 2 ? { kind: 'gp', value: 0.1 * i, period: { basis: 'quarter', periodEnd: '2026-09-30' } } : { kind: 'rev', value: 1 } });
 function pages(root, { hgRows = 25, r40Rows = 130, filterRows = 60 } = {}) {
   const v1 = path.join(root, 'outputs', 'findash-export', 'v1'), hg = path.join(root, 'outputs', 'hypergrowth');
-  for (const d of [path.join(v1, 'rule40'), path.join(v1, 'filter'), hg]) fs.mkdirSync(d, { recursive: true });
+  for (const d of [path.join(v1, 'rule40'), path.join(v1, 'filter'), path.join(v1, 'full'), hg]) fs.mkdirSync(d, { recursive: true });
   const w = (f, j) => fs.writeFileSync(f, JSON.stringify(j));
   for (const list of ['alpha', 'beta']) {
     const rows = track => Array.from({ length: hgRows }, (_, i) => hgRow(`${list}-${track}-${i}`, i));
     w(path.join(hg, list + '.json'), { profitable: rows('p'), unprofitable: rows('u') });
   }
   w(path.join(hg, 'index.json'), { profitable: [hgRow('NEVER-INDEX', 1), hgRow('NEVER-INDEX2', 3)] });
-  w(path.join(v1, 'alpha.json'), { profitable: [{ ticker: 'alpha-p-1', revGrowthBasis: 'quarter', revGrowthPeriodEnd: '2026-09-30', revGrowthPriorPeriodEnd: '2025-09-30' }] });
+  w(path.join(v1, 'full', 'alpha.json'), { profitable: [{ ticker: 'alpha-p-1', revGrowthBasis: 'quarter', revGrowthPeriodEnd: '2026-09-30', revGrowthPriorPeriodEnd: '2025-09-30' }] });
+  // Decoy: a top board file with another label; the labels come from the full export only (the baseline's input).
+  w(path.join(v1, 'alpha.json'), { profitable: [{ ticker: 'alpha-p-1', revGrowthBasis: 'year', revGrowthPeriodEnd: '1999-12-31' }] });
   w(path.join(v1, 'index.json'), { generated_at: '2026-11-21T11:22:31.786Z' });
   w(path.join(v1, 'rule40', 'overview.json'), { rows: Array.from({ length: r40Rows }, (_, i) => ({ ticker: i < 5 ? `alpha-p-${i}` : 'r40-' + i, name: 'R' + i,
     country: 'Germany', rank: i + 1, revGrowthYoYPct: i, fcfMarginPct: i % 4 ? 5 : null, ebitdaMarginPct: 7 })) });
@@ -62,6 +64,12 @@ check('draw: 100 values, 50 firms, 34/34/32 per list, two different fields per f
   for (const x of s.filter(x => x.stratum.startsWith('Rule40/'))) assert.ok(Number(x.stratum.slice('Rule40/rank'.length)) <= 100, x.stratum);
   const mc = s.find(x => x.field === 'marketCapUSD');
   if (mc) assert.equal(mc.period.asOf, 'export 2026-11-21 (price of prior trading day)');
+});
+
+check('readPages: period labels come from v1/full (the baseline input), never from a top board file', () => {
+  const full = Z.readPages(root).full;
+  assert.equal(full.length, 1);
+  assert.equal(full[0].profitable[0].revGrowthPeriodEnd, '2026-09-30');
 });
 
 check('draw: same seed same sample, another seed another sample', () => {

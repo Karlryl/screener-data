@@ -37,7 +37,8 @@ function readPages(root) {
   const json = dir => fs.readdirSync(dir).filter(f => f.endsWith('.json') && !EXCLUDED_FILES.test(f)).sort();
   return {
     hg: json(hgDir).map(f => ({ name: f.slice(0, -5), json: read(path.join(hgDir, f)) })),
-    full: json(v1).map(f => read(path.join(v1, f))),
+    // Period labels from the findash full export v1/full/ (13 sector files), the input of the baseline (pre-registration).
+    full: json(path.join(v1, 'full')).map(f => read(path.join(v1, 'full', f))),
     rule40: read(path.join(v1, 'rule40', 'overview.json')).rows,
     filter: read(path.join(v1, 'filter', 'universum.json')).rows,
     generatedAt: read(path.join(v1, 'index.json')).generated_at ?? null,
