@@ -2214,6 +2214,24 @@ jobs:
         continue-on-error: true
         run: node scripts/value-open-items.js
 
+      # Card data contract (23.11.2026): price12m must end on the same day as ath. The checkout is the trigger
+      # commit, i.e. the price store of the PREVIOUS pull, while ath-state comes from today's merge job. So the
+      # store is read from the tip of main into a temp folder, as the preisschritt step below does; the working
+      # tree stays untouched. FAIL-SOFT: without it FINDASH_PRICES_DIR stays unset, the export falls back to the
+      # checkout's store, and `write-findash-export.js --check` warns about every row whose price12m.toDate
+      # differs from ath.lastDate. The boards never depend on this step.
+      - name: Price store of today's pull for the card fields (fail-soft)
+        run: |
+          store="$RUNNER_TEMP/card-price-store"
+          if rm -rf "$store" && mkdir -p "$store" &&
+             git fetch --no-tags origin main &&
+             git archive FETCH_HEAD prices/history | tar -x -C "$store" &&
+             test -f "$store/prices/history/_meta.json"; then
+            echo "FINDASH_PRICES_DIR=$store/prices" >> "$GITHUB_ENV"
+          else
+            echo "::warning::card price store from main not available; price12m uses the checkout's store (one pull older)."
+          fi
+
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js

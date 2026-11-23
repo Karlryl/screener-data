@@ -122,19 +122,23 @@ function displayFor(entry) {
   };
 }
 
+/** Reason codes of athReason (the wording lives in findash, see docs/findash-export-v1.md). */
+const ATH_REASON_CODES = Object.freeze(['not-seeded', 'reseed-needed', 'close-before-ath', 'entry-incomplete', 'state-unreadable']);
 /**
- * Why the export shows no ATH for a ticker (23.11.2026, card data contract): one German sentence
- * for exactly the case displayFor() returned null, else null. An ATH needs the full price history
- * (prices-max/, local batch); the 400-day store cannot stand in, a 400-day high is not an ATH.
+ * Why the export shows no ATH for a ticker (23.11.2026, card data contract): a code for exactly the
+ * case displayFor() returned null, else null. An ATH needs the full price history (prices-max/, the
+ * local batch scripts/backfill-prices-max.js, which nothing runs on a schedule); the 400-day store
+ * cannot stand in, a 400-day high is not an ATH. needsReseed has several causes (split re-basing, an
+ * anchor day aged out of the store, a damaged entry), so its code does not claim a split.
  * @param {object|undefined} entry ath-state entry of the ticker (undefined = never seeded).
  * @returns {string|null}
  */
 function athReasonFor(entry) {
   if (displayFor(entry) !== null) return null;
-  if (!entry) return 'Allzeithoch noch nicht ermittelt: für diese Aktie fehlt die volle Kurshistorie, sie wird lokal nachgeladen.';
-  if (entry.needsReseed) return 'Allzeithoch ausgesetzt: die Kursreihe wurde nach einem Split oder einer Anpassung neu berechnet, die volle Kurshistorie muss neu geladen werden.';
-  if (entry.athDate && entry.lastDate && entry.athDate > entry.lastDate) return 'Allzeithoch ausgesetzt: der letzte Schlusskurs ist älter als der Tag des Allzeithochs.';
-  return 'Allzeithoch nicht anzeigbar: der gespeicherte Eintrag ist unvollständig.';
+  if (!entry) return 'not-seeded';
+  if (entry.needsReseed) return 'reseed-needed';
+  if (entry.athDate && entry.lastDate && entry.athDate > entry.lastDate) return 'close-before-ath';
+  return 'entry-incomplete';
 }
 
 // Store->History laden, fail-loud statt still leer (Muster rank-ic loadPriceIndexOrThrow,
@@ -215,5 +219,5 @@ function main() {
   return runUpdateAthState(stateFile, pricesDir);
 }
 
-module.exports = { advanceEntry, displayFor, athReasonFor, monthsBetween, loadHistoryOrDie, runUpdateAthState, REF_DRIFT_TOLERANCE };
+module.exports = { advanceEntry, displayFor, athReasonFor, ATH_REASON_CODES, monthsBetween, loadHistoryOrDie, runUpdateAthState, REF_DRIFT_TOLERANCE };
 if (require.main === module) main();
