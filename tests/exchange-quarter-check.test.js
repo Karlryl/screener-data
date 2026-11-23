@@ -887,8 +887,8 @@ test('K2-TW printed check: an agreeing MOPS print fills the MOPS quarter, with s
   assert.equal(r.fill.printedCheck.agree, true); assert.equal(r.fill.printedCheck.source, 'MOPS'); assert.equal(r.fill.printedCheck.season, '115Q3');
   assert.equal(r.fill.printedCheck.printedPriorQuarter, 3893772 * 1000); assert.equal(r.fill.operands[0].season, '115Q3');
   assert.equal(r.fill.reason, 'Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (MOPS, abgerufen 24.09.2026). ' +
-    'Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3), Zeile ' +
-    '營業收入合計, Spalte 114年第3季 (3,893,772 Tausend TWD).');
+    'Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3, Jahr 115 der taiwanischen Zählung = 2026), Zeile ' +
+    '營業收入合計, Spalte 114年第3季 (gedruckt „3,893,772“ in Tausend TWD, also rund 3,9 Mrd. TWD).');
   const out = run(c.s, 'fill-only', c.ctx).snapshot, cell = out.timeseries.revenueQ[3];
   assert.equal(cell.exchangeFill.printedCheck.column, '114年第3季'); assert.equal(cell.exchangeFill.nativeValue, 3893772 * 1000);
   assert.equal(revGrowthLeg(out).basis, 'quarter');
@@ -920,14 +920,28 @@ test('K2-TW printed check: missing, late or disagreeing prints keep no-baseline;
   assert.equal(X.twPrintedCheck(c.s, xs, '2026-09-30', 1, () => true).agree, true);
 });
 test('K2-TW printed check: a broken agreement or read-day check turns red (break once)', () => {
-  const disagree = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase().ctx }).result.fill.blocked, 'no-baseline');
+  const disagree = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase().ctx }).result.fill.blocked, 'no-baseline', 'tw disagreement blocks');
   disagree(twLib(s => s, {}, shiftedStore(1.002)));
-  assert.throws(() => disagree(twLib(s => replaceLine(s, "  if (!agree(value, v.priorQuarter)) return { ...evidence, status: 'fill-value-differs-from-print' };", ''), {}, shiftedStore(1.002))), assert.AssertionError);
+  assert.throws(() => disagree(twLib(s => replaceLine(s, "  if (!agree(value, v.priorQuarter)) return { ...evidence, status: 'fill-value-differs-from-print' };", ''), {}, shiftedStore(1.002))), /tw disagreement blocks/); // review 23.11. N3: a missing anchor no longer counts as red
   breaks++;
-  const late = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase({ readAt: '2026-09-26T00:00:00.000Z' }).ctx }).result.fill.blocked, 'no-baseline');
+  const late = lib => assert.equal(lib.applyExchangeCheck(clone(twPrintedCase().s), { mode: 'shadow', context: twPrintedCase({ readAt: '2026-09-26T00:00:00.000Z' }).ctx }).result.fill.blocked, 'no-baseline', 'tw late read blocks');
   late(X);
-  assert.throws(() => late(twLib(s => replaceLine(s, "  if (!isDay(firstRead) || !isDay(snapshotDay) || firstRead > snapshotDay) return { ...evidence, status: 'read-after-snapshot' };", ''))), assert.AssertionError);
+  assert.throws(() => late(twLib(s => replaceLine(s, "  if (!isDay(firstRead) || !isDay(snapshotDay) || firstRead > snapshotDay) return { ...evidence, status: 'read-after-snapshot' };", ''))), /tw late read blocks/);
   breaks++;
+});
+// Review 23.11. N4: the three read-day branches without a test.
+test('K2-TW printed check: a read on the snapshot day fills, a season without a first read does not, asOf wins over fetchedAt', () => {
+  const c0 = twPrintedCase(), day0 = String(c0.s.meta.asOf || c0.s.meta.fetchedAt).slice(0, 10);
+  const same = twPrintedCase({ readAt: day0 + 'T23:59:00.000Z' });
+  assert.equal(res(same.s, same.ctx).category, 'would-fill', 'same calendar day as the snapshot');
+  const none = twPrintedCase(); none.st.tw.companies['6446.TW'].seasons['115Q3'][0].confirmedBy = [];
+  assert.equal(res(none.s, none.ctx).fill.printedCheck.status, 'read-after-snapshot');
+  const later = new Date(Date.parse(day0 + 'T00:00:00Z') + 3 * 864e5).toISOString().slice(0, 10);
+  const asOf = twPrintedCase({ readAt: later + 'T08:00:00.000Z' }); asOf.s.meta.fetchedAt = later + 'T09:00:00.000Z';
+  asOf.s.meta.asOf = day0 + 'T03:00:00.000Z';
+  assert.equal(res(asOf.s, asOf.ctx).fill.printedCheck.status, 'read-after-snapshot', 'asOf decides, not the later fetchedAt');
+  delete asOf.s.meta.asOf;
+  assert.equal(res(asOf.s, asOf.ctx).category, 'would-fill', 'without asOf the fetchedAt day decides');
 });
 test('K2-TW printed check: switch off restores the previous no-baseline result exactly; own switch, China unaffected', () => {
   const c = twPrintedCase(), off = twLib(s => s, { printedQ3CheckTw: false });

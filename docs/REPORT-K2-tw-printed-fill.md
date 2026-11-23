@@ -4,15 +4,15 @@
 > Am Datentag 21.11.2026 füllt der neue Weg **27 Quartale Q3 2025** bei Taiwan-Aktien, die bisher nur am fehlenden Juli-Stand (`no-baseline`) scheiterten; **24** davon zeigen jetzt Q3 2026 statt Q2 2026, und alle 24 Wachstumswerte treffen das Wachstum aus den beiden MOPS-Zahlen auf 0,01 Prozentpunkte.
 >
 > - Taiwan-Zeilen nach gezeigtem Zeitraum (286 Snapshots): Q3 2026 **197 → 221**, Q2 2026 **56 → 32**, alles andere unverändert. Mit Schalter aus sind alle 286 Taiwan-Snapshots und alle Boards bytegleich mit dem heutigen Code.
-> - Boards: Vier sichtbare Taiwan-Zeilen ändern ihren Zeitraum, zwei davon kommen neu in die Top 50 (2421.TW HyperGrowth Industrie profitabel 57 → 38, 4919.TW Halbleiter unprofitabel 51 → 49); 2464.TW springt 40 → 9, 3563.TW 46 → 9.
+> - Boards (feste Kalibrierung, Nachtrag 23.11.): 2464.TW Industrie unprofitabel 42 → 11, 3563.TW Halbleiter profitabel 47 → 9, 2421.TW Industrie profitabel 57 → 38, 4919.TW Halbleiter unprofitabel 51 → 49; neu in der Top-Liste Halbleiter profitabel 2455.TW (74) und 2441.TW (75), heraus 8016.TW und 300236.SZ. Keine Zeile außerhalb Taiwans ändert ihren Score.
 
 Stand 22.11.2026, gemessen auf dem Datentag 21.11.2026, Zählebene Ticker. Gebaut von einem Claude-Opus-Helfer (Codex war leer), gestapelt auf PR #140. Der Schalter `printedQ3CheckTw` steht im Arbeitsstand auf `true`; live geht er erst nach der Prüfung durch die andere KI.
 
 ## 1. Was sich ändert
 
-Bisher füllte `lib/exchange-quarter-check.js` ein fehlendes Taiwan-Quartal Q3 2025 nur, wenn die Firma im Board-Stand vor dem 01.08.2026 (Juli-Stand, `board-history/2026-07-29`) stand. Der Juli-Stand belegt, dass die Zahlen des Datenanbieters für 2025 seitdem gleich geblieben sind. Fehlte die Firma dort, blieb die Füllung mit `no-baseline` gesperrt, obwohl die Prüfung schon verlangte, dass der MOPS-Bericht zu Q3 2026 das Vorjahresquartal selbst abdruckt.
+Bisher füllte `lib/exchange-quarter-check.js` ein fehlendes Taiwan-Quartal Q3 2025 nur, wenn die Firma im Board-Stand vor dem 01.08.2026 (Juli-Stand, `board-history/2026-07-29`) stand. Der Juli-Stand belegt, dass die Zahlen des Datenanbieters für 2025 seitdem gleich geblieben sind. Fehlte die Firma dort oder ihr Quartal 2025 (so bei 2441.TW und 2633.TW), blieb die Füllung mit `no-baseline` gesperrt, obwohl die Prüfung schon verlangte, dass der MOPS-Bericht zu Q3 2026 das Vorjahresquartal selbst abdruckt.
 
-Neu gilt dieser Abdruck als Beleg, dass Vorjahres- und aktuelles Quartal auf derselben Grundlage stehen, genau wie beim CNINFO-Beleg für China (PR #140). Gefüllt wird nur, wenn alle drei Bedingungen gelten:
+Neu gilt dieser Abdruck als Beleg, dass Vorjahres- und aktuelles Quartal auf derselben Grundlage stehen, genau wie beim CNINFO-Beleg für China (PR #140). Gefüllt wird nur, wenn alle drei Bedingungen gelten (die zweite ist im heutigen Betrieb immer erfüllt, weil der Speicher den eingefüllten Wert schon aus diesem Abdruck ableitet; sie schließt die Füllung, falls sich die Ableitung je ändert):
 
 - Die MOPS-Saison 115Q3 (Bericht zum 3. Quartal 2026) liegt im Speicher und druckt in der Zeile 營業收入合計 die Spalte 114年第3季.
 - Dieser gedruckte Wert stimmt mit dem eingefüllten MOPS-Einzelquartal überein (bisherige Toleranz 0,1 %, mindestens 500 TWD).
@@ -62,8 +62,8 @@ Zum Wiederfinden auf MOPS (Gewinn- und Verlustrechnung `t164sb04`, Jahr 115, Sai
 
 | Ticker | Wachstum vorher (Q2 2026) | Wachstum nachher (Q3 2026) | MOPS 115年第3季 | MOPS 114年第3季 (gefüllt) | Board |
 |---|---:|---:|---:|---:|---|
-| 2464.TW | 32,56 % | **71,38 %** | 2,789,153 | 1,627,461 | HyperGrowth Industrie unprofitabel 40 → 9 |
-| 3563.TW | 8,10 % | **42,35 %** | 1,092,135 | 767,206 | HyperGrowth Halbleiter profitabel 46 → 9 |
+| 2464.TW | 32,56 % | **71,38 %** | 2,789,153 | 1,627,461 | HyperGrowth Industrie unprofitabel 42 → 11 |
+| 3563.TW | 8,10 % | **42,35 %** | 1,092,135 | 767,206 | HyperGrowth Halbleiter profitabel 47 → 9 |
 | 2421.TW | 16,20 % | **24,48 %** | 6,142,510 | 4,934,408 | HyperGrowth Industrie profitabel 57 → 38 |
 | 4919.TW | 1,61 % | **8,03 %** | 7,856,135 | 7,272,079 | HyperGrowth Halbleiter unprofitabel 51 → 49 |
 | 2441.TW | 22,28 % | **41,10 %** | 5,998,024 | 4,250,756 | HyperGrowth Halbleiter profitabel 181 → 75 |
@@ -79,6 +79,12 @@ Beispiel 2464.TW: 2.789.153 / 1.627.461 − 1 = 71,38 %, gleich dem neuen Board-
 ## 5. Grenzen und offene Punkte
 
 - Solange der Speicher für Q3 2025 den Vorjahreswert des neueren Berichts bevorzugt (`taiwanSingleQuarters`), ist der eingefüllte Wert genau dieser Abdruck; die Übereinstimmung gilt dann von selbst. Die Prüfung sichert, dass die Füllung schließt, falls sich die Ableitung je ändert. Den eigentlichen Beleg liefert, dass Wert und laufendes Quartal aus demselben amtlichen Bericht stammen (Sicherheit, dass das trägt: 90 %).
-- Die Tausenderkommas im Begründungstext entsprechen der Schreibweise, in der MOPS die Beträge zeigt; live auf der MOPS-Seite nachgesehen wurde das in diesem Auftrag nicht (Sicherheit 85 %).
+- Der Begründungstext zitiert den Betrag in der Schreibweise von MOPS (Tausenderkommas) und nennt danach die deutsche Lesart, etwa „gedruckt „767,206“ in Tausend TWD, also rund 767,2 Mio. TWD“, dazu das Jahr der taiwanischen Zählung (115 = 2026). Live auf der MOPS-Seite nachgesehen wurde die Schreibweise nicht (Sicherheit 85 %).
 - Die 32 Taiwan-Zeilen, die weiter Q2 2026 zeigen, haben andere Ursachen: Bei den meisten liefert der Datenanbieter Q3 2026 noch nicht (Diagnose Abschnitt 2, Mechanismus B), dazu kommen zu alte MOPS-Abrufe und geänderte Anbieterwerte für 2025. Dieser Auftrag ändert daran nichts.
 - Der Begründungstext wurde nach dem Bau von „gleich abgegrenzt“ auf einen Satz ohne Fachbegriff umgestellt; Zahlen und Füllungen sind davon nicht betroffen, nur die Prüfsumme im GQS-00-Übergang wurde nachgezogen.
+- 3264.TWO und 8039.TW haben ein im Juli bestätigtes Quartal 2025 und bleiben trotzdem gesperrt (andere Sperre als `no-baseline`); der neue Weg greift für sie nicht. Das ist eine Schieflage gegenüber Firmen ohne Juli-Stand, aber keine falsche Zahl.
+- Der Abruftag wird als Kalendertag verglichen: Eine Saison, die am Snapshot-Tag erst nach dem Snapshot gelesen wurde, zählt als rechtzeitig. Im Tageslauf ist das ohne Wirkung; nur eine Nachrechnung mit neuerem Speicher könnte so einen Beleg benutzen, den es am Snapshot-Zeitpunkt noch nicht gab.
+
+## 6. Nachtrag 23.11.2026 nach der blinden Opus-Prüfung
+
+Urteil APPROVE MIT AUFLAGEN (85 %). Umgesetzt: Begründungstext mit deutscher Lesart des Betrags und Jahr der taiwanischen Zählung (M2); Tageslauf-Erwartungen für 2464.TW und 3563.TW (M1); Absichtlich-rot-Prüfungen erkennen einen fehlenden Anker (N3); drei neue Tests für Lesung am Snapshot-Tag, fehlende erste Lesung und Vorrang von `asOf` (N4); Board-Ränge mit fester Kalibrierung neu gemessen (N6, oben eingetragen). Welche Zellen gefüllt werden, ändert sich dadurch nicht. `tests/exchange-quarter-check.test.js` 54 grün.
