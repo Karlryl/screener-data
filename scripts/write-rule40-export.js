@@ -78,8 +78,10 @@ const nextReportOf = reportCalendar(path.join(__dirname, '..', 'earnings-calenda
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
-const { isCalendarDay } = require('../lib/fcf-ttm.js');
+const { isCalendarDay, MAX_FCF_MARGIN_PCT, fcfMargeVertrauenswuerdig } = require('../lib/fcf-ttm.js');
 const { annualPairsShadowForSnapshot } = require('./write-findash-export.js');
+// Card data contract 23.11.2026: ATH with its reason and the 12-month change from the same helpers as the boards.
+const { athUndKurs, checkKartenFelder } = require('./write-findash-export.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 const { shownGrowthMonth } = require('../lib/home-listing.js');
 
@@ -182,7 +184,7 @@ const MAX_FISCAL_AGE_DAYS = 550;
  * Brett, dessen ganzer Zweck die nachrechenbare Summe ist, eine erfundene Zahl.
  * Gemessen am Stand 2026-08-29: trifft 23 von 247 Zeilen, davon 2 in der Software-Gruppe.
  */
-const MAX_FCF_MARGIN_PCT = 100;
+// The bound itself lives in lib/fcf-ttm.js (one definition for every board, 23.11.2026).
 /**
  * Unter so vielen Kandidaten wird der Wachstumsterm NICHT geklemmt. Ein 1-%-Rand braucht
  * mindestens ein paar Beobachtungen, um ein Rand zu sein; bei 3 Kandidaten IST die
@@ -358,32 +360,6 @@ function periodeDesBeins(bein, quartalsEndeMs) {
   return bein.periodEnd === null ? null : new Date(Date.parse(bein.periodEnd + 'T00:00:00Z')).toISOString();
 }
 
-/**
- * Datenvertrauens-Tore der FCF-Marge: G0-G2 von fcfMarginValid (engine.js:106-131),
- * BEWUSST OHNE G3.
- *
- * G0 (Marge fehlt/nicht endlich), G1 (weder FCF- noch OCF-Reihe vorhanden) und G2 (Vorzeichen
- * der TTM-Marge widerspricht dem juengsten present FCF-Jahr) sind Aussagen ueber die DATEN:
- * fallen sie, ist die Zahl nicht vertrauenswuerdig. G3 (Summe der zwei juengsten Jahre >= 0)
- * ist dagegen ein WIRTSCHAFTLICHES Urteil — es wirft profitable-Track-Kandidaten mit
- * juengstem Cash-Burn heraus. Genau die will dieses Brett zeigen: hohes Wachstum bei
- * negativer Marge ist ein voellig regulaerer Rule-of-40-Fall, und ihn stillschweigend
- * wegzufiltern waere eine Meinung, keine Datenpruefung.
- *
- * Die Kopie ist Absicht (engine.js exportiert die Tore nicht einzeln) und wird von
- * tests/rule40/gate-parity.test.js an das Original gehalten: jede von der Engine
- * akzeptierte Zeile muss auch hier akzeptiert sein, und die Differenz ist exakt G3.
- */
-function fcfMargeVertrauenswuerdig(fcfMarginTTM, normFCF, normOCF) {
-  if (!istZahl(fcfMarginTTM)) return false;                                   // G0
-  const present = (a) => Array.isArray(a) && a.some((v) => istZahl(v));
-  const ersterPresent = (a) => (Array.isArray(a) ? a.find((v) => istZahl(v)) : undefined);
-  if (!present(normFCF) && !present(normOCF)) return false;                   // G1
-  if (!present(normFCF)) return false;                                        // G2 braucht ein FCF-Jahr
-  const vz = (x) => (x > 0 ? 1 : (x < 0 ? -1 : 0));
-  if (vz(fcfMarginTTM) !== vz(ersterPresent(normFCF))) return false;          // G2
-  return true;
-}
 
 /**
  * ebitdaMargins in PROZENT. Nachgemessen am 17.09.2026 auf sieben Namen (CRM 30,1 /
@@ -803,6 +779,9 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
         lamps: Array.isArray(row.lamps) ? row.lamps : [],
       };
       for (const f of PASSTHROUGH_FIELDS) zeile[f] = (f in row) ? row[f] : null;
+      // Card data contract 23.11.2026: ATH from the state for every row (off-board rows had none only for lack of a
+      // board row), its reason when null, and the 12-month change. Display only, after ranking.
+      Object.assign(zeile, athUndKurs(k.ticker));
       if (row.financialDataReasons?.length) zeile.financialDataReasons = row.financialDataReasons.slice();
       if (!k.onBoard) {
         // Ohne Brett-Zeile kommen die Stammdaten aus dem Snapshot. marketCap bleibt
@@ -1187,6 +1166,7 @@ function check(opts = {}) {
     // 01.10.2026: dieselbe Basis-Regel wie der Haupt-Export, dazu das Etikett: traegt das
     // Jahresbein die Zahl, nennt quartalsEnde dessen Geschaeftsjahresende (oder null), nie ein Quartal.
     checkRevGrowthBasis(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);
+    checkKartenFelder(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler); // card data contract 23.11.2026
     checkOverviewPeriods(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler); // P267 additive OPTIONAL
     checkValueFlags(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);   // Tag 1401 additive OPTIONAL
     if ((r.revGrowthBasis === 'year' || r.revGrowthBasis === 'yearNewerRecord')

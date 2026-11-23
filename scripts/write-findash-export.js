@@ -303,14 +303,116 @@ const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase',
 // geseedet vom lokalen Max-Batch, täglich billig fortgeschrieben; Split-Wächter -> null).
 // Reine ANZEIGE, nie Score-Input (Grundgesetz 1). --check validiert die FORM wenn present
 // (nicht Pflicht — Abwesenheit ist legitim, Präzedenz coverageAxes/B1).
-const { displayFor } = require('./update-ath-state.js');
-let _athEntries = null;
-function athFor(ticker) {
+const { displayFor, athReasonFor, ATH_REASON_CODES } = require('./update-ath-state.js');
+let _athEntries = null, _athStateLesbar = true;
+function athEntryFor(ticker) {
   if (_athEntries === null) {
-    const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
-    _athEntries = (st && st.entries) || {};
+    // FINDASH_ATH_STATE: test seam like FINDASH_SNAPSHOTS_DIR, so fixture tests do not read the live state (23.11.2026).
+    const st = readJSONOrNull(process.env.FINDASH_ATH_STATE || path.join(__dirname, '..', 'external-data', 'ath-state.json'));
+    _athStateLesbar = !!(st && st.entries && typeof st.entries === 'object' && !Array.isArray(st.entries));
+    if (!_athStateLesbar) console.log('::warning::[card] external-data/ath-state.json missing or unreadable: every row gets athReason "state-unreadable".');
+    _athEntries = _athStateLesbar ? st.entries : {};
   }
-  return displayFor(_athEntries[ticker]);
+  return _athEntries[ticker];
+}
+function athFor(ticker) { return displayFor(athEntryFor(ticker)); }
+
+// Card data contract (23.11.2026, findash S7 company card): per row, additive, display only, never a
+// score input and read after ranking, so no rank or score can move. A null value comes with a reason
+// CODE (G2), never a 0; the German wording lives in findash (codes keep the full boards small):
+//   athReason            why ath is null (scripts/update-ath-state.js ATH_REASON_CODES, plus 'state-unreadable')
+//   price12m / price12mReason   12-month change of the close from the 400-day store (lib/price12m.js).
+//                        In the daily run FINDASH_PRICES_DIR points at the store of the tip of main (the
+//                        checkout is the trigger commit, one pull older), so price12m ends on ath.lastDate.
+//   fcfMarginPct / fcfMarginSource / fcfMarginPeriodEnd / fcfMarginReason   the FCF margin with its
+//                        twelve months and source on every board, through the rule40 data gates
+//                        (lib/fcf-ttm.js fcfMargeVertrauenswuerdig, MAX_FCF_MARGIN_PCT); FCF_REASON_CODES.
+const priceStore = require('../lib/price-history-store.js');
+const { price12mFor, SOURCE: PRICE12M_SOURCE, START_GAP_DAYS: PRICE12M_GAP_DAYS } = require('../lib/price12m.js');
+const { MAX_FCF_MARGIN_PCT, SUPPRESS_ABS_PCT, fcfMargeVertrauenswuerdig, isCalendarDay } = require('../lib/fcf-ttm.js');
+const PRICES_DIR = process.env.FINDASH_PRICES_DIR || path.join(__dirname, '..', 'prices');
+const FCF_REASON_CODES = Object.freeze(['no-snapshot', 'suppressed', 'stale', 'implausible', 'none', 'untrusted', 'over-revenue', 'unknown-source', 'no-period']);
+
+// The store is read one shard at a time (32 shards) and each shard is reduced to the finished results at
+// once: peak memory is one shard, not all 36,000 series (the whole store per load ran tests out of heap),
+// and a module loaded again and again in tests reads only the shards of its own tickers.
+let _kursStore; // undefined = not checked yet; {fehler:true} or {ok:true}
+const _kursErgebnis = new Map(); // shard -> Map(ticker -> result) | null (shard unreadable)
+function kursStoreStatus() {
+  if (_kursStore !== undefined) return _kursStore;
+  let meta = null, grund = null;
+  try { meta = priceStore.loadMeta(PRICES_DIR); } catch (e) { grund = 'unreadable _meta.json (' + e.message + ')'; }
+  if (!grund && meta == null) grund = 'no stamped store';
+  if (!grund && !(meta.tickerCount > 0)) grund = 'stamped store with 0 tickers';
+  // BH-139 rule of loadAll: once stamped, every shard file exists; a missing one is a partial checkout.
+  if (!grund) {
+    for (let n = 0; n < priceStore.SHARD_COUNT; n++) {
+      if (!fs.existsSync(priceStore.shardPath(PRICES_DIR, n))) { grund = 'shard ' + n + ' missing (partial checkout)'; break; }
+    }
+  }
+  if (grund) console.log('::warning::[card] price store ' + PRICES_DIR + ': ' + grund + ' — price12m is null with "store-unreadable" on every row.');
+  _kursStore = grund ? { fehler: true } : { ok: true };
+  return _kursStore;
+}
+function price12mAusStore(ticker) {
+  if (kursStoreStatus().fehler) return { price12m: null, price12mReason: 'store-unreadable' };
+  const n = priceStore.shardOf(ticker);
+  if (!_kursErgebnis.has(n)) {
+    let shard = null;
+    try { shard = priceStore.loadShard(PRICES_DIR, n); }
+    catch (e) { console.log('::warning::[card] price store shard ' + n + ' unreadable (' + e.message + ') — its tickers get "store-unreadable".'); }
+    const tag = dataDay();
+    _kursErgebnis.set(n, shard ? new Map(Object.entries(shard).map(([t, reihe]) => [t, price12mFor(reihe, tag)])) : null);
+  }
+  const m = _kursErgebnis.get(n);
+  if (m === null) return { price12m: null, price12mReason: 'store-unreadable' };
+  return m.get(ticker) || { price12m: null, price12mReason: 'no-series' };
+}
+/**
+ * ATH, its reason and the 12-month change of one ticker (also used by the rule40 board, which keeps
+ * its own FCF margin). @param {string} ticker Row ticker.
+ * @returns {{ath:(object|null), athReason:(string|null), price12m:(object|null), price12mReason:(string|null)}}
+ */
+function athUndKurs(ticker) {
+  const entry = athEntryFor(ticker);
+  const ath = displayFor(entry);
+  const { price12m, price12mReason } = price12mAusStore(ticker);
+  // Compact on the wire (the full boards sit near findash's read limit): a reason key only next to a
+  // null value, never "reason": null. Absent = null for every reader (contract: additive OPTIONAL).
+  return { ath, ...(ath === null ? { athReason: _athStateLesbar ? athReasonFor(entry) : 'state-unreadable' } : {}),
+    price12m, ...(price12m === null ? { price12mReason } : {}) };
+}
+/** Card fields of one board row (see above). @param {string} ticker Row ticker. @param {string} [snapshotStore] 'smallcap' or main. */
+function kartenFelder(ticker, snapshotStore) {
+  const { ath: _ath, ...rest } = athUndKurs(ticker); // row.ath is already set by athFor (same entry)
+  const abl = snapAbleitungenFuer(ticker, snapshotStore === 'smallcap' ? 'smallcap' : 'main');
+  return { ...rest, ...(abl.fcfAnzeige || fcfAnzeigeAus(null)) };
+}
+
+/**
+ * The FCF margin of one snapshot for the card with source and period, or (no margin keys) its reason code.
+ * @param {object|null} snap Snapshot after the FCF overlay (scripts/fcf-ttm-overlay.js), null when none.
+ * @returns {{fcfMarginPct:number, fcfMarginSource:string, fcfMarginPeriodEnd:string}|{fcfMarginReason:string}}
+ */
+function fcfAnzeigeAus(snap) {
+  // Compact like athUndKurs: without a margin only the reason, with a margin no reason key.
+  const leer = (code) => ({ fcfMarginReason: code });
+  if (!snap) return leer('no-snapshot');
+  const meta = snap.meta || {};
+  if (meta.fcfMarginTTMSuppressed) return leer('suppressed');
+  const v = metricVal(snap, 'fcfMarginTTM');
+  if (!Number.isFinite(v)) {
+    const code = typeof meta.fcfMarginTTMReason === 'string' ? meta.fcfMarginTTMReason : '';
+    return leer(/stale/.test(code) ? 'stale' : /invalid|over-200|negative/.test(code) ? 'implausible' : 'none');
+  }
+  if (!fcfMargeVertrauenswuerdig(v, norm(snap, 'annualFCF'), norm(snap, 'annualOCF'))) return leer('untrusted');
+  if (v > MAX_FCF_MARGIN_PCT) return leer('over-revenue');
+  if (v < -SUPPRESS_ABS_PCT) return leer('implausible');
+  const m = snap.metrics && snap.metrics.fcfMarginTTM;
+  const source = m && typeof m.source === 'string' ? m.source : null;
+  if (source !== 'sec-ttm' && source !== 'yahoo-fts-ttm') return leer('unknown-source');
+  if (!isCalendarDay(m.periodEnd) || (dataDay() && m.periodEnd > dataDay())) return leer('no-period');
+  return { fcfMarginPct: Math.round(v * 10) / 10, fcfMarginSource: source, fcfMarginPeriodEnd: m.periodEnd };
 }
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
@@ -436,6 +538,8 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    // Card data contract 23.11.2026; inert where this function is extracted without the module (P159 test).
+    fcfAnzeige: typeof fcfAnzeigeAus === 'function' ? fcfAnzeigeAus(snap) : null,
     // Stufe 4 label `newerPeriod`, compact facts only. typeof: tests/smallcap-store-evidence-p159.test.js extracts this function
     // without the module's bindings (like g31Export above); the writer itself always has the helper.
     newerPeriodFacts: snap && typeof newerPeriodFacts === 'function' ? newerPeriodFacts(snap, dataDay(), nextReportOf(ticker)) : null,
@@ -676,7 +780,7 @@ function overviewPeriodFor(kind, period) {
 // depreciation per position, newest present year, next present year) in the same order of exits and names the
 // exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
 // re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
-const { norm } = require('../src/scoring/snapshot.js');
+const { norm, metricVal } = require('../src/scoring/snapshot.js');
 const { annualPeriodEnds, staleReason } = require('../lib/annual-pairs.js');
 const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'jahreVeraltet', 'grundNichtImDatenstand']);
 const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
@@ -1140,6 +1244,7 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, snapshotStore)); // card contract 23.11.
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: Belegpunkte neben der Coverage-Behauptung
   // W8: ffoReason/revGrowthReason right after the growth fields, before the P88 and G31 shadow keys (both stay last);
   // inert (identity) in isolated legacy mappers that lack the helper, like g31Last below.
@@ -1167,6 +1272,7 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, snapshotStore)); // card contract 23.11.
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: s. mapBoardRow
   const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
   const last = typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
@@ -1186,6 +1292,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  if (typeof kartenFelder === 'function') Object.assign(out, kartenFelder(r.ticker, 'main')); // card contract 23.11.
   return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), 'main')); // P88 additive shadow, last keys.
 }
 
@@ -2088,6 +2195,59 @@ function validateGeo(r, where, errs) {
       if (!Number.isFinite(r.ath.monthsAgo) || r.ath.monthsAgo < 0) errs.push(`${where}: ath.monthsAgo`);
     }
   }
+  checkKartenFelder(r, where, errs);
+}
+
+/**
+ * Card data contract (23.11.2026), additive OPTIONAL: when present, a value has its reason code exactly
+ * when it is null, and a shown value carries its own dates and source.
+ * @param {object} r Export row. @param {string} where Row locator. @param {string[]} errs Collected errors.
+ */
+function checkKartenFelder(r, where, errs) {
+  if (!('price12m' in r)) return; // a row from before the card contract
+  const code = (v, erlaubt) => typeof v === 'string' && erlaubt.includes(v.split(':')[0]);
+  const wert = (k) => (r[k] === undefined ? null : r[k]);
+  const paar = (feld, grund, codes) => {
+    if (wert(feld) === null && !code(r[grund], codes)) errs.push(`${where}: ${feld} null without a known ${grund} (${JSON.stringify(r[grund])})`);
+    if (wert(feld) !== null && grund in r) errs.push(`${where}: ${grund} next to a shown ${feld}`);
+  };
+  paar('ath', 'athReason', ATH_REASON_CODES_EXPORT);
+  if (r.price12m !== null) {
+    const p = r.price12m;
+    const ok = p && typeof p === 'object' && isCalendarDay(p.fromDate) && isCalendarDay(p.toDate)
+      && Number.isFinite(p.fromClose) && p.fromClose > 0 && Number.isFinite(p.toClose) && p.toClose > 0
+      && p.source === PRICE12M_SOURCE && Number.isFinite(p.changePct)
+      && Math.abs(p.changePct - Math.round((p.toClose / p.fromClose - 1) * 1000) / 10) <= 0.05;
+    let fenster = false;
+    if (ok) { // fromDate lies on or before toDate minus one year, at most the gap tolerance earlier
+      const ziel = new Date(p.toDate + 'T00:00:00Z'); ziel.setUTCFullYear(ziel.getUTCFullYear() - 1);
+      const abstand = (ziel.getTime() - Date.parse(p.fromDate + 'T00:00:00Z')) / 86400000;
+      fenster = abstand >= 0 && abstand <= PRICE12M_GAP_DAYS;
+    }
+    if (!ok || !fenster) errs.push(`${where}: price12m malformed, outside its 12-month window, or changePct does not follow from its closes`);
+    if (r.ath && typeof r.ath.lastDate === 'string' && ok && p.toDate !== r.ath.lastDate) _price12mNebenAth.n++; // report-only (warnePrice12mStand)
+  }
+  paar('price12m', 'price12mReason', ['no-series', 'short-series', 'gap', 'jump', 'stale-series', 'store-unreadable']);
+  // FCF: the rule40 rows carry their own margin (always shown there) and no reason key.
+  if ('fcfMarginReason' in r || ('fcfMarginPct' in r && !('r40' in r))) {
+    if (wert('fcfMarginPct') !== null) {
+      if (!Number.isFinite(r.fcfMarginPct) || r.fcfMarginPct > MAX_FCF_MARGIN_PCT || r.fcfMarginPct < -SUPPRESS_ABS_PCT) errs.push(`${where}: fcfMarginPct=${r.fcfMarginPct}`);
+      if (r.fcfMarginSource !== 'sec-ttm' && r.fcfMarginSource !== 'yahoo-fts-ttm') errs.push(`${where}: fcfMarginSource=${JSON.stringify(r.fcfMarginSource)}`);
+      if (!isCalendarDay(r.fcfMarginPeriodEnd)) errs.push(`${where}: fcfMarginPeriodEnd missing, the margin would have no period`);
+      else if (dataDay() && r.fcfMarginPeriodEnd > dataDay()) errs.push(`${where}: fcfMarginPeriodEnd ${r.fcfMarginPeriodEnd} after the data day`);
+    } else if (wert('fcfMarginSource') !== null || wert('fcfMarginPeriodEnd') !== null) {
+      errs.push(`${where}: fcfMarginSource/PeriodEnd without a margin`);
+    }
+    paar('fcfMarginPct', 'fcfMarginReason', FCF_REASON_CODES);
+  }
+}
+const ATH_REASON_CODES_EXPORT = Object.freeze([...(ATH_REASON_CODES || []), 'state-unreadable']); // empty list in sandbox stubs
+// Rows whose price12m ends on another day than their ath (the store is behind ath-state): counted by the check.
+const _price12mNebenAth = { n: 0 };
+/** One warning when price12m and ath stand on different days (wrong price store in the run). @returns {number} count. */
+function warnePrice12mStand() {
+  if (_price12mNebenAth.n > 0) console.log(`::warning::[card] ${_price12mNebenAth.n} rows: price12m.toDate differs from ath.lastDate — the price store is not the one ath-state was advanced from (FINDASH_PRICES_DIR).`);
+  return _price12mNebenAth.n;
 }
 
 // Belegbarkeits-Gate, BEIDE Richtungen — der eigentliche Waechter der Regel:
@@ -2893,6 +3053,7 @@ if (require.main === module) {
   if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
   if (process.argv.includes('--check')) {
     const errs = validateExport(OUT_DIR, { requireProvenance: true });
+    warnePrice12mStand(); // card contract 23.11.2026: report-only, never a schema error
     if (errs.length) {
       console.error(`::error::findash-export/v1 schema contract violation (${errs.length}): ${errs.slice(0, 20).join('; ')}`);
       process.exit(1);
@@ -2944,4 +3105,6 @@ module.exports = {
   // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
   profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
   buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps, heldNewerSibling,
+  // Card data contract 23.11.2026.
+  athUndKurs, kartenFelder, fcfAnzeigeAus, checkKartenFelder, warnePrice12mStand, FCF_REASON_CODES,
 };
