@@ -222,12 +222,14 @@ cases['archive-no-noise'] = async () => {
   history.preserveReloadHistory(next, old);
   assert.equal(next.meta.reloadHistoryArchive, undefined);
 };
-cases['fx-rate-is-intentional'] = async () => {
+// Class R (23.11.2026): a new rate alone no longer blocks a refill (tests/reload-fx-refill.test.js); siblings that do not
+// match in the original currency at the new rate still do (here the USD values stayed equal while the rate doubled).
+cases['fx-rate-change-without-native-match'] = async () => {
   const old = await baseline(), next = clone(old);
   next.annual.annualSGA[1] = null; next.meta.fxRateApplied = 2;
   history.preserveReloadHistory(next, old);
   assert.equal(next.annual.annualSGA[1], null);
-  assert(next.meta.reloadHistoryGaps.some(g => g.field === 'annualSGA' && g.reason === 'statement-basis-unverified'));
+  assert(next.meta.reloadHistoryGaps.some(g => g.field === 'annualSGA' && g.reason === 'period-revised'));
 };
 cases['warn-only-unsafe'] = async () => {
   for (const unsafe of [false, true]) {
