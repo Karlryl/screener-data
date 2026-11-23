@@ -307,7 +307,8 @@ const { displayFor, athReasonFor, ATH_REASON_CODES } = require('./update-ath-sta
 let _athEntries = null, _athStateLesbar = true;
 function athEntryFor(ticker) {
   if (_athEntries === null) {
-    const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
+    // FINDASH_ATH_STATE: test seam like FINDASH_SNAPSHOTS_DIR, so fixture tests do not read the live state (23.11.2026).
+    const st = readJSONOrNull(process.env.FINDASH_ATH_STATE || path.join(__dirname, '..', 'external-data', 'ath-state.json'));
     _athStateLesbar = !!(st && st.entries && typeof st.entries === 'object' && !Array.isArray(st.entries));
     if (!_athStateLesbar) console.log('::warning::[card] external-data/ath-state.json missing or unreadable: every row gets athReason "state-unreadable".');
     _athEntries = _athStateLesbar ? st.entries : {};
