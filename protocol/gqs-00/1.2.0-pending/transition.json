@@ -601,7 +601,7 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/exchange-quarter-check.js": "a3922e313d56b41e1a1d8481fc328cc5118812d63f13203ecfc71921774989cb",
+    "lib/exchange-quarter-check.js": "5c7d9415b1dfbd9817176be4b294d6d7475655e45b5f1019fcd38a0500687d09",
     "scripts/cn-printed-parser.js": "d97c07398d051928a44667cb4125c67b60fd6e5227284e286b8326f9d143baba",
     "scripts/cn-printed-shadow-report.js": "2f00001be9007157f3f8d07e18d8136aaa4efc035b2fce8ebf457602aadc5a9f",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
@@ -756,5 +756,21 @@
     "review": "Build registration only; the Codex blind review decides the draft. The builder does not merge.",
     "reviewFix": "23.11.2026 after the Opus blind review: the reason quotes the printed figure and adds its German reading and the ROC year; tests for the read-day branches; no change to which cells fill.",
     "rollback": "Set printedQ3CheckTw to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
+  },
+  "s1WithholdThenFill20261123": {
+    "date": "2026-11-23",
+    "authority": "S1 build (stacked on the PR #142 branch, formula DRAFT for the Codex blind review): Karl's decision G31 of 11.10.2026 (newest reported numbers per firm) and Regelblatt v4 G2 (a wrong number is never shown; fill a gap from a free source, same unit, currency and period). A change with visible board numbers: no merge before the independent review by the other AI. No court verdict, Karl release or ratification is claimed.",
+    "scope": "lib/exchange-quarter-check.js evaluate/applyResult: when policy.withholdThenFill (configs/exchange-quarter-policy.json) is true and every vendor/exchange disagreement of a company is an acceleration leg (no level pair, no fill-period cell), those cells are withheld (existing exchange-pair-mismatch marker and acceleration reason) and fillCheck runs on the withheld state under every existing guard. Only when that yields a fill does the result become would-fill with a non-empty withhold, and only then does fill-only mode apply the withhold together with the fill; otherwise the result and the snapshot stay exactly as before. The filled number is the one fillCheck already derives (Eastmoney 9M - H1, printed check where it applies). No new dependency; the policy switch is not hash-registered (as printedQ3Check). No file under src/scoring changes.",
+    "previousDependencySha256LF": {
+      "lib/exchange-quarter-check.js": "a3922e313d56b41e1a1d8481fc328cc5118812d63f13203ecfc71921774989cb"
+    },
+    "dependencySha256LF": {
+      "lib/exchange-quarter-check.js": "5c7d9415b1dfbd9817176be4b294d6d7475655e45b5f1019fcd38a0500687d09"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "None: verify() rebuilds the 25 golden traces unchanged (golden snapshots carry no exchange fill).",
+    "evidence": "Before/after on the data day 21.11.2026 with fixed calibration in docs/REPORT-S1-withhold-then-fill.md (version 2 after the Opus blind review: the S1 fill also needs the printed proof of the Q3-2026 report): 12 A-shares move from would-withhold to would-fill (Q2-2025 vendor cell withheld, Q3-2025 filled); their growth moves from FY 2025 to Q3 2026 and all 12 agree with the CNINFO-printed growth within 0.014 points. With withholdThenFill false all boards are identical with the code before (only generated_at differs). Tests: tests/exchange-quarter-check.test.js.",
+    "review": "Build registration only; the Codex blind review decides the draft. The builder does not merge.",
+    "rollback": "Set withholdThenFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
   }
 }

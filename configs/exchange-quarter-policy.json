@@ -8,7 +8,9 @@
   "maxStoreAgeDaysInSeason": 2,
   "printedQ3Check": true,
   "printedQ3CheckTw": true,
-  "reason": "P71: fill-only fills empty 2025-09-30 vendor cells at read time under the existing guards and never withholds; active retains fill plus withhold and still requires the council and the other AI's blind review.",
+  "withholdThenFill": true,
+  "reason": "P71: fill-only fills empty 2025-09-30 vendor cells at read time under the existing guards and withholds only where withholdThenFill pairs a withhold with a fill; active retains fill plus withhold and still requires the council and the other AI's blind review.",
   "printedQ3CheckReason": "K2: true lets a 2025-09-30 fill that only lacks the July row use the CNINFO Q3-2026 report, whose printed comparable prior quarter must contain the Eastmoney 9M - H1 value (docs/exchange-quarter-check.md). false restores the previous behaviour exactly.",
-  "printedQ3CheckTwReason": "K2-TW: true lets a Taiwan 2025-09-30 fill that only lacks the July row use the MOPS Q3-2026 season (115Q3), which must print the prior-year quarter 114Q3 in agreement with the filled MOPS single quarter, read on or before the snapshot day (docs/exchange-quarter-check.md). Own switch so Taiwan rolls back without touching the China path; false restores the previous behaviour exactly."
+  "printedQ3CheckTwReason": "K2-TW: true lets a Taiwan 2025-09-30 fill that only lacks the July row use the MOPS Q3-2026 season (115Q3), which must print the prior-year quarter 114Q3 in agreement with the filled MOPS single quarter, read on or before the snapshot day (docs/exchange-quarter-check.md). Own switch so Taiwan rolls back without touching the China path; false restores the previous behaviour exactly.",
+  "withholdThenFillReason": "S1: true lets an A-share or Taiwan company whose only vendor/exchange disagreement is an acceleration leg (no level pair, no fill period) get that cell withheld and the 2025-09-30 fill checked on the withheld state under every existing guard; the withhold applies in fill-only mode only together with a fill. false restores the previous behaviour exactly."
 }

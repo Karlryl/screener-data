@@ -339,7 +339,7 @@ function main() {
     report.mustWithhold = must.map(t => {
       const r = results.get(t);
       return { ticker: t, category: r ? r.category : 'absent', why: r?.why || null, stratum: r?.stratum || null,
-        pass: !!r && (r.category === 'would-withhold' || r.category === 'would-withhold-growth'), onBoard: B.rows.has(t), boards: B.rows.get(t) || [] };
+        pass: !!r && (r.category === 'would-withhold' || r.category === 'would-withhold-growth' || (r.category === 'would-fill' && r.withhold?.length > 0)), onBoard: B.rows.has(t), boards: B.rows.get(t) || [] };
     });
     report.mustWithholdPass = report.mustWithhold.filter(x => x.pass).length + '/' + must.length;
   }
