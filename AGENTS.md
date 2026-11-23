@@ -1,8 +1,7 @@
 # AGENTS.md — Anweisungen für Codex (und alle Nicht-Claude-Agenten)
 
-**Regeln:** der gemeinsame Kern in `C:\Users\Anwender\.codex\AGENTS.md` (bei Widerspruch gilt
-`C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\REGELBLATT-v4.md`). Codex' Rechte stehen ausschließlich
-dort; diese Datei zitiert keine Regeln und ergänzt nur Repo-Fakten.
+**Regeln:** der gemeinsame Kern in `C:\Users\Anwender\.codex\AGENTS.md`; den Vorrang regelt der Kern selbst. Codex' Rechte stehen ausschließlich
+dort; diese Datei ergänzt Repo-Fakten und die Regeln, die nur dieses Projekt betreffen.
 Danach lesen: `CLAUDE.md` in diesem Verzeichnis (Repo-Fakten, Test-Gates, Fallen), die Wunschliste
 `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\WUNSCHLISTE.md` und den Vault-Einstieg
 `C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\START.md`.
@@ -31,10 +30,13 @@ Der Vault-Masterplan ist Nachschlagewerk, kein Auftraggeber.
 6. Das Repo ist öffentlich: was nie in eine Datei, einen Commit oder einen Bericht darf, sagt der Kern.
 
 ## Arbeitsteilung
-Rollen, Prüfung durch die andere KI, Formel-Weg und die Sperre vor dem ersten Schreiben stehen im Kern
-(Abschnitte „Fragen oder machen“ und „Bauen und Prüfen“). Für dieses Repo heißt die Sperre
+Rollen, Prüfung durch die andere KI und die Sperre vor dem ersten Schreiben stehen im Kern; der Formel-Weg steht unten in dieser Datei, die übrigen Projektregeln am Ende von `CLAUDE.md`.
+Für dieses Repo heißt die Sperre
 `C:\Users\Anwender\.claude\skills\codex-delegieren\gate-check.ps1 -Mode Claim -Repo C:\Users\Anwender\OneDrive\Dokumente\GitHub\screener-data`.
 Im Zweifel: kleiner Diff, nichts außerhalb des Auftrags anfassen.
+
+## Formel-Weg
+Formeländerung sichtbar mit Vorher/Nachher am selben Datentag, von der anderen KI geprüft, danach live; die alte Formel läuft höchstens 4 Wochen sichtbar als Vergleich mit, bei einem Fehler wird zurückgeschaltet. Was Karl selbst entschieden hat, braucht keinen Beleg, dass es besser ist. Alte Vorschläge werden nie geschönt. Das Vorher/Nachher hält alles außer der geprüften Änderung fest (gleicher Datentag, gleiche Kalibrierung, gleiche Firmenliste). [Teil 2, Archiv, 13.10.; L15]
 
 ## Arbeitsmodus (eigener Auftrag)
 
@@ -53,7 +55,7 @@ konkreten Auftrag; die Wahl im Ergebnis begründen.
 - Commit `Tag <n>: <Betreff>` (gezielt per Pathspec) auf einem eigenen Branch, vorher auf aktuellem
   `origin/main` aufsetzen (täglicher CI committet). Merge nach `main` erst nach bestandener
   Zweitprüfung und grünen Gates.
-- Meldung an Karl nach dem Kern, Abschnitt „Karl, Sprache, Antworten“.
+- Meldung an Karl nach den Antwortregeln des Kerns.
 
 **Nie:** Schutzlisten-Dateien überschreiben oder löschen, kostenpflichtige API-Calls.
 
@@ -67,4 +69,4 @@ Erkennbar am Brief (ZIEL / ZIEL-DATEIEN / VERBOTEN / FERTIG-WENN / MELDEFORMAT):
 3. Tests nie abschwächen (kein skip/only/todo, keine gelockerten Assertions,
    keine gelöschten Testfälle) — rote Tests werden im Code gefixt.
 4. Schlussnachricht exakt im MELDEFORMAT des Briefs.
-Bei Widerspruch gilt: Regelblatt v4 > `~\.codex\AGENTS.md` > Brief > diese Datei > Bequemlichkeit.
+Bei Widerspruch gilt: Kern (`~\.codex\AGENTS.md`, mit dem dort genannten Vorrang) > Brief > diese Datei > Bequemlichkeit.

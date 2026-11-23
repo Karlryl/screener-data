@@ -6315,7 +6315,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
+module.exports = { normalizeYahooSymbol, mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   prioritizeRestoredMissingSnapshots,
   mergeSmallcapSnapshots,
   fundamentalsStaleness, ftsFailureSummary,
