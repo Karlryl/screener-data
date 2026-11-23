@@ -139,11 +139,11 @@ test('(f) every old key and its order are byte-identical to the pre-change expor
       // P184 appends independent shadows; the complete older mapping and its order remain frozen.
       // W8 (28.10.2026) adds two text-only reason keys (tests/export-w8-*.test.js); every other key stays frozen.
       // 07.11.2026 adds the display-only acceleration basis label (tests/rev-acceleration-basis-label.test.js).
-      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'ffoReason', 'revGrowthReason', 'revAccelerationBasis', ...G31_TRAILING_KEYS].includes(key))));
+      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'ffoReason', 'revGrowthReason', 'revAccelerationBasis', 'newerPeriod', ...G31_TRAILING_KEYS].includes(key)))); // newerPeriod: Stufe 4 label (22.11.2026)
     assert.equal(JSON.stringify(stripped), JSON.stringify(baseline[mapper]), mapper);
     for (const row of actual.filter((r) => r.ticker !== 'P88-USD')) {
-      assert.deepEqual(Object.keys(row).filter(k => !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
-      if (mapper !== 'mapSurvivalRow') assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
+      assert.deepEqual(Object.keys(row).filter(k => k !== 'newerPeriod' && !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
+      if (mapper !== 'mapSurvivalRow') assert.deepEqual(Object.keys(row).filter(k => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow']);
       assert.equal(row.marketCapClassesShadow.value, 710000000);
     }
   }
@@ -261,7 +261,7 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   // P134 adds source-period labels; exclude only these additions alongside the shadows from the frozen baseline.
   const stripped = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
     // P184 adds only these two trailing shadows to the unchanged legacy row.
-    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'revAccelerationBasis', ...G31_TRAILING_KEYS,
+    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'revAccelerationBasis', 'newerPeriod', ...G31_TRAILING_KEYS,
       'fcfMarginSource', 'fcfMarginPeriodEnd', 'fcfMarginPctOld'].includes(key)))); // 07.11.2026: additive acceleration basis label; 18.11.2026: FCF TTM source, period, comparison (lib/fcf-ttm.js)
   assert.equal(JSON.stringify(stripped), JSON.stringify(fixture.before.rows));
   const byTicker = Object.fromEntries(rows.map((row) => [row.ticker, row]));
@@ -271,8 +271,8 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   assert.ok(Math.abs(byTicker['9969.HK'].marketCapClassesDeviationPct - (900 / 710 - 1) * 100) < 1e-9);
   assert.equal(Object.hasOwn(byTicker['P88-USD'], 'marketCapClassesShadow'), false, 'unregistered: no new key');
   for (const row of rows.filter((r) => r.ticker !== 'P88-USD')) {
-    assert.deepEqual(Object.keys(row).filter(k => !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
-    assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
+    assert.deepEqual(Object.keys(row).filter(k => k !== 'newerPeriod' && !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
+    assert.deepEqual(Object.keys(row).filter(k => k !== 'newerPeriod').slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   }
 });
 
