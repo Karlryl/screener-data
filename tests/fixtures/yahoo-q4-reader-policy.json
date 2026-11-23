@@ -1,8 +1,10 @@
 {
   "lib/g31-recency.js": { "mode": "upstream", "reason": "P184 production export and scoring callers supply prepared snapshots; additive shadows never change a live value, and scoring variants require an explicit synchronous measurement scope." },
+  "lib/stale-period.js": { "mode": "upstream", "reason": "Stufe 4 label (22.11.2026): reads no snapshot file itself (its only file read is earnings-calendar.json, report dates); the three export writers pass the snapshot they already prepared (write-findash-export.js snapAbleitungenFuer and write-rule40-export.js through prepareYahooQ4Snapshot, write-filter-universe.js through prepareSnapshot); it reads quarterly ends and values only to name a newer published period, never a value." },
   "lib/hk-interim.js": { "mode": "upstream", "reason": "sd-halbjahr HK interim pair (12.11.2026): lib/g31-recency.js g31Shadow calls it with prepared snapshots; it imports norm only to read the annual revenue row for its size check and reads no quarterly array." },
   "scripts/cn-printed-shadow-report.js": { "mode": "exempt", "reason": "B11 shadow report only: reads the stored CNINFO printed Q3 revenue and the board snapshots to compare them with Eastmoney; writes only a report file, never a live value." },
   "scripts/g31-replay.js": { "mode": "exempt", "reason": "P184 offline report-only shadow replay prepares the same inputs in all arms; writes only into explicit isolated task directories, never published values." },
+  "lib/source-priority.js": { "mode": "exempt", "reason": "S2 step 1 (22.11.2026): descriptive field registry; quarterly field names appear only as registry keys and notes, it reads no snapshot value and feeds no number." },
   "field-coverage.js": { "mode": "exempt", "reason": "Legacy coverage helper has no production caller; only its tests use it." },
   "lib/annual-currency-guard.js": { "mode": "upstream", "reason": "Pull calls this diagnostic after the native correction and FX conversion." },
   "lib/e1-compression.js": { "mode": "exempt", "reason": "Comment-only hit: the module explicitly does not read quarterly arrays." },
@@ -43,6 +45,7 @@
   "scripts/f1-burnverschiebung.js": { "mode": "exempt", "reason": "Archived annual cash-flow counterfactual intentionally shares raw evidence between its arms." },
   "scripts/f1-rekonstruktions-kipppunkte.js": { "mode": "exempt", "reason": "Annual OCF sensitivity research delegates to the raw archived F1 experiment loader." },
   "scripts/f4-quartalsvergleich.js": { "mode": "exempt", "reason": "Controlled raw quarter-position/date counterfactual, not a daily board reader." },
+  "scripts/fcf-ttm-overlay.js": { "mode": "exempt", "reason": "Reads only the newest timeseries.revenueQEnds date as the staleness anchor of the FCF TTM choice (lib/fcf-ttm.js); writes no quarterly value into any snapshot, score or export." },
   "scripts/filter-snapshot-merge.js": { "mode": "exempt", "reason": "Issuer identity fingerprints require identical raw provider series across listing legs; do not publish these values." },
   "scripts/gqs00-freeze.js": { "mode": "exempt", "reason": "Frozen raw-fixture scoring contract must retain the original evidence." },
   "scripts/plausibilitaets-waechter.js": { "mode": "hook", "hook": "s = prepareSnapshot(readJson(path.join(opt.snapshotsDir, safeSnapshotFilename(z.r.ticker))));", "reason": "Reporting-only plausibility watcher judges the prepared snapshots the export writer shows; it writes only its own report and never changes a published value." },

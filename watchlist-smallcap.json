@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 483,
+    "count": 477,
     "partial": false
   },
   "stocks": [
@@ -221,14 +221,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "ONT",
-      "yahoo_symbol": "ONT",
-      "name": "Onterris, Inc. Common Stock",
-      "marketCapUsd": 701462400,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "BBOT",
       "yahoo_symbol": "BBOT",
       "name": "BridgeBio Oncology Therapeutics, Inc. - Common Stock",
@@ -305,14 +297,6 @@
       "yahoo_symbol": "LDI",
       "name": "loanDepot, Inc. Class A Common Stock",
       "marketCapUsd": 681001664,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "SWBI",
-      "yahoo_symbol": "SWBI",
-      "name": "Smith & Wesson Brands, Inc. - Common Stock",
-      "marketCapUsd": 679404160,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -669,14 +653,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "RGR",
-      "yahoo_symbol": "RGR",
-      "name": "Sturm, Ruger & Company, Inc. Common Stock",
-      "marketCapUsd": 618318080,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "CBIO",
       "yahoo_symbol": "CBIO",
       "name": "Crescent Biopharma, Inc. - Common Stock",
@@ -857,14 +833,6 @@
       "yahoo_symbol": "RMAX",
       "name": "RE/MAX Holdings, Inc. Class A Common Stock",
       "marketCapUsd": 591883072,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "CTKB",
-      "yahoo_symbol": "CTKB",
-      "name": "Cytek Biosciences, Inc. - Common Stock",
-      "marketCapUsd": 590181632,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1661,14 +1629,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "DCBO",
-      "yahoo_symbol": "DCBO",
-      "name": "Docebo Inc. - Common Shares",
-      "marketCapUsd": 491408160,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "PANL",
       "yahoo_symbol": "PANL",
       "name": "Pangaea Logistics Solutions Ltd. - Common Stock",
@@ -2145,14 +2105,6 @@
       "yahoo_symbol": "FRBA",
       "name": "First Bank  - Common Stock",
       "marketCapUsd": 441383168,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "GLAD",
-      "yahoo_symbol": "GLAD",
-      "name": "Gladstone Capital Corporation - Closed End Fund",
-      "marketCapUsd": 441242624,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3877,22 +3829,22 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-11-07T12:47:41.416Z",
+  "lastReconcile": "2026-11-21T14:32:31.132Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "HELE",
+      "ticker": "SWBI",
       "grund": "band-austritt-oben",
-      "mcap": 875511488
+      "mcap": 823116480
     },
     {
-      "ticker": "TASK",
+      "ticker": "CTKB",
       "grund": "band-austritt-oben",
-      "mcap": 833840896
+      "mcap": 800397888
     },
     {
-      "ticker": "ENHA",
-      "grund": "band-austritt-oben",
-      "mcap": 2280988928
+      "ticker": "GLAD",
+      "grund": "nicht-operativ",
+      "mcap": 384759968
     }
   ]
 }
