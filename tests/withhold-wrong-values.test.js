@@ -187,6 +187,32 @@ check('growth: the writer withholds g and r40 with the German reason; an agreein
     'Umsatzwachstum und Rule of 40 werden nicht gezeigt, weil das Wachstum nicht zu den Umsätzen der Börsenmeldung (Eastmoney) für dieselben Zeiträume passt (Geschäftsjahr bis 31.12.2025 gegen 31.12.2024, Abweichung mehr als 2 Prozentpunkte und mehr als 5 % des Wachstums laut Börsenmeldung).');
 });
 
+check('growth + np (Tag 1573): a withheld growth carries no newer-period label, a shown one does; break once, label before the hold', () => {
+  const anchor = '      revGrowth: row.g === null || row.g === undefined ? null : board ? board.revGrowthPeriodEnd : revGrowthLeg(snapshot).periodEnd,';
+  const before = process.env.RUN_DATE_UTC;
+  process.env.RUN_DATE_UTC = '2026-11-21';
+  try {
+    const feedOf = (builder, t) => {
+      const s = structuredClone(EQ.snapshots[t]);
+      s.meta.mostRecentQuarter = '2026-09-30'; // a newer quarter is published than the shown 30.06.2026
+      const feed = builder.buildUniverse({ snapshots: [s], excluded: new Map([[t, ['test']]]), generatedAt: FRESH });
+      return { row: feed.rows[0], npErrors: W.validateUniverse(feed, Buffer.byteLength(JSON.stringify(feed))).filter(e => e.endsWith('invalid np')) };
+    };
+    const wrong = feedOf(W, '601377.SS'), agree = feedOf(W, '601901.SS');
+    assert.equal(wrong.row.g, undefined);
+    assert.equal(wrong.row.np, undefined, 'no label on a growth the row no longer shows');
+    assert.deepEqual(wrong.npErrors, []);
+    assert.notEqual(agree.row.g, undefined);
+    assert.ok(typeof agree.row.np === 'string' && agree.row.np.startsWith('2026-09-30'), 'a shown stale growth keeps its label: ' + agree.row.np);
+    const early = compiled(FILES[0], anchor, '      revGrowth: g === null ? null : board ? board.revGrowthPeriodEnd : revGrowthLeg(snapshot).periodEnd,');
+    const broken = feedOf(early, '601377.SS');
+    assert.equal(typeof broken.row.np, 'string', 'labelled before the hold, the withheld growth keeps a label');
+    assert.equal(broken.npErrors.length, 1, 'and the validator refuses it');
+  } finally {
+    if (before === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = before;
+  }
+});
+
 check('growth: break once, a check that always agrees lets the wrong rows through', () => {
   const blind = compiled(FILES[3], "  out.status = out.exchangePct.some(near) ? 'agree' : 'mixed';", "  out.status = 'agree';");
   assert.equal(blind.shownGrowthCheck(structuredClone(EQ.snapshots['601377.SS'])).status, 'agree');
