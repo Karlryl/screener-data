@@ -46,7 +46,7 @@ test('calendar readiness enforces December and January boundaries with a fixed c
 test('calendar records the complete official 2026 EDGAR list and provenance', () => {
   const calendar = JSON.parse(fs.readFileSync(CALENDAR, 'utf8'));
   assert.equal(calendar.source, 'https://www.sec.gov/submit-filings/filer-support-resources/edgar-calendar');
-  assert.equal(calendar.asOf, '2026-09-27');
+  assert.equal(calendar.asOf, '2026-11-23');
   assert.deepEqual(calendar.years['2026'], [
     '20260101', '20260119', '20260216', '20260525', '20260619', '20260703',
     '20260907', '20261012', '20261111', '20261126', '20261225',
