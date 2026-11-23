@@ -603,7 +603,7 @@
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
     "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
-    "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
+    "configs/hk-interim-filed.json": "127541119ee0ee433c448924e2c7e4cb183dac92bb630645ef321ef255fe16a8"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
@@ -719,5 +719,19 @@
     "evidence": "tests/hk-interim.test.js on real cells (Pop Mart, GenScript) covering every condition; each guard (switch, agreement limit, general-company rule, size check, hand-table rule, data-day rule, minimum row count of the fetch) was broken once by hand during the build on 12.11.2026 and the test went red. Before and after on the snapshots of 11.11.2026 in the PR body; blind Opus review 12.11.2026 (agent-reports/daylauf-2026-11-12/blindpruefung-sd-halbjahr-2026-11-12.md).",
     "review": "Build registration only. Opus blind review rounds 1 and 2; Codex review 12.11.2026 KEINE FREIGABE on 6d679a23fb (unit not proven, provenance empty, empty fetch green), all three addressed at the following head; Codex decides the draft. The builder does not merge. Codex round 2 on bc1b0fc38e: KEINE FREIGABE (the year and TTM checks prove only the difference of the two halves; tolerance on small bases); the tolerance is fixed at the following head, the level of a half year still needs an independent source. Codex round 3 on 4821bd5be5: FREIGABE MIT AUFLAGEN 94 % (text and coverage hand-over, done). Merged with origin/main 64be931d40 (#124, #125, #128, #115) afterwards; the merge step gets its own narrow Opus check.",
     "rollback": "Set ENABLED to false in lib/hk-interim.js, or revert the source change and this registration together."
+  },
+  "hkInterimFiled20261123": {
+    "date": "2026-11-23",
+    "authority": "Data repair S1 (Diener 4e, master session 23.11.2026): hand table only, no code change; a wrong-number repair by hand table is not a formula change.",
+    "scope": "configs/hk-interim-filed.json gains 129 records (78 to 207): HK listings that pass conditions 1 to 5 of lib/hk-interim.js on the 21.11. snapshots, both halves as printed in the HKEX interim results announcement and the interim report, read twice; each quote is the revenue line of the income statement on the physical PDF page named (PyMuPDF text layer, statement title on that page, no highlights or notes page). All 129 equal Eastmoney exactly (condition 6 tolerance 0.1 %).",
+    "previousDependencySha256LF": {
+      "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
+    },
+    "dependencySha256LF": {
+      "configs/hk-interim-filed.json": "127541119ee0ee433c448924e2c7e4cb183dac92bb630645ef321ef255fe16a8"
+    },
+    "goldenImpact": "None: no sealed trace is a Hong Kong listing.",
+    "evidence": "tests/hk-interim.test.js (committed filed table: each reading quotes the revenue line with both of its figures); node scripts/gqs00-freeze.js --verify.",
+    "rollback": "Revert the table and this registration together."
   }
 }
