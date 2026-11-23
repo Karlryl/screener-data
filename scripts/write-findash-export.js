@@ -327,22 +327,34 @@ const priceStore = require('../lib/price-history-store.js');
 const { price12mFor } = require('../lib/price12m.js');
 const { MAX_FCF_MARGIN_PCT, fcfMargeVertrauenswuerdig, isCalendarDay } = require('../lib/fcf-ttm.js');
 const PRICES_DIR = process.env.FINDASH_PRICES_DIR || path.join(__dirname, '..', 'prices');
-let _priceHistory = null, _priceStoreFehler = null;
+// One shard of the store at a time (lib/price-history-store.js, 32 shards): a module loaded again and again
+// in tests must not read all 36,000 series each time (the whole store per load ran tests out of heap).
+let _kursMeta, _kursFehler = null;
+const _kursShards = new Map();
+function kursReiheFuer(ticker) {
+  if (_kursMeta === undefined) {
+    try { _kursMeta = priceStore.loadMeta(PRICES_DIR); } catch (e) { _kursMeta = null; _kursFehler = e; }
+    // No stamped store at all is a store problem for every row, not "no series for this stock".
+    if (!_kursFehler && _kursMeta == null) _kursFehler = new Error('no price store at ' + PRICES_DIR);
+  }
+  if (_kursFehler) return { fehler: true };
+  const n = priceStore.shardOf(ticker);
+  if (!_kursShards.has(n)) {
+    try { _kursShards.set(n, priceStore.loadShard(PRICES_DIR, n) || {}); } catch (e) { _kursShards.set(n, null); }
+  }
+  const shard = _kursShards.get(n);
+  return shard === null ? { fehler: true } : { reihe: shard[ticker] };
+}
 /**
  * ATH, its reason and the 12-month change of one ticker (also used by the rule40 board, which keeps
  * its own FCF margin). @param {string} ticker Row ticker.
  * @returns {{ath:(object|null), athReason:(string|null), price12m:(object|null), price12mReason:(string|null)}}
  */
 function athUndKurs(ticker) {
-  if (_priceHistory === null) {
-    // An unreadable store is named as such, not as "no series for this stock".
-    try { _priceHistory = priceStore.loadAll(PRICES_DIR) || {}; } catch (e) { _priceHistory = {}; _priceStoreFehler = e; }
-    // loadAll answers a missing store with {}: that is a store problem, not "no series for this stock".
-    if (!_priceStoreFehler && Object.keys(_priceHistory).length === 0) _priceStoreFehler = new Error('empty price store ' + PRICES_DIR);
-  }
-  const kurs = _priceStoreFehler
-    ? { price12m: null, price12mReason: 'Kursspeicher leer oder nicht lesbar: der 12-Monats-Verlauf fehlt für alle Zeilen dieses Laufs.' }
-    : price12mFor(_priceHistory[ticker]);
+  const k = kursReiheFuer(ticker);
+  const kurs = k.fehler
+    ? { price12m: null, price12mReason: 'Kursspeicher leer oder nicht lesbar: der 12-Monats-Verlauf fehlt für diese Zeile.' }
+    : price12mFor(k.reihe);
   const entry = athEntryFor(ticker);
   return { ath: displayFor(entry), athReason: athReasonFor(entry), ...kurs };
 }

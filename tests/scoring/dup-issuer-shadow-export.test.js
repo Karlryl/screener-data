@@ -26,7 +26,11 @@ function writer(apply = shadow.applyDupIssuerShadow, loader = shadow.loadDupIssu
       if (id === '../configs/g31-hinweise.json') return { definitionen: [] }; // Definition hints stay inert in this fixture.
       if (id === '../lib/g31-recency.js') return { g31Export: () => ({ g31Shadow: null, g31Overview: {} }), g31Variant: () => null, g31Last: row => row };
       if (id === '../lib/stale-period.js') return require('../../lib/stale-period.js'); // Stufe 4 label: the real module, no inert stub
-      return { displayFor: () => null, financialReasons: () => [], safeSnapshotFilename: (ticker) => ticker + '.json', overviewGrowthHold: () => null, sealedEraSnapshot: () => false }; // P186 hold stays inert in this fixture
+      // Card data contract (23.11.2026): the pure helpers are real, the price store stays empty in this fixture.
+      if (id === '../lib/price12m.js') return require('../../lib/price12m.js');
+      if (id === '../lib/fcf-ttm.js') return require('../../lib/fcf-ttm.js');
+      if (id === '../lib/price-history-store.js') return { loadMeta: () => null, loadShard: () => ({}), shardOf: () => 0 };
+      return { displayFor: () => null, athReasonFor: () => 'fixture', financialReasons: () => [], safeSnapshotFilename: (ticker) => ticker + '.json', overviewGrowthHold: () => null, sealedEraSnapshot: () => false }; // P186 hold stays inert in this fixture
     },
   };
   vm.runInNewContext(writerSource, context, { filename: writerFile });
