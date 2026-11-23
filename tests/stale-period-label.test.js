@@ -214,3 +214,53 @@ test('Rule of 40 writer: build labels the stale row (growth and FCF) and leaves 
   assert.equal(by('BBB').newerPeriod, null);
   assert.deepEqual(R40.check(f).errors, []);
 });
+
+// 23.11.2026 (evidence `kalender`): RERE on 21.11.2026 showed Q2 2026 with Yahoo and the stored series at Q2, while
+// earnings-calendar.json named a report on 19.11.2026; no label said the shown quarter was older than a due report.
+const q2 = () => ({ meta: { ticker: 'RERX', mostRecentQuarter: '2026-06-30' }, timeseries: {
+  revenueQ: [140, 120, 110, 100, 95].map(v), revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
+  grossProfitQ: [55, 50, 45, 40, 38].map(v), grossProfitQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] } });
+
+test('calendar: a report due on or before the data day, more than 105 days after the shown end, labels the row with its date', () => {
+  const label = L.newerPeriodLabel(L.newerPeriodFacts(q2(), '2026-11-21', '2026-11-19'), { revGrowth: '2026-06-30', fcfMargin: '2026-06-30' });
+  assert.deepEqual(label, { end: '2026-11-19', evidence: 'kalender', fields: { revGrowth: 'anbieter-verzug', fcfMargin: 'fcf-ttm-alt' },
+    hint: 'Neuerer Bericht laut Termin-Kalender am 19.11.2026 erwartet, hier noch nicht verwendet: Umsatzwachstum, weil die Quartalswerte des Anbieters noch nicht so weit reichen; FCF-Marge, weil die Zwölfmonatswerte des Free Cashflow noch nicht so weit reichen.' });
+  assert.ok(L.validNewerPeriod(label));
+  assert.equal(L.compactNewerPeriod(label), '2026-11-19k:av:fa');
+  assert.deepEqual(L.decodeNewerPeriod('2026-11-19k:av:fa'), { end: '2026-11-19', evidence: 'kalender', fields: { revGrowth: 'anbieter-verzug', fcfMargin: 'fcf-ttm-alt' } });
+  assert.equal(L.validNewerPeriod({ ...label, hint: 'Neuerer Zeitraum veröffentlicht' }), false, 'a calendar label carries the calendar sentence');
+  assert.equal(L.validNewerPeriod({ ...label, evidence: 'termin' }), false);
+});
+
+test('calendar: no label for the report of the shown quarter itself, a report after the data day, no data day, or a current row', () => {
+  const lbl = (due, today = '2026-11-21', shown = '2026-06-30') => L.newerPeriodLabel(L.newerPeriodFacts(q2(), today, due), { revGrowth: shown });
+  assert.equal(lbl('2026-08-28'), null, '59 days after the shown end: the report of that quarter (measured 58 to 72 days)');
+  assert.equal(lbl('2026-10-13'), null, '105 days: still the report of the shown period (GDS.PA 98, EXA.PA 101 days on 21.11.2026)');
+  assert.equal(lbl('2026-10-03'), null, '95 days');
+  assert.notEqual(lbl('2026-10-14'), null, '106 days: a later period');
+  assert.equal(lbl('2026-11-24'), null, 'due after the data day: not yet expected');
+  assert.equal(lbl('2026-11-19', null), null, 'without a data day the calendar is not read');
+  assert.equal(lbl('2026-11-19', '2026-11-21', '2026-09-30'), null, 'a shown Q3 is not older than a report due 50 days later');
+  assert.equal(L.newerPeriodFacts({ meta: { ticker: 'NONE' }, timeseries: {} }, '2026-11-21', null), null);
+});
+
+test('calendar: Yahoo or stored evidence wins whenever it labels a field; the calendar fills only rows it leaves unlabelled', () => {
+  const both = L.newerPeriodLabel(L.newerPeriodFacts(dno(), '2026-11-21', '2026-11-19'), { revGrowth: '2026-06-30' });
+  assert.equal(both.evidence, 'quarter');
+  assert.equal(both.end, '2026-09-30');
+  // A snapshot with only a calendar date (no Yahoo date, no stored quarter after the shown one) still gets the calendar label.
+  const bare = q2(); delete bare.meta.mostRecentQuarter;
+  assert.equal(L.newerPeriodLabel(L.newerPeriodFacts(bare, '2026-11-21', '2026-11-19'), { revGrowth: '2026-06-30' }).evidence, 'kalender');
+});
+
+test('calendar: the filter feed validator accepts the k form on a shown growth and refuses it without one', () => {
+  const pay = require('./fixtures/w6/snapshots.json').find(s => s.meta.ticker === 'PAY');
+  const snap = { ...pay, meta: { ...pay.meta, ticker: 'CALX', mostRecentQuarter: '2026-09-30' } };
+  const row = { branch: 'software-comm-services', row: { score: 50, rank: 1, marketCap: 1e9, revGrowthYoYPct: 10, revGrowthPeriodEnd: '2026-06-30' } };
+  const feed = buildUniverse({ snapshots: [snap], boards: new Map([['CALX', row]]), generatedAt: '2026-11-21T12:00:00Z' });
+  const errs = () => validateUniverse(feed, Buffer.byteLength(JSON.stringify(feed))).filter(e => e.endsWith('invalid np'));
+  feed.rows[0].np = '2026-11-19k:av:';
+  assert.deepEqual(errs(), []);
+  feed.rows[0].np = '2026-11-19k::fa';
+  assert.equal(errs().length, 1, 'an FCF code without a shown FCF period');
+});
