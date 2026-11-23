@@ -307,7 +307,8 @@ const { displayFor } = require('./update-ath-state.js');
 let _athEntries = null;
 function athFor(ticker) {
   if (_athEntries === null) {
-    const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
+    // FINDASH_ATH_STATE: test seam like FINDASH_SNAPSHOTS_DIR, so fixture tests do not read the live state (23.11.2026).
+    const st = readJSONOrNull(process.env.FINDASH_ATH_STATE || path.join(__dirname, '..', 'external-data', 'ath-state.json'));
     _athEntries = (st && st.entries) || {};
   }
   return displayFor(_athEntries[ticker]);
