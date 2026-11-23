@@ -145,7 +145,7 @@ Both reasons carry `whyText`; `no-own-read` also carries the sorted unique `noDa
 - growth withheld: "Umsatzwachstum ausgeblendet: Vorjahresquartal und Jahreswerte des Datenanbieters weichen von der Börsenmeldung ab oder sind nicht prüfbar (vermutlich berichtigte Vorjahreszahlen)."
 - fill: "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025)."
 - printed-check fill (K2), inverted printed growth (842 of 844 fills on 21.11.): the fill text plus "Der Wert passt zu der Veränderung gegenüber dem Vorjahresquartal (-44,44 %), die die Firma im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 31.10.2026) selbst angibt."; printed prior quarter: "… Der Wert entspricht dem im CNINFO-Bericht … gedruckten Vorjahresquartal."
-- Taiwan printed-check fill (K2-TW): the fill text plus "Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3), Zeile 營業收入合計, Spalte 114年第3季 (6,505,738 Tausend TWD)."
+- Taiwan printed-check fill (K2-TW): the fill text plus "Die Firma druckt diesen Wert selbst als Vorjahresquartal im MOPS-Bericht zum 3. Quartal 2026 (Saison 115Q3), Zeile 營業收入合計, Spalte 114年第3季 (gedruckt „6,505,738“ in Tausend TWD, also rund 6,5 Mrd. TWD)." (the season also names the ROC year, "Saison 115Q3, Jahr 115 der taiwanischen Zählung = 2026")
 
 Board history (active mode only): `pit.revenueQExchange: { filled, withheld }` with the original vendor values.
 
