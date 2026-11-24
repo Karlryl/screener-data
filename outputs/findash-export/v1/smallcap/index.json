@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-21T11:22:41.246Z",
+  "generated_at": "2026-11-24T14:07:09.500Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 68.5,
-    "generated_at": "2026-11-21T11:05:00.091Z",
-    "honest_coverage_pct": 90,
-    "n_addressable": 17302,
-    "n_ok": 15575,
-    "n_total": 22739,
-    "n_failed": 1216,
+    "coverage_pct": 69.3,
+    "generated_at": "2026-11-24T13:49:18.495Z",
+    "honest_coverage_pct": 90.5,
+    "n_addressable": 17372,
+    "n_ok": 15715,
+    "n_total": 22661,
+    "n_failed": 1203,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
-  "generatedFromSnapshots": 408,
+  "generatedFromSnapshots": 405,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -46,11 +46,11 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 15,
+      "profitable": 14,
       "unprofitable": 8
     },
     "smallcap-consumer-staples": {
-      "profitable": 8,
+      "profitable": 7,
       "unprofitable": 0
     },
     "smallcap-energy": {
@@ -59,22 +59,22 @@
     },
     "smallcap-financials": {
       "profitable": 7,
-      "unprofitable": 4
+      "unprofitable": 2
     },
     "smallcap-health-care": {
       "profitable": 14,
-      "unprofitable": 20
+      "unprofitable": 19
     },
     "smallcap-industrials": {
       "profitable": 21,
-      "unprofitable": 12
+      "unprofitable": 11
     },
     "smallcap-it-services": {
       "profitable": 1,
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 9,
+      "profitable": 8,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
@@ -102,10 +102,9 @@
     "no-axes": 1,
     "no-revenue": 27,
     "no-sector": 3,
-    "non-operating-rev": 1,
     "smallcap-mcap-missing": 9,
-    "smallcap-mcap-out-of-band": 85,
-    "smallcap-thin-coverage": 19,
+    "smallcap-mcap-out-of-band": 91,
+    "smallcap-thin-coverage": 18,
     "telecom": 5,
     "unrouted": 5
   },
@@ -170,9 +169,9 @@
     "coverageFloor": 0.58,
     "renewalDue": true,
     "drift": {
-      "maxKs": 0.384,
+      "maxKs": 0.357,
       "ksThreshold": 0.15,
-      "axesDrifted": 49
+      "axesDrifted": 48
     },
     "notMonitored": [
       {
@@ -237,16 +236,16 @@
   },
   "namedReasons": {
     "counts": {
-      "belowFloor": 102,
-      "aboveBand": 2,
+      "belowFloor": 114,
+      "aboveBand": 0,
       "noFreshValue": 1,
-      "thinCoverage": 19
+      "thinCoverage": 18
     },
     "belowFloor": [
       {
         "ticker": "ADUR",
         "name": "Aduro Clean Technologies Inc.",
-        "marketCapUsd": 282819776,
+        "marketCapUsd": 270834368,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -254,7 +253,7 @@
       {
         "ticker": "AGMB",
         "name": "AgomAb Therapeutics NV",
-        "marketCapUsd": 272833792,
+        "marketCapUsd": 268401456,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -262,7 +261,7 @@
       {
         "ticker": "AIOT",
         "name": "PowerFleet, Inc.",
-        "marketCapUsd": 273962112,
+        "marketCapUsd": 253718608,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -270,7 +269,7 @@
       {
         "ticker": "ALLO",
         "name": "Allogene Therapeutics, Inc.",
-        "marketCapUsd": 228703056,
+        "marketCapUsd": 217477504,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -278,7 +277,7 @@
       {
         "ticker": "ALT",
         "name": "Altimmune, Inc.",
-        "marketCapUsd": 280520160,
+        "marketCapUsd": 258803984,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -286,7 +285,7 @@
       {
         "ticker": "ALTI",
         "name": "AlTi Global, Inc.",
-        "marketCapUsd": 236457184,
+        "marketCapUsd": 219116992,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -294,7 +293,7 @@
       {
         "ticker": "API",
         "name": "Agora, Inc.",
-        "marketCapUsd": 259567824,
+        "marketCapUsd": 267600064,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -302,7 +301,7 @@
       {
         "ticker": "ARTV",
         "name": "Artiva Biotherapeutics, Inc.",
-        "marketCapUsd": 192786176,
+        "marketCapUsd": 186854288,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -310,7 +309,7 @@
       {
         "ticker": "ASPI",
         "name": "ASP Isotopes Inc.",
-        "marketCapUsd": 167132432,
+        "marketCapUsd": 171417872,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -318,7 +317,7 @@
       {
         "ticker": "AUTL",
         "name": "Autolus Therapeutics plc",
-        "marketCapUsd": 257817440,
+        "marketCapUsd": 241650592,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -326,7 +325,7 @@
       {
         "ticker": "BETR",
         "name": "Better Home & Finance Holding Company",
-        "marketCapUsd": 282627616,
+        "marketCapUsd": 269486560,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -334,7 +333,7 @@
       {
         "ticker": "BMM",
         "name": "Blue Moon Metals Inc.",
-        "marketCapUsd": 283448256,
+        "marketCapUsd": 262452080,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -342,7 +341,7 @@
       {
         "ticker": "BNTC",
         "name": "Benitec Biopharma Inc.",
-        "marketCapUsd": 294550784,
+        "marketCapUsd": 285882240,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -350,7 +349,7 @@
       {
         "ticker": "BRBI",
         "name": "BRBI BR Partners S.A.",
-        "marketCapUsd": 194504544,
+        "marketCapUsd": 194242048,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -358,7 +357,7 @@
       {
         "ticker": "BTBT",
         "name": "Bit Digital, Inc.",
-        "marketCapUsd": 210904400,
+        "marketCapUsd": 185917968,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -366,7 +365,7 @@
       {
         "ticker": "BTQ",
         "name": "BTQ Technologies Corp.",
-        "marketCapUsd": 163315888,
+        "marketCapUsd": 154496112,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -374,7 +373,7 @@
       {
         "ticker": "CABA",
         "name": "Cabaletta Bio, Inc.",
-        "marketCapUsd": 220034784,
+        "marketCapUsd": 201935856,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -382,7 +381,7 @@
       {
         "ticker": "CCOI",
         "name": "Cogent Communications Holdings, Inc.",
-        "marketCapUsd": 160053088,
+        "marketCapUsd": 153611648,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -390,7 +389,7 @@
       {
         "ticker": "CGC",
         "name": "Canopy Growth Corporation",
-        "marketCapUsd": 209475232,
+        "marketCapUsd": 191985232,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -398,7 +397,7 @@
       {
         "ticker": "CLPT",
         "name": "ClearPoint Neuro, Inc.",
-        "marketCapUsd": 236239952,
+        "marketCapUsd": 221494992,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -406,7 +405,7 @@
       {
         "ticker": "CRNC",
         "name": "Cerence Inc.",
-        "marketCapUsd": 288116736,
+        "marketCapUsd": 277261472,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -414,7 +413,7 @@
       {
         "ticker": "CURR",
         "name": "CURRENC Group Inc.",
-        "marketCapUsd": 218949680,
+        "marketCapUsd": 212212768,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -422,7 +421,7 @@
       {
         "ticker": "DDD",
         "name": "3D Systems Corporation",
-        "marketCapUsd": 277894624,
+        "marketCapUsd": 244737264,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -430,7 +429,7 @@
       {
         "ticker": "DGXX",
         "name": "Digi Power X Inc.",
-        "marketCapUsd": 200792336,
+        "marketCapUsd": 187590048,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -438,7 +437,7 @@
       {
         "ticker": "DRUG",
         "name": "Bright Minds Biosciences Inc.",
-        "marketCapUsd": 203643536,
+        "marketCapUsd": 201226848,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -446,7 +445,7 @@
       {
         "ticker": "EBS",
         "name": "Emergent BioSolutions Inc.",
-        "marketCapUsd": 262731600,
+        "marketCapUsd": 259646688,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -454,7 +453,7 @@
       {
         "ticker": "ECX",
         "name": "ECARX Holdings Inc.",
-        "marketCapUsd": 265858336,
+        "marketCapUsd": 206948992,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -462,7 +461,7 @@
       {
         "ticker": "EDIT",
         "name": "Editas Medicine, Inc.",
-        "marketCapUsd": 270094560,
+        "marketCapUsd": 253117184,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -470,7 +469,7 @@
       {
         "ticker": "EH",
         "name": "EHang Holdings Limited",
-        "marketCapUsd": 210091648,
+        "marketCapUsd": 188096496,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -478,7 +477,7 @@
       {
         "ticker": "EIKN",
         "name": "Eikon Therapeutics, Inc.",
-        "marketCapUsd": 273639808,
+        "marketCapUsd": 256842080,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -486,7 +485,7 @@
       {
         "ticker": "ENTA",
         "name": "Enanta Pharmaceuticals, Inc.",
-        "marketCapUsd": 228605120,
+        "marketCapUsd": 222190176,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -494,7 +493,7 @@
       {
         "ticker": "EVMN",
         "name": "Evommune, Inc.",
-        "marketCapUsd": 298132480,
+        "marketCapUsd": 291103008,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -502,7 +501,7 @@
       {
         "ticker": "FBYD",
         "name": "Falcon's Beyond Global, Inc.",
-        "marketCapUsd": 214628608,
+        "marketCapUsd": 207244592,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -510,7 +509,7 @@
       {
         "ticker": "FCCO",
         "name": "First Community Corporation",
-        "marketCapUsd": 294417440,
+        "marketCapUsd": 293289408,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -518,7 +517,7 @@
       {
         "ticker": "FLXS",
         "name": "Flexsteel Industries, Inc.",
-        "marketCapUsd": 285115936,
+        "marketCapUsd": 284054656,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -526,7 +525,7 @@
       {
         "ticker": "FVCB",
         "name": "FVCBankcorp, Inc.",
-        "marketCapUsd": 284110848,
+        "marketCapUsd": 280431872,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -534,7 +533,15 @@
       {
         "ticker": "FVRR",
         "name": "Fiverr International Ltd.",
-        "marketCapUsd": 272866016,
+        "marketCapUsd": 259923760,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "FWDI",
+        "name": "Forward Industries, Inc.",
+        "marketCapUsd": 267121200,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -542,7 +549,7 @@
       {
         "ticker": "GASS",
         "name": "StealthGas Inc.",
-        "marketCapUsd": 282493696,
+        "marketCapUsd": 280218560,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -552,13 +559,13 @@
         "name": "Global Indemnity Group, LLC",
         "marketCapUsd": 293397920,
         "floorUsd": 300000000,
-        "date": "2026-11-19",
-        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 19.11.2026"
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
       },
       {
         "ticker": "GEMI",
         "name": "Gemini Space Station, Inc.",
-        "marketCapUsd": 222743600,
+        "marketCapUsd": 203089744,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -566,7 +573,7 @@
       {
         "ticker": "IHRT",
         "name": "iHeartMedia, Inc.",
-        "marketCapUsd": 70519560,
+        "marketCapUsd": 69637096,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -574,7 +581,7 @@
       {
         "ticker": "IMSR",
         "name": "Terrestrial Energy Inc.",
-        "marketCapUsd": 237414032,
+        "marketCapUsd": 228934976,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -582,7 +589,7 @@
       {
         "ticker": "IMXI",
         "name": "International Money Express, Inc.",
-        "marketCapUsd": 163185760,
+        "marketCapUsd": 167114320,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -590,7 +597,15 @@
       {
         "ticker": "IPSC",
         "name": "Century Therapeutics, Inc.",
-        "marketCapUsd": 223364320,
+        "marketCapUsd": 211560512,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "ITRG",
+        "name": "Integra Resources Corp.",
+        "marketCapUsd": 290475040,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -598,7 +613,7 @@
       {
         "ticker": "KNOP",
         "name": "KNOT Offshore Partners LP",
-        "marketCapUsd": 274005472,
+        "marketCapUsd": 252928144,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -606,7 +621,7 @@
       {
         "ticker": "KRUS",
         "name": "Kura Sushi USA, Inc.",
-        "marketCapUsd": 281723104,
+        "marketCapUsd": 270906304,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -614,7 +629,7 @@
       {
         "ticker": "KYTX",
         "name": "Kyverna Therapeutics, Inc.",
-        "marketCapUsd": 284498848,
+        "marketCapUsd": 269325600,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -622,7 +637,7 @@
       {
         "ticker": "LAES",
         "name": "SEALSQ Corp",
-        "marketCapUsd": 242925008,
+        "marketCapUsd": 216383200,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -630,7 +645,7 @@
       {
         "ticker": "LAND",
         "name": "Gladstone Land Corporation",
-        "marketCapUsd": 274723424,
+        "marketCapUsd": 268415648,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -638,7 +653,7 @@
       {
         "ticker": "LDI",
         "name": "loanDepot, Inc.",
-        "marketCapUsd": 274042944,
+        "marketCapUsd": 227286816,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -646,7 +661,7 @@
       {
         "ticker": "LE",
         "name": "Lands' End, Inc.",
-        "marketCapUsd": 257920448,
+        "marketCapUsd": 246693696,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -654,7 +669,7 @@
       {
         "ticker": "LSAK",
         "name": "Lesaka Technologies, Inc.",
-        "marketCapUsd": 254424000,
+        "marketCapUsd": 271731776,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -662,7 +677,15 @@
       {
         "ticker": "LWAY",
         "name": "Lifeway Foods, Inc.",
-        "marketCapUsd": 294309632,
+        "marketCapUsd": 289626048,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "MNRO",
+        "name": "Monro, Inc.",
+        "marketCapUsd": 297605824,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -670,7 +693,23 @@
       {
         "ticker": "MRAM",
         "name": "Everspin Technologies, Inc.",
-        "marketCapUsd": 249267392,
+        "marketCapUsd": 220807728,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "MVBF",
+        "name": "MVB Financial Corp.",
+        "marketCapUsd": 295959232,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "MYFW",
+        "name": "First Western Financial, Inc.",
+        "marketCapUsd": 294531648,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -678,7 +717,7 @@
       {
         "ticker": "NEWT",
         "name": "NewtekOne, Inc.",
-        "marketCapUsd": 290233952,
+        "marketCapUsd": 281281440,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -686,7 +725,7 @@
       {
         "ticker": "NKLR",
         "name": "Terra Innovatum Global N.V.",
-        "marketCapUsd": 245772768,
+        "marketCapUsd": 222223680,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -694,7 +733,7 @@
       {
         "ticker": "NMG",
         "name": "Nouveau Monde Graphite Inc.",
-        "marketCapUsd": 233670800,
+        "marketCapUsd": 220701888,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -702,7 +741,7 @@
       {
         "ticker": "NNDM",
         "name": "Nano Dimension Ltd.",
-        "marketCapUsd": 216072416,
+        "marketCapUsd": 210125456,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -710,7 +749,7 @@
       {
         "ticker": "NOA",
         "name": "North American Construction Group Ltd.",
-        "marketCapUsd": 221860816,
+        "marketCapUsd": 216657840,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -718,7 +757,7 @@
       {
         "ticker": "NPCE",
         "name": "NeuroPace, Inc.",
-        "marketCapUsd": 278368672,
+        "marketCapUsd": 273889952,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -726,7 +765,7 @@
       {
         "ticker": "NREF",
         "name": "NexPoint Real Estate Finance, Inc.",
-        "marketCapUsd": 258443040,
+        "marketCapUsd": 259364400,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -734,7 +773,7 @@
       {
         "ticker": "OCGN",
         "name": "Ocugen, Inc.",
-        "marketCapUsd": 261639312,
+        "marketCapUsd": 260553536,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -742,7 +781,7 @@
       {
         "ticker": "OEC",
         "name": "Orion S.A.",
-        "marketCapUsd": 185236720,
+        "marketCapUsd": 176496480,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -750,7 +789,15 @@
       {
         "ticker": "OFIX",
         "name": "Orthofix Medical Inc.",
-        "marketCapUsd": 258213328,
+        "marketCapUsd": 247412000,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "OPI",
+        "name": "Office Properties Income Trust",
+        "marketCapUsd": 295715008,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -758,7 +805,7 @@
       {
         "ticker": "OPTU",
         "name": "Optimum Communications, Inc.",
-        "marketCapUsd": 236830848,
+        "marketCapUsd": 231261952,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -766,7 +813,7 @@
       {
         "ticker": "OPTX",
         "name": "Syntec Optics Holdings, Inc.",
-        "marketCapUsd": 241771920,
+        "marketCapUsd": 253360448,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -774,7 +821,7 @@
       {
         "ticker": "ORN",
         "name": "Orion Group Holdings, Inc.",
-        "marketCapUsd": 279329024,
+        "marketCapUsd": 276076288,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -782,7 +829,7 @@
       {
         "ticker": "OWLS",
         "name": "Obook Holdings Inc.",
-        "marketCapUsd": 183733488,
+        "marketCapUsd": 177550144,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -790,7 +837,7 @@
       {
         "ticker": "PACK",
         "name": "Ranpak Holdings Corp.",
-        "marketCapUsd": 247922848,
+        "marketCapUsd": 229049824,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -798,7 +845,7 @@
       {
         "ticker": "PAMT",
         "name": "PAMT CORP",
-        "marketCapUsd": 261194816,
+        "marketCapUsd": 243405104,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -806,7 +853,7 @@
       {
         "ticker": "PESI",
         "name": "Perma-Fix Environmental Services, Inc.",
-        "marketCapUsd": 264519392,
+        "marketCapUsd": 268448416,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -814,7 +861,7 @@
       {
         "ticker": "PINE",
         "name": "Alpine Income Property Trust, Inc.",
-        "marketCapUsd": 297635680,
+        "marketCapUsd": 291894688,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -822,7 +869,7 @@
       {
         "ticker": "PLAY",
         "name": "Dave & Buster's Entertainment, Inc.",
-        "marketCapUsd": 237196688,
+        "marketCapUsd": 218039840,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -830,7 +877,7 @@
       {
         "ticker": "PRE",
         "name": "Prenetics Global Limited",
-        "marketCapUsd": 192800736,
+        "marketCapUsd": 171725344,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -838,7 +885,7 @@
       {
         "ticker": "PRLD",
         "name": "Prelude Therapeutics Incorporated",
-        "marketCapUsd": 260630016,
+        "marketCapUsd": 258628240,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -846,7 +893,7 @@
       {
         "ticker": "PSFE",
         "name": "Paysafe Limited",
-        "marketCapUsd": 161070336,
+        "marketCapUsd": 143289840,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -854,7 +901,7 @@
       {
         "ticker": "QNC",
         "name": "Quantum eMotion Corp.",
-        "marketCapUsd": 180582384,
+        "marketCapUsd": 162809392,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -862,7 +909,15 @@
       {
         "ticker": "REI",
         "name": "Ring Energy, Inc.",
-        "marketCapUsd": 277474688,
+        "marketCapUsd": 270961184,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "RLMD",
+        "name": "Relmada Therapeutics, Inc.",
+        "marketCapUsd": 279540480,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -870,7 +925,7 @@
       {
         "ticker": "RM",
         "name": "Regional Management Corp.",
-        "marketCapUsd": 294817632,
+        "marketCapUsd": 292133408,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -878,7 +933,7 @@
       {
         "ticker": "RMR",
         "name": "The RMR Group Inc.",
-        "marketCapUsd": 282934976,
+        "marketCapUsd": 272181888,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -886,7 +941,7 @@
       {
         "ticker": "RNGR",
         "name": "Ranger Energy Services, Inc.",
-        "marketCapUsd": 261213424,
+        "marketCapUsd": 249361632,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -894,7 +949,7 @@
       {
         "ticker": "RR",
         "name": "Richtech Robotics Inc.",
-        "marketCapUsd": 144065232,
+        "marketCapUsd": 130289008,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -902,7 +957,7 @@
       {
         "ticker": "SEG",
         "name": "Seaport Entertainment Group Inc.",
-        "marketCapUsd": 260396640,
+        "marketCapUsd": 240563616,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -910,7 +965,7 @@
       {
         "ticker": "SERV",
         "name": "Serve Robotics Inc.",
-        "marketCapUsd": 193950624,
+        "marketCapUsd": 178627216,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -918,7 +973,15 @@
       {
         "ticker": "SLI",
         "name": "Standard Lithium Ltd.",
-        "marketCapUsd": 273190048,
+        "marketCapUsd": 249252000,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "SNDL",
+        "name": "SNDL Inc.",
+        "marketCapUsd": 285200992,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -926,7 +989,23 @@
       {
         "ticker": "SPCE",
         "name": "Virgin Galactic Holdings, Inc.",
-        "marketCapUsd": 166850192,
+        "marketCapUsd": 157749264,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "SPIR",
+        "name": "Spire Global, Inc.",
+        "marketCapUsd": 288962560,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "SPRY",
+        "name": "ARS Pharmaceuticals, Inc.",
+        "marketCapUsd": 297564064,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -934,7 +1013,7 @@
       {
         "ticker": "SSII",
         "name": "SS Innovations International, Inc.",
-        "marketCapUsd": 256867840,
+        "marketCapUsd": 254861056,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -942,7 +1021,7 @@
       {
         "ticker": "SUJA",
         "name": "Suja Life, Inc.",
-        "marketCapUsd": 242951328,
+        "marketCapUsd": 225570080,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -950,7 +1029,7 @@
       {
         "ticker": "SUPX",
         "name": "SuperX AI Technology Limited",
-        "marketCapUsd": 187349104,
+        "marketCapUsd": 163488624,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -958,7 +1037,23 @@
       {
         "ticker": "TLRY",
         "name": "Tilray Brands, Inc.",
-        "marketCapUsd": 298530784,
+        "marketCapUsd": 279318400,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "TMQ",
+        "name": "Trilogy Metals Inc.",
+        "marketCapUsd": 270228224,
+        "floorUsd": 300000000,
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
+      },
+      {
+        "ticker": "TMS",
+        "name": "Teamshares Inc.",
+        "marketCapUsd": 283468992,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -966,7 +1061,7 @@
       {
         "ticker": "TRVG",
         "name": "trivago N.V.",
-        "marketCapUsd": 285466400,
+        "marketCapUsd": 293966624,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -974,7 +1069,7 @@
       {
         "ticker": "TTRX",
         "name": "Turn Therapeutics Inc.",
-        "marketCapUsd": 260173712,
+        "marketCapUsd": 247486048,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -982,7 +1077,7 @@
       {
         "ticker": "TWI",
         "name": "Titan International, Inc.",
-        "marketCapUsd": 270701536,
+        "marketCapUsd": 267471184,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -990,7 +1085,7 @@
       {
         "ticker": "URG",
         "name": "Ur-Energy Inc.",
-        "marketCapUsd": 199490208,
+        "marketCapUsd": 181825984,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -998,15 +1093,15 @@
       {
         "ticker": "VCRE",
         "name": "Vicore Pharma Holding AB (publ)",
-        "marketCapUsd": 279109728,
+        "marketCapUsd": 264889488,
         "floorUsd": 300000000,
-        "date": "2026-11-19",
-        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 19.11.2026"
+        "date": "2026-11-20",
+        "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
       },
       {
         "ticker": "VRRM",
         "name": "Verra Mobility Corporation",
-        "marketCapUsd": 261456080,
+        "marketCapUsd": 243214960,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1014,7 +1109,7 @@
       {
         "ticker": "WRN",
         "name": "Western Copper and Gold Corporation",
-        "marketCapUsd": 295290400,
+        "marketCapUsd": 269268672,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1022,7 +1117,7 @@
       {
         "ticker": "XNET",
         "name": "Xunlei Limited",
-        "marketCapUsd": 189194752,
+        "marketCapUsd": 181652112,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1030,7 +1125,7 @@
       {
         "ticker": "XPER",
         "name": "Xperi Inc.",
-        "marketCapUsd": 267032784,
+        "marketCapUsd": 259719648,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1038,7 +1133,7 @@
       {
         "ticker": "XRX",
         "name": "Xerox Holdings Corporation",
-        "marketCapUsd": 124644632,
+        "marketCapUsd": 120430136,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1046,7 +1141,7 @@
       {
         "ticker": "ZKH",
         "name": "ZKH Group Limited",
-        "marketCapUsd": 225611296,
+        "marketCapUsd": 217722800,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
@@ -1054,35 +1149,20 @@
       {
         "ticker": "ZURA",
         "name": "Zura Bio Limited",
-        "marketCapUsd": 95439216,
+        "marketCapUsd": 89630792,
         "floorUsd": 300000000,
         "date": "2026-11-20",
         "reasonDe": "unter der Größengrenze von 0,3 Mrd. USD am 20.11.2026"
       }
     ],
-    "aboveBand": [
-      {
-        "ticker": "CTKB",
-        "name": "Cytek Biosciences, Inc.",
-        "marketCapUsd": 816091904,
-        "date": "2026-11-20",
-        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 20.11.2026"
-      },
-      {
-        "ticker": "SWBI",
-        "name": "Smith & Wesson Brands, Inc.",
-        "marketCapUsd": 851648320,
-        "date": "2026-11-20",
-        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 20.11.2026"
-      }
-    ],
+    "aboveBand": [],
     "noFreshValue": [
       {
         "ticker": "LND",
         "name": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
         "marketCapUsd": null,
-        "date": "2026-11-20",
-        "reasonDe": "Der Abruf am 20.11.2026 lieferte keinen Börsenwert, die Firma steht deshalb auf keinem Board."
+        "date": "2026-11-21",
+        "reasonDe": "Der Abruf am 21.11.2026 lieferte keinen Börsenwert, die Firma steht deshalb auf keinem Board."
       }
     ],
     "thinCoverage": [
@@ -1162,13 +1242,6 @@
         "coverageWeight": 0.04,
         "coverageFloor": 0.58,
         "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,04 unter der festen Grenze 0,580."
-      },
-      {
-        "ticker": "OPI",
-        "name": "Office Properties Income Trust",
-        "coverageWeight": 0.51,
-        "coverageFloor": 0.58,
-        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,51 unter der festen Grenze 0,580."
       },
       {
         "ticker": "PFL",

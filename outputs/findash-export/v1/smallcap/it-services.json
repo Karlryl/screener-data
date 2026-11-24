@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-21T11:22:42.657Z",
+  "generated_at": "2026-11-24T14:07:10.535Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 68.5,
-    "generated_at": "2026-11-21T11:05:00.091Z",
-    "honest_coverage_pct": 90,
-    "n_addressable": 17302,
-    "n_ok": 15575,
-    "n_total": 22739,
-    "n_failed": 1216,
+    "coverage_pct": 69.3,
+    "generated_at": "2026-11-24T13:49:18.495Z",
+    "honest_coverage_pct": 90.5,
+    "n_addressable": 17372,
+    "n_ok": 15715,
+    "n_total": 22661,
+    "n_failed": 1203,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -36,7 +36,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 725427520,
+      "marketCap": 720160640,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -118,17 +118,12 @@
         "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 15.905648271254602,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-09-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
-      "overviewValueLegacy": 0.089,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
@@ -143,7 +138,8 @@
           "basis": "quarter",
           "periodEnd": "2026-09-30"
         }
-      }
+      },
+      "newerPeriod": null
     }
   ],
   "unprofitable": []
