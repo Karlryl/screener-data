@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-24T14:07:10.355Z",
+  "generated_at": "2026-11-25T12:51:28.340Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.3,
-    "generated_at": "2026-11-24T13:49:18.495Z",
-    "honest_coverage_pct": 90.5,
-    "n_addressable": 17372,
-    "n_ok": 15715,
-    "n_total": 22661,
-    "n_failed": 1203,
+    "coverage_pct": 68.8,
+    "generated_at": "2026-11-25T12:33:30.094Z",
+    "honest_coverage_pct": 91,
+    "n_addressable": 17163,
+    "n_ok": 15618,
+    "n_total": 22716,
+    "n_failed": 1156,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -23,8 +23,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VINP",
-      "score": 76.4,
-      "scoreCycleLegacy": 76.4,
+      "score": 76.8,
+      "scoreCycleLegacy": 76.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -39,7 +39,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 530850912,
+      "marketCap": 568056832,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -50,8 +50,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 79.7,
-      "scoreShrunk": 76.4,
+      "scoreBase": 80.2,
+      "scoreShrunk": 76.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -86,16 +86,16 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 57.1,
+          "pct": 64.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 35.7,
+          "pct": 28.6,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 29.972691069275204,
+      "revGrowthYoYPct": 29.972691069275157,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -130,13 +130,13 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 29.972691069275204,
+          "pct": 29.972691069275157,
           "basis": "quarter",
           "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.32621056393705383,
+        "value": 0.32621056393705405,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-09-30"
@@ -164,7 +164,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 419425600,
+      "marketCap": 433250848,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -261,7 +261,7 @@
         }
       },
       "g31OverviewShadow": {
-        "value": 0.5760127667048214,
+        "value": 0.5760127667048216,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -298,7 +298,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 627098688,
+      "marketCap": 626528576,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -408,8 +408,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CSHR",
-      "score": 52,
-      "scoreCycleLegacy": 52,
+      "score": 47.1,
+      "scoreCycleLegacy": 47.1,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -417,26 +417,26 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.06,
-        "companion": 16.7
+        "value": -0.482,
+        "companion": -103.4
       },
       "name": "CoinShares PLC",
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 462548544,
+      "marketCap": 499446976,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2026,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 52.3,
-      "scoreShrunk": 52,
+      "scoreBase": 46.7,
+      "scoreShrunk": 47.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -446,7 +446,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.6,
+          "pct": 18.8,
           "weight": 1
         },
         {
@@ -461,12 +461,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 65.6,
+          "pct": 18.8,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": null,
+          "pct": 100,
           "weight": 0.6
         },
         {
@@ -480,30 +480,30 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 7.248100733419216,
+      "revGrowthYoYPct": -44.9410501620375,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 638,
+      "qPunkte": 5,
+      "qSpanTage": 548,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2025-12-31",
-      "revGrowthPriorPeriodEnd": "2024-12-31",
-      "revGrowthSourcePeriodEnd": "2025-12-31",
-      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "revAccelerationBasis": {
         "basis": "year",
-        "quarterComparisons": 0,
+        "quarterComparisons": 1,
         "newestQuarterStale": false
       },
       "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
       "revGrowthYoYPctLegacy": null,
@@ -515,27 +515,19 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 7.248100733419216,
-          "basis": "year",
-          "periodEnd": "2025-12-31"
+          "pct": -44.9410501620375,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.059710970753810155,
+        "value": -0.4819781190717497,
         "period": {
-          "basis": "year",
-          "periodEnd": "2025-12-31"
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
         }
       },
-      "newerPeriod": {
-        "end": "2026-09-30",
-        "evidence": "quarter",
-        "fields": {
-          "revGrowth": "vorjahr-fehlt",
-          "grossProfit": "vorjahr-fehlt"
-        },
-        "hint": "Neuerer Zeitraum veröffentlicht (bis 30.09.2026), hier noch nicht verwendet: Umsatzwachstum und Bruttogewinn-Wachstum, weil das Vorjahresquartal in den Anbieterdaten fehlt."
-      }
+      "newerPeriod": null
     },
     {
       "rank": 5,
@@ -558,7 +550,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 600943168,
+      "marketCap": 612355968,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -684,7 +676,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 349952256,
+      "marketCap": 361116960,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -809,7 +801,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 489861248,
+      "marketCap": 532415136,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -920,6 +912,135 @@
       "rank": 1,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "TMS",
+      "score": 58.8,
+      "scoreCycleLegacy": 58.8,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.281,
+        "companion": 55.3
+      },
+      "name": "Teamshares Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 332767968,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 8,
+      "cohortFallback": true,
+      "scoreBase": 61,
+      "scoreShrunk": 58.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 70.8,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 69.6,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 73.1,
+          "weight": 1.7
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70.8,
+          "weight": 0.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 46.2,
+          "weight": 1.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 30,
+          "weight": 1.7
+        },
+        {
+          "key": "dilution",
+          "pct": 82.1,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 24.053043011474195,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "quarter",
+        "quarterComparisons": 2,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 24.053043011474195,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.2813883014672218,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "newerPeriod": null
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "PRAA",
       "score": 50.5,
       "scoreCycleLegacy": 50.5,
@@ -939,7 +1060,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 390935808,
+      "marketCap": 402234528,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1045,7 +1166,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 2,
+      "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MTC",
@@ -1070,7 +1191,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 520844224,
+      "marketCap": 508893728,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",

@@ -1,151 +1,25 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-24T14:07:10.378Z",
+  "generated_at": "2026-11-25T12:51:28.359Z",
   "branch": "health-care",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.3,
-    "generated_at": "2026-11-24T13:49:18.495Z",
-    "honest_coverage_pct": 90.5,
-    "n_addressable": 17372,
-    "n_ok": 15715,
-    "n_total": 22661,
-    "n_failed": 1203,
+    "coverage_pct": 68.8,
+    "generated_at": "2026-11-25T12:33:30.094Z",
+    "honest_coverage_pct": 91,
+    "n_addressable": 17163,
+    "n_ok": 15618,
+    "n_total": 22716,
+    "n_failed": 1156,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
   "profitable": [
     {
       "rank": 1,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "VREX",
-      "score": 56.4,
-      "scoreCycleLegacy": 56.4,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.136,
-        "companion": 8.5
-      },
-      "name": "Varex Imaging Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 768588416,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 9.4,
-          "weight": 1.7
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 96.9,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 43.3,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 9.4,
-          "weight": 1.1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 96.9,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 71.9,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 59.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 3.6945812807881673,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": null,
-      "revGrowthBasisLegacy": null,
-      "revGrowthPeriodEndLegacy": null,
-      "revGrowthPriorPeriodEndLegacy": null,
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": null,
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 3.6945812807881673,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.13629629629629636,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "newerPeriod": null
-    },
-    {
-      "rank": 2,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BWAY",
@@ -165,9 +39,9 @@
       "country": "Israel",
       "region": "Middle East",
       "sector": "Healthcare",
-      "marketCap": 341345312,
+      "marketCap": 368617760,
       "phase": "inflected",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "seit-kurzem-profitabel",
@@ -271,6 +145,132 @@
       "newerPeriod": null
     },
     {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "VREX",
+      "score": 55.7,
+      "scoreCycleLegacy": 55.7,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.136,
+        "companion": 3.1
+      },
+      "name": "Varex Imaging Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 740774848,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 16,
+      "cohortFallback": false,
+      "scoreBase": 56.4,
+      "scoreShrunk": 55.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 6.3,
+          "weight": 1.7
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.9,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 43.3,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 6.3,
+          "weight": 1.1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96.9,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 71.9,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 59.4,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 1.3615912858157664,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "yearNewerRecord",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 1.3615912858157664,
+          "basis": "yearNewerRecord",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.13629629629629636,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "newerPeriod": null
+    },
+    {
       "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -291,9 +291,9 @@
       "country": "Israel",
       "region": "Middle East",
       "sector": "Healthcare",
-      "marketCap": 446845664,
+      "marketCap": 480630464,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
@@ -417,9 +417,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 573475136,
+      "marketCap": 612229504,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "seit-kurzem-profitabel",
@@ -540,7 +540,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 533933888,
+      "marketCap": 545393536,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -667,7 +667,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 419163264,
+      "marketCap": 443024576,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -796,9 +796,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 454608608,
+      "marketCap": 475004992,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
@@ -919,7 +919,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 322849184,
+      "marketCap": 345206080,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1047,7 +1047,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 445073024,
+      "marketCap": 450180448,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1174,7 +1174,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 364473408,
+      "marketCap": 379465952,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1301,7 +1301,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 441111552,
+      "marketCap": 436587296,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1363,7 +1363,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 8.7,
-        "pctl": 0.923
+        "pctl": 0.917
       },
       "ath": null,
       "qPunkte": 5,
@@ -1433,7 +1433,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 708229440,
+      "marketCap": 748575616,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1495,7 +1495,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 5,
-        "pctl": 0.769
+        "pctl": 0.75
       },
       "ath": null,
       "qPunkte": 5,
@@ -1564,7 +1564,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 373615232,
+      "marketCap": 402898592,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1626,7 +1626,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 6.5,
-        "pctl": 0.846
+        "pctl": 0.833
       },
       "ath": null,
       "qPunkte": 5,
@@ -1671,140 +1671,6 @@
         }
       },
       "newerPeriod": null
-    },
-    {
-      "rank": 14,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "IRWD",
-      "score": 22.1,
-      "scoreCycleLegacy": 22.1,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 20.7
-      },
-      "name": "Ironwood Pharmaceuticals, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 778088512,
-      "phase": "inflected",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.82,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 42,
-      "scoreShrunk": 44.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.5,
-        "cycleLegacy": 0.5
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 37.5,
-          "weight": 1.7
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 71.9,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 18.8,
-          "weight": 1.1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 81.3,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 15.6,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 28.1,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 8.99557594625593,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-09-30",
-      "revGrowthPriorPeriodEnd": "2025-09-30",
-      "revGrowthSourcePeriodEnd": "2026-09-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2022-12-31",
-        "priorPeriodEnd": "2021-12-31",
-        "reason": "Periodenstand veraltet: Das neueste Wertepaar endet am 31.12.2022, mehr als 550 Tage vor dem Datenstand; Wachstum nicht gezeigt."
-      },
-      "revGrowthYoYPctLegacy": null,
-      "revGrowthBasisLegacy": null,
-      "revGrowthPeriodEndLegacy": null,
-      "revGrowthPriorPeriodEndLegacy": null,
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": null,
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 8.99557594625593,
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": null,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2022-12-31",
-          "reason": "Periodenstand veraltet: Das neueste Wertepaar endet am 31.12.2022, mehr als 550 Tage vor dem Datenstand; Wachstum nicht gezeigt."
-        }
-      },
-      "newerPeriod": {
-        "end": "2026-09-30",
-        "evidence": "quarter",
-        "fields": {
-          "grossProfit": "nur-jahreswerte"
-        },
-        "hint": "Neuerer Zeitraum veröffentlicht (bis 30.09.2026), hier noch nicht verwendet: Bruttogewinn-Wachstum, weil der Anbieter dafür nur Jahreswerte liefert."
-      }
     }
   ],
   "unprofitable": [
@@ -1832,7 +1698,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 521260480,
+      "marketCap": 546847424,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1964,7 +1830,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 407298528,
+      "marketCap": 433647904,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2094,7 +1960,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 360519392,
+      "marketCap": 369043776,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2225,7 +2091,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 533651328,
+      "marketCap": 542645440,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -2354,7 +2220,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 415210240,
+      "marketCap": 465224160,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2494,7 +2360,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 679709056,
+      "marketCap": 738053184,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -2556,7 +2422,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 11.5,
-        "pctl": 0.783
+        "pctl": 0.792
       },
       "ath": null,
       "qPunkte": 5,
@@ -2626,7 +2492,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 477379200,
+      "marketCap": 488751872,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -2755,7 +2621,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 460791104,
+      "marketCap": 459696576,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2885,9 +2751,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 394499488,
+      "marketCap": 438610208,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -3013,7 +2879,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 431548160,
+      "marketCap": 458685376,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -3142,9 +3008,9 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 469113664,
+      "marketCap": 488660032,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
@@ -3189,7 +3055,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.7,
+          "pct": 90.3,
           "weight": 0.4
         },
         {
@@ -3278,9 +3144,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 441816896,
+      "marketCap": 494962976,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -3388,6 +3254,133 @@
       "rank": 13,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "MYGN",
+      "score": 37.5,
+      "scoreCycleLegacy": 37.5,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.042,
+        "companion": -3.4
+      },
+      "name": "Myriad Genetics, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 552032256,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 41,
+      "cohortFallback": false,
+      "scoreBase": 36.9,
+      "scoreShrunk": 37.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 20.6,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 29.7,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 30,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 20.6,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 80.6,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 95.8,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 83.3,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -1.4584346135148252,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -1.4584346135148252,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.04242002781641163,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "newerPeriod": null
+    },
+    {
+      "rank": 14,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "CV",
       "score": 33.6,
       "scoreCycleLegacy": 33.6,
@@ -3409,7 +3402,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 327555392,
+      "marketCap": 340421728,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3515,133 +3508,6 @@
       "newerPeriod": null
     },
     {
-      "rank": 14,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "MYGN",
-      "score": 33.4,
-      "scoreCycleLegacy": 33.4,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.042,
-        "companion": -3.4
-      },
-      "name": "Myriad Genetics, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 523735168,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 1995,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 41,
-      "cohortFallback": false,
-      "scoreBase": 32.6,
-      "scoreShrunk": 33.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 20.6,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 29.7,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 30,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 20.6,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 30.6,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 95.8,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 83.3,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -1.4584346135148252,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-09-30",
-      "revGrowthPriorPeriodEnd": "2025-09-30",
-      "revGrowthSourcePeriodEnd": "2026-09-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
-      "revAccelerationBasis": {
-        "basis": "year",
-        "quarterComparisons": 1,
-        "newestQuarterStale": false
-      },
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-09-30",
-        "priorPeriodEnd": "2025-09-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": null,
-      "revGrowthBasisLegacy": null,
-      "revGrowthPeriodEndLegacy": null,
-      "revGrowthPriorPeriodEndLegacy": null,
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": null,
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -1.4584346135148252,
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.04242002781641163,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      },
-      "newerPeriod": null
-    },
-    {
       "rank": 15,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -3667,9 +3533,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 325667360,
+      "marketCap": 417589632,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -3729,7 +3595,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 13,
-        "pctl": 0.826
+        "pctl": 0.833
       },
       "ath": null,
       "qPunkte": 5,
@@ -3781,8 +3647,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VALN",
-      "score": 25.3,
-      "scoreCycleLegacy": 25.3,
+      "score": 25.6,
+      "scoreCycleLegacy": 25.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3801,7 +3667,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 490858208,
+      "marketCap": 485150560,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -3812,8 +3678,8 @@
       "coverageWeight": 1,
       "cohortN": 41,
       "cohortFallback": false,
-      "scoreBase": 37.4,
-      "scoreShrunk": 38,
+      "scoreBase": 37.8,
+      "scoreShrunk": 38.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3828,7 +3694,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 39.1,
+          "pct": 40.6,
           "weight": 2.8
         },
         {
@@ -3853,7 +3719,7 @@
         },
         {
           "key": "dilution",
-          "pct": 67.9,
+          "pct": 66.7,
           "weight": 0.5
         }
       ],
@@ -3863,7 +3729,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 15.4,
-        "pctl": 0.87
+        "pctl": 0.875
       },
       "ath": null,
       "qPunkte": 5,
@@ -3933,9 +3799,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 454217792,
+      "marketCap": 494954816,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -4072,7 +3938,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 673888704,
+      "marketCap": 691769664,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -4203,9 +4069,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 434879456,
+      "marketCap": 489553600,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",

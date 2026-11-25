@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-24T14:07:10.326Z",
+  "generated_at": "2026-11-25T12:51:28.317Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.3,
-    "generated_at": "2026-11-24T13:49:18.495Z",
-    "honest_coverage_pct": 90.5,
-    "n_addressable": 17372,
-    "n_ok": 15715,
-    "n_total": 22661,
-    "n_failed": 1203,
+    "coverage_pct": 68.8,
+    "generated_at": "2026-11-25T12:33:30.094Z",
+    "honest_coverage_pct": 91,
+    "n_addressable": 17163,
+    "n_ok": 15618,
+    "n_total": 22716,
+    "n_failed": 1156,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -39,7 +39,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 596137792,
+      "marketCap": 598763904,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -164,7 +164,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 436717312,
+      "marketCap": 440654656,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -292,7 +292,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 636856000,
+      "marketCap": 629095360,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -401,6 +401,131 @@
       "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "KNOP",
+      "score": 60.1,
+      "scoreCycleLegacy": 60.1,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.273,
+        "companion": 65.9
+      },
+      "name": "KNOT Offshore Partners LP",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Energy",
+      "marketCap": 310286144,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 62.1,
+      "scoreShrunk": 60.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 26.5,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 59.4,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.7,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 3.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 73.5,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 11.160119457845163,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 11.160119457845163,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.2730106575677156,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "newerPeriod": null
+    },
+    {
+      "rank": 5,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "VTS",
       "score": 56.1,
       "scoreCycleLegacy": 56.1,
@@ -419,7 +544,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 602062208,
+      "marketCap": 600381184,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -528,7 +653,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 5,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NGS",
@@ -551,7 +676,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 352708640,
+      "marketCap": 354644448,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -657,7 +782,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 6,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PNRG",
@@ -676,7 +801,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 337273664,
+      "marketCap": 341760960,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -782,7 +907,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SD",
@@ -801,7 +926,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 434894048,
+      "marketCap": 434151904,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -930,7 +1055,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 337359072,
+      "marketCap": 309797056,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1056,7 +1181,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 455392192,
+      "marketCap": 434481312,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1190,7 +1315,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 441982304,
+      "marketCap": 450355456,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1317,7 +1442,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 499660928,
+      "marketCap": 499134976,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
