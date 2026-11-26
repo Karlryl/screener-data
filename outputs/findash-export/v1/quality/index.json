@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-25T12:51:27.517Z",
+  "generated_at": "2026-11-26T12:31:12.683Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 68.8,
-    "generated_at": "2026-11-25T12:33:30.094Z",
-    "honest_coverage_pct": 91,
-    "n_addressable": 17163,
-    "n_ok": 15618,
-    "n_total": 22716,
-    "n_failed": 1156,
+    "coverage_pct": 69.1,
+    "generated_at": "2026-11-26T12:08:37.540Z",
+    "honest_coverage_pct": 90.9,
+    "n_addressable": 17194,
+    "n_ok": 15629,
+    "n_total": 22610,
+    "n_failed": 1155,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
-  "generatedFromSnapshots": 15770,
+  "generatedFromSnapshots": 15797,
   "boards": [
     "quality-consumer-discretionary",
     "quality-consumer-staples",
@@ -44,11 +44,11 @@
   },
   "counts": {
     "quality-consumer-discretionary": {
-      "profitable": 1005,
+      "profitable": 1006,
       "unprofitable": 0
     },
     "quality-consumer-staples": {
-      "profitable": 512,
+      "profitable": 505,
       "unprofitable": 0
     },
     "quality-energy": {
@@ -56,51 +56,51 @@
       "unprofitable": 0
     },
     "quality-health-care": {
-      "profitable": 695,
+      "profitable": 685,
       "unprofitable": 0
     },
     "quality-industrials": {
-      "profitable": 1782,
+      "profitable": 1783,
       "unprofitable": 0
     },
     "quality-it-services": {
-      "profitable": 121,
+      "profitable": 122,
       "unprofitable": 0
     },
     "quality-materials": {
-      "profitable": 821,
+      "profitable": 824,
       "unprofitable": 0
     },
     "quality-semiconductors": {
-      "profitable": 281,
+      "profitable": 284,
       "unprofitable": 0
     },
     "quality-software-comm-services": {
-      "profitable": 452,
+      "profitable": 456,
       "unprofitable": 0
     },
     "quality-tech-hardware": {
-      "profitable": 511,
+      "profitable": 515,
       "unprofitable": 0
     },
     "quality-utilities": {
-      "profitable": 330,
+      "profitable": 328,
       "unprofitable": 0
     }
   },
   "excluded": {
-    "balance-sheet-bank": 738,
-    "data-suspect": 857,
-    "dup-issuer": 1994,
+    "balance-sheet-bank": 736,
+    "data-suspect": 873,
+    "dup-issuer": 1996,
     "insurer": 311,
     "mortgage-reit": 11,
-    "no-axes": 5,
-    "no-revenue": 105,
+    "no-axes": 4,
+    "no-revenue": 107,
     "no-sector": 78,
-    "non-operating-rev": 162,
-    "non-us": 1742,
-    "qc-not-compounder": 1384,
+    "non-operating-rev": 166,
+    "non-us": 1745,
+    "qc-not-compounder": 1387,
     "qc-sector-unsupported": 1328,
-    "telecom": 210
+    "telecom": 212
   }
 }

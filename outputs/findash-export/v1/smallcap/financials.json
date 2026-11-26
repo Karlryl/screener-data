@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-25T12:51:28.340Z",
+  "generated_at": "2026-11-26T12:31:13.933Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 68.8,
-    "generated_at": "2026-11-25T12:33:30.094Z",
-    "honest_coverage_pct": 91,
-    "n_addressable": 17163,
-    "n_ok": 15618,
-    "n_total": 22716,
-    "n_failed": 1156,
+    "coverage_pct": 69.1,
+    "generated_at": "2026-11-26T12:08:37.540Z",
+    "honest_coverage_pct": 90.9,
+    "n_addressable": 17194,
+    "n_ok": 15629,
+    "n_total": 22610,
+    "n_failed": 1155,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -23,8 +23,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VINP",
-      "score": 76.8,
-      "scoreCycleLegacy": 76.8,
+      "score": 79.3,
+      "scoreCycleLegacy": 79.3,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -39,7 +39,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 568056832,
+      "marketCap": 569289536,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -50,8 +50,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 80.2,
-      "scoreShrunk": 76.8,
+      "scoreBase": 83,
+      "scoreShrunk": 79.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -66,7 +66,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.5,
+          "pct": 90.6,
           "weight": 2.7
         },
         {
@@ -86,16 +86,16 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 64.3,
+          "pct": 71.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 28.6,
+          "pct": 35.7,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 29.972691069275157,
+      "revGrowthYoYPct": 29.972691069275182,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -130,13 +130,13 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 29.972691069275157,
+          "pct": 29.972691069275182,
           "basis": "quarter",
           "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.32621056393705405,
+        "value": 0.32621056393705383,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-09-30"
@@ -149,8 +149,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NOAH",
-      "score": 63.9,
-      "scoreCycleLegacy": 63.9,
+      "score": 63.3,
+      "scoreCycleLegacy": 63.3,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -164,9 +164,9 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 433250848,
+      "marketCap": 378924608,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -175,8 +175,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 65.7,
-      "scoreShrunk": 63.9,
+      "scoreBase": 65,
+      "scoreShrunk": 63.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -216,7 +216,7 @@
         },
         {
           "key": "dilution",
-          "pct": 21.4,
+          "pct": 14.3,
           "weight": 0.9
         }
       ],
@@ -261,7 +261,7 @@
         }
       },
       "g31OverviewShadow": {
-        "value": 0.5760127667048216,
+        "value": 0.5760127667048214,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -298,7 +298,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 626528576,
+      "marketCap": 615696896,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -424,7 +424,7 @@
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 499446976,
+      "marketCap": 500764800,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -550,7 +550,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 612355968,
+      "marketCap": 615405952,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -676,7 +676,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 361116960,
+      "marketCap": 358396160,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -801,7 +801,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 532415136,
+      "marketCap": 521179776,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -932,7 +932,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 332767968,
+      "marketCap": 304493536,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1060,7 +1060,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 402234528,
+      "marketCap": 384909824,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1191,7 +1191,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 508893728,
+      "marketCap": 478021504,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
