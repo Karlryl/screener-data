@@ -177,6 +177,10 @@ function measure() {
   const X = require('../lib/exchange-quarter-check.js');
   const context = { stores: X.loadStores(path.join(root, 'external-data/exchange-quarters')),
     baseline: { date: null, rows: new Map(), warnings: [] } };
+  if (X.policy.printedQ3Check) { // K2: same printed store as defaultContext, or printedCheck warns and never fills
+    const printed = X.loadPrinted(path.join(root, 'external-data/exchange-quarters'));
+    assert.deepEqual(printed.warnings, []); context.printed = printed.store;
+  }
   const hand = require('../lib/yahoo-q4-known-cases.js'), prepare = hand.prepareSnapshot, prepared = new Map();
   hand.prepareSnapshot = raw => {
     if (!raw) return raw;

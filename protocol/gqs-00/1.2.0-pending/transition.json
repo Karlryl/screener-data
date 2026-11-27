@@ -601,7 +601,9 @@
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-    "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d",
+    "lib/exchange-quarter-check.js": "5c9fd4c5446b99b31869b220c1c35121537a773d9c96a558f1c90058af0ed425",
+    "scripts/cn-printed-parser.js": "d97c07398d051928a44667cb4125c67b60fd6e5227284e286b8326f9d143baba",
+    "scripts/cn-printed-shadow-report.js": "2f00001be9007157f3f8d07e18d8136aaa4efc035b2fce8ebf457602aadc5a9f",
     "lib/hk-interim.js": "b31451f59bc58bec190f599b9f5dcf270ad231af774ea5baf63867c2dbd0f039",
     "configs/hk-interim-filed.json": "f60f775e97000eb3be4274d2ec5d02864371745315641dca7c7ff3ed6fd405ea"
   },
@@ -719,5 +721,23 @@
     "evidence": "tests/hk-interim.test.js on real cells (Pop Mart, GenScript) covering every condition; each guard (switch, agreement limit, general-company rule, size check, hand-table rule, data-day rule, minimum row count of the fetch) was broken once by hand during the build on 12.11.2026 and the test went red. Before and after on the snapshots of 11.11.2026 in the PR body; blind Opus review 12.11.2026 (agent-reports/daylauf-2026-11-12/blindpruefung-sd-halbjahr-2026-11-12.md).",
     "review": "Build registration only. Opus blind review rounds 1 and 2; Codex review 12.11.2026 KEINE FREIGABE on 6d679a23fb (unit not proven, provenance empty, empty fetch green), all three addressed at the following head; Codex decides the draft. The builder does not merge. Codex round 2 on bc1b0fc38e: KEINE FREIGABE (the year and TTM checks prove only the difference of the two halves; tolerance on small bases); the tolerance is fixed at the following head, the level of a half year still needs an independent source. Codex round 3 on 4821bd5be5: FREIGABE MIT AUFLAGEN 94 % (text and coverage hand-over, done). Merged with origin/main 64be931d40 (#124, #125, #128, #115) afterwards; the merge step gets its own narrow Opus check.",
     "rollback": "Set ENABLED to false in lib/hk-interim.js, or revert the source change and this registration together."
+  },
+  "k2CnPrintedFill20261122": {
+    "date": "2026-11-22",
+    "authority": "K2 build (PR #140, formula DRAFT for the Codex blind review): Karl's decision G31 of 11.10.2026 (newest reported numbers per firm) and Regelblatt v4 G2 (fill a gap from a free source, same unit, currency and period). A change with visible board numbers: draft PR, no merge before the independent review by the other AI. No court verdict, Karl release or ratification is claimed.",
+    "scope": "lib/exchange-quarter-check.js fillCheck: a China 2025-09-30 fill that is blocked only by the missing July baseline row (no-baseline) now fills when policy.printedQ3Check (configs/exchange-quarter-policy.json) is true and printedCheck() finds, in the CNINFO Q3-2026 report of the shadow store external-data/exchange-quarters/cn-printed.json, a comparable Q3-2025 quarter whose rounding band contains the filled Eastmoney 9M - H1 value, with a notice before the snapshot day. The filled number stays the Eastmoney value; the print only proves the common basis. derivation 'printed-check', the evidence is kept as exchangeFill.printedCheck. Every other block of fillCheck is unchanged; printed-only, mixed-basis and unparsed reports keep no-baseline. printedCheck reads scripts/cn-printed-parser.js (compare) and scripts/cn-printed-shadow-report.js (printedEvidence), which therefore decide productive fills and are registered here as dependencies. The store is data and, like external-data/exchange-quarters/hk.json, not hash-registered; the policy switch is not registered either, like usFill. No file under src/scoring changes.",
+    "previousDependencySha256LF": {
+      "lib/exchange-quarter-check.js": "6bcd2d9dc06beb2671edb613575378188d5ea2cfb0a3586547e9676afe19bf9d"
+    },
+    "dependencySha256LF": {
+      "lib/exchange-quarter-check.js": "5c9fd4c5446b99b31869b220c1c35121537a773d9c96a558f1c90058af0ed425",
+      "scripts/cn-printed-parser.js": "d97c07398d051928a44667cb4125c67b60fd6e5227284e286b8326f9d143baba",
+      "scripts/cn-printed-shadow-report.js": "2f00001be9007157f3f8d07e18d8136aaa4efc035b2fce8ebf457602aadc5a9f"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "None: verify() rebuilds the 25 golden traces unchanged (golden snapshots carry no exchange fill).",
+    "evidence": "Before/after on the data day 21.11.2026 in docs/REPORT-K2-cn-printed-fill.md: 844 new fills of 2025-09-30, A-shares with Q3 2026 growth 1,164 -> 2,008; with printedQ3Check false all 2,490 A-share snapshots and all boards are byte-identical with the code before. Parser cn-q3-layout-v5: 698 of 698 earlier results identical, fresh gate pass 294 of 300. Tests: tests/exchange-quarter-check.test.js, tests/cn-printed-parser.test.js, tests/export-provenance.test.js.",
+    "review": "Build registration only; the Codex blind review decides the draft. The builder does not merge.",
+    "rollback": "Set printedQ3Check to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
   }
 }

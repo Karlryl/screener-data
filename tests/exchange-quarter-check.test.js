@@ -746,6 +746,123 @@ test('fill-only break-once: fills, all four withholding paths, default policy an
   assert.throws(() => offCheck(offBroken), assert.AssertionError); offCheck(X); breaks++;
 });
 
+// ── K2: printed-check fill without a July row (constructed from the 000002.SZ fixture) ───────────────────────
+// The Q3-2026 9M row is a copy of the Q3-2025 9M row (as in the no-baseline case above); the printed report carries
+// the anchored quarter and a growth whose inverted rounding band contains the Eastmoney Q3-2025 single quarter.
+function printedCase({ growthShift = 0, parseStatus = 'parsed', notice = '2026-10-28', totalShift = 0, company = true, priorLayout = null } = {}) {
+  const st = clone(F.store), y = st.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
+  y['2026-09-30'] = [{ ...q3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
+  q3.confirmedBy = [q3.confirmedBy[0], { ...q3.confirmedBy[0], src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }];
+  if (totalShift) { q3.total += totalShift; y['2025-12-31'].at(-1).total += totalShift; }
+  st.cn.sources.x = { fetchedAt: '2026-10-29T00:00:00.000Z', periods: Object.keys(y), absent: {} };
+  const nb = clone(F.baseline); delete nb.rows['000002.SZ'];
+  const current = y['2026-09-30'][0].operate - y['2026-06-30'].at(-1).operate, prior = q3.operate - y['2025-06-30'].at(-1).operate;
+  const cell = value => ({ printed: value.toFixed(2), value: Number(value.toFixed(2)), decimals: 2, roundingHalfWidth: 0.005 });
+  const g = Number(((current / prior - 1) * 100).toFixed(2)) + growthShift;
+  const obs = { periodEnd: '2026-09-30', announcementId: '1225600001', url: 'https://static.cninfo.com.cn/finalpage/2026-10-28/1225600001.PDF',
+    noticeDate: notice, parseStatus, reason: parseStatus === 'parsed' ? null : 'growth-row-unbound', parserVersion: 'cn-q3-layout-v5',
+    ...(parseStatus === 'parsed' ? { layout: 'table-row', unit: 1, current: cell(current), ytd: cell(y['2026-09-30'][0].operate),
+      growth: { printed: g.toFixed(2) + '%', value: g, decimals: 2, roundingHalfWidth: 0.005 }, priorValues: null } : {}),
+    confirmedBy: [{ src: 'p', fetchedAt: '2026-11-22T00:00:00.000Z' }] };
+  if (priorLayout) Object.assign(obs, { layout: priorLayout, priorValues: { after: cell(prior) } }); // report prints the prior quarter
+  const printed = { schemaVersion: 1, market: 'CN-PRINTED', currency: 'CNY', shadow: true,
+    sources: { p: { year: 2026, fetchedAt: '2026-11-22T00:00:00.000Z', mode: 'live', read: ['000002.SZ'], errors: [] } },
+    companies: company ? { '000002.SZ': { reports: { [obs.announcementId]: [obs] } } } : {} };
+  const s = base(); s.meta.fetchedAt = '2026-10-29T09:00:00.000Z';
+  return { s, ctx: { ...ctxOf(st, nb), printed }, prior, st, obs, g };
+}
+test('K2 printed-check: the reason names what the report prints, per method (review 22.11.)', () => {
+  const head = 'Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (';
+  const c = printedCase(), r = res(c.s, c.ctx), pct = '+' + c.g.toFixed(2).replace('.', ',') + ' %';
+  assert.ok(c.g > 0 && r.fill.reason.startsWith(head), r.fill.reason);
+  assert.equal(r.fill.printedCheck.growth, c.obs.growth.printed);
+  assert.ok(r.fill.reason.endsWith(` Der Wert passt zu der Veränderung gegenüber dem Vorjahresquartal (${pct}), die die Firma im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) selbst angibt.`), r.fill.reason);
+  assert.doesNotMatch(r.fill.reason, /gedruckte|abgegrenzt/);
+  c.obs.growth.printed = '-1,234.50%'; // text only: the band uses growth.value
+  assert.match(res(c.s, c.ctx).fill.reason, /Vorjahresquartal \(-1\.234,50 %\)/);
+  c.obs.growth.printed = '0.0'; assert.match(res(c.s, c.ctx).fill.reason, /Vorjahresquartal \(0,0 %\)/);
+  for (const [layout, method] of [['single-prior', 'printed-prior'], ['table-row-restated-prior', 'printed-adjusted-prior']]) {
+    const p = printedCase({ priorLayout: layout }), rp = res(p.s, p.ctx);
+    assert.equal(rp.category, 'would-fill', layout); assert.equal(rp.fill.printedCheck.method, method);
+    assert.equal(rp.fill.printedCheck.growth, undefined); assert.equal(rp.fill.nativeValue, p.prior);
+    assert.ok(rp.fill.reason.endsWith(' Der Wert entspricht dem im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) gedruckten Vorjahresquartal.'), rp.fill.reason);
+  }
+});
+test('K2 printed-check: asOf, not fetchedAt, is the snapshot day of the notice check', () => {
+  const status = (asOf, fetchedAt) => { const c = printedCase(); c.s.meta.asOf = asOf; c.s.meta.fetchedAt = fetchedAt;
+    return X.printedCheck(c.s, c.ctx, '2026-09-30', c.prior).status; };
+  assert.equal(status('2026-10-28T09:00:00.000Z', '2026-10-29T09:00:00.000Z'), 'notice-not-before-snapshot');
+  assert.equal(status('2026-10-29T09:00:00.000Z', '2026-10-28T09:00:00.000Z'), 'agree');
+});
+test('K2 printed-check: a context without the printed store warns once per process when the switch is on', () => {
+  const fresh = () => moduleCopy('lib/exchange-quarter-check.js', s => s);
+  const warnings = lib => { const c = printedCase(), seen = [], warn = console.warn; delete c.ctx.printed; console.warn = m => seen.push(String(m));
+    try { for (let i = 0; i < 3; i++) assert.equal(lib.printedCheck(c.s, c.ctx, '2026-09-30', c.prior).status, 'printed-store-missing'); } finally { console.warn = warn; }
+    return seen; };
+  const seen = warnings(fresh());
+  assert.equal(seen.length, 1); assert.match(seen[0], /printedQ3Check is on but the context has no cn-printed store/);
+  const off = moduleCopy('lib/exchange-quarter-check.js', s => s, { '../configs/exchange-quarter-policy.json': { ...X.policy, printedQ3Check: false } });
+  assert.deepEqual(warnings(off), [], 'switch off: no warning');
+  const c = printedCase(), seen2 = [], warn = console.warn; console.warn = m => seen2.push(m);
+  try { fresh().printedCheck(c.s, c.ctx, '2026-09-30', c.prior); } finally { console.warn = warn; }
+  assert.deepEqual(seen2, [], 'store present: no warning');
+});
+test('K2 printed-check: an agreeing printed prior quarter fills the Eastmoney value, with CNINFO reason', () => {
+  const c = printedCase(), r = res(c.s, c.ctx);
+  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.derivation, 'printed-check');
+  assert.equal(r.fill.nativeValue, c.prior, 'the filled number is Eastmoney 9M - H1, never the printed value');
+  assert.equal(r.fill.otherwiseFillable, undefined);
+  assert.equal(r.fill.printedCheck.agree, true); assert.equal(r.fill.printedCheck.method, 'inverted-printed-growth');
+  assert.ok(r.fill.printedCheck.lower <= c.prior && c.prior <= r.fill.printedCheck.upper);
+  assert.match(r.fill.reason, /CNINFO-Bericht zum 3\. Quartal 2026 \(veröffentlicht 28\.10\.2026\)/);
+  const out = run(clone(c.s), 'fill-only', c.ctx).snapshot, k = out.timeseries.revenueQEnds.indexOf('2025-09-30');
+  assert.equal(out.timeseries.revenueQ[k].exchangeFill.derivation, 'printed-check');
+  assert.equal(out.timeseries.revenueQ[k].exchangeFill.printedCheck.announcementId, '1225600001');
+  assert.equal(out.timeseries.revenueQ[k].value, c.prior * c.s.meta.fxRateApplied);
+  assert.equal(serial(X.stripOwn(out)), serial(c.s), 'the marker is removable like every own fill');
+});
+test('K2 printed-check: disagreeing, unparsed, missing, late or other-line reports keep no-baseline', () => {
+  const kept = (c, status) => {
+    const r = res(c.s, c.ctx);
+    assert.equal(r.category, 'agree'); assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true);
+    assert.equal(r.fill.printedCheck?.status ?? 'none', status);
+    assert.equal(serial(run(clone(c.s), 'fill-only', c.ctx).snapshot), serial(c.s), status + ': no cell changes');
+  };
+  kept(printedCase({ growthShift: 0.02 }), 'mixed-basis');
+  kept(printedCase({ parseStatus: 'unparsed' }), 'unparsed');
+  kept(printedCase({ company: false }), 'unparsed');
+  kept(printedCase({ notice: '2026-10-29' }), 'notice-not-before-snapshot');
+  kept(printedCase({ totalShift: 1e7 }), 'fill-value-outside-printed-band');
+  const noStore = printedCase(); delete noStore.ctx.printed; kept(noStore, 'printed-store-missing');
+  const c = printedCase(), y = c.ctx.stores.cn.companies['000002.SZ'].ytd;
+  y['2026-06-30'].at(-1).operate += 1; // today's Eastmoney anchor no longer the anchor the report was parsed against
+  assert.equal(X.printedCheck(c.s, c.ctx, '2026-09-30', c.prior).status, 'unparsed');
+});
+test('K2 printed-check: printed-only never fills, and a broken agreement check turns red (break once)', () => {
+  const c = printedCase(), cn = clone(c.ctx.stores.cn);
+  cn.companies['000002.SZ'].ytd['2025-06-30'].at(-1).reportType = 'other'; // no Eastmoney prior-year anchor
+  const only = lib => assert.equal(lib.printedCheck(c.s, { ...c.ctx, stores: { ...c.ctx.stores, cn } }, '2026-09-30', c.prior).agree, false);
+  only(X);
+  assert.equal(X.printedCheck(c.s, { ...c.ctx, stores: { ...c.ctx.stores, cn } }, '2026-09-30', c.prior).status, 'printed-only');
+  assert.throws(() => only(mutant("  if (comparison.status !== 'agree') return out;", "  if (comparison.status === 'unparsed') return out;")), assert.AssertionError);
+  breaks++;
+  const band = lib => assert.equal(lib.applyExchangeCheck(printedCase({ totalShift: 1e7 }).s, { mode: 'shadow', context: printedCase({ totalShift: 1e7 }).ctx }).result.fill.blocked, 'no-baseline');
+  band(X);
+  assert.throws(() => band(mutant("  if (Parser.compare(obs, { current: value }).status !== 'agree') return { ...out, status: 'fill-value-outside-printed-band' };", '')), assert.AssertionError);
+  breaks++;
+});
+test('K2 printed-check: switch off restores the previous no-baseline result exactly', () => {
+  const c = printedCase();
+  const off = moduleCopy('lib/exchange-quarter-check.js', s => s, { '../configs/exchange-quarter-policy.json': { ...X.policy, printedQ3Check: false } });
+  const r = off.applyExchangeCheck(clone(c.s), { mode: 'shadow', context: c.ctx }).result;
+  assert.deepEqual(Object.keys(r.fill), ['period', 'index', 'blocked', 'nativeValue', 'otherwiseFillable']);
+  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.category, 'agree');
+  assert.equal(serial(off.applyExchangeCheck(clone(c.s), { mode: 'fill-only', context: c.ctx }).snapshot), serial(c.s));
+  assert.equal(X.policy.printedQ3Check, true, 'committed switch');
+  for (const bad of ['yes', 1, null]) assert.throws(() => X.validatePolicy({ ...X.policy, printedQ3Check: bad }), /Invalid exchange-quarter policy/);
+  assert.equal(X.validatePolicy({ ...X.policy, printedQ3Check: undefined }).mode, 'fill-only');
+});
+
 test('live files unchanged by this test run', () => {
   assert.deepEqual(LIVE.map(sha), liveBefore);
 });

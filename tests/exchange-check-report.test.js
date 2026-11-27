@@ -39,6 +39,9 @@ write(path.join(v1, 'full', 'real-estate.json'), { profitable: ranked([...board,
 write(path.join(v1, 'excluded.json'), { rows: [{ ticker: '6949.TW' }] });
 write(path.join(v1, 'rule40', 'overview.json'), { rows: [] });
 write(path.join(store, 'cn.json'), F.store.cn); write(path.join(store, 'tw.json'), F.store.tw);
+// K2: with printedQ3Check on, the reports load the printed store like defaultContext (an empty valid one here).
+const emptyPrinted = { schemaVersion: 1, market: 'CN-PRINTED', currency: 'CNY', shadow: true, sources: {}, companies: {} };
+write(path.join(store, 'cn-printed.json'), emptyPrinted);
 write(path.join(bh, F.baseline.date, 'real-estate.json'), { generated_at: '2026-07-29T09:38:18.526Z', cohort: { profitable: Object.entries(F.baseline.rows).map(([ticker, pit]) => ({ ticker, pit })), unprofitable: [] } });
 const before = tree(root);
 const out = path.join(root, 'report', 'exchange-check-shadow.json');
@@ -99,7 +102,8 @@ test('missing store: rows unchecked plus a warning, exit 0', () => {
     '--outputs', outputs, '--store', empty, '--board-history', bh], { encoding: 'utf8', timeout: 120000 });
   assert.equal(r2.status, 0, r2.stderr);
   const j = JSON.parse(fs.readFileSync(o2, 'utf8'));
-  assert.equal(j.warnings.length, 2);
+  assert.equal(j.warnings.length, 3); // cn, tw and (switch on) the printed store
+  assert.ok(j.warnings.some(w => /cn-printed.json unreadable/.test(w)), JSON.stringify(j.warnings));
   assert.ok(Object.keys(j.counts.board).every(k => k === 'unchecked(store-missing)'));
 });
 
@@ -136,6 +140,7 @@ test('no-own-read report: distinct counts, German text and codes; only the old o
   }
   write(path.join(mixedSnaps, '_manifest.json'), { pulled_at: '2026-10-20T09:00:00.000Z' });
   for (const k of ['cn', 'tw']) write(path.join(mixedStore, k + '.json'), st[k]);
+  write(path.join(mixedStore, 'cn-printed.json'), emptyPrinted);
   write(path.join(mixedOutputs, 'findash-export', 'v1', 'real-estate.json'),
     { generated_at: '2026-10-20T09:00:00.000Z', profitable: ranked(ts), unprofitable: [] });
   const args = ['--snapshots', mixedSnaps, '--outputs', mixedOutputs, '--store', mixedStore, '--board-history', bh];

@@ -1,0 +1,137 @@
+[
+ {
+  "ticker": "001283.SZ",
+  "case": "growth below the quarter line, SZ percent cells",
+  "url": "https://static.cninfo.com.cn/finalpage/2026-10-22/1225613475.PDF",
+  "noticeDate": "2026-10-22",
+  "anchor": {
+   "current": 2069643151.6599994,
+   "ytd": 5253639627.73,
+   "line": "operate"
+  },
+  "priorAnchor": {
+   "current": 1628624315.8900003
+  },
+  "layoutReason": "growth-row-unbound",
+  "slot": {
+   "raw": "27.08%",
+   "row": 38,
+   "x": 31,
+   "end": 37
+  },
+  "expected": {
+   "layout": "table-row",
+   "growth": 27.08,
+   "unit": 1,
+   "prior": null
+  }
+ },
+ {
+  "ticker": "002093.SZ",
+  "case": "profit growth inline in the layout text (the dropped v4 rule bound it)",
+  "url": "https://static.cninfo.com.cn/finalpage/2026-10-29/1225633020.PDF",
+  "noticeDate": "2026-10-29",
+  "anchor": {
+   "current": 131041972.93,
+   "ytd": 377085313.38,
+   "line": "operate"
+  },
+  "priorAnchor": {
+   "current": 131793801.38999999
+  },
+  "layoutReason": "growth-row-unbound",
+  "slot": {
+   "raw": "-0.57%",
+   "row": 39,
+   "x": 28,
+   "end": 34
+  },
+  "expected": {
+   "layout": "table-row",
+   "growth": -0.57,
+   "unit": 1,
+   "prior": null
+  }
+ },
+ {
+  "ticker": "600640.SS",
+  "case": "SS growth without percent sign, standalone (%) header",
+  "url": "https://static.cninfo.com.cn/finalpage/2026-10-24/1225621087.PDF",
+  "noticeDate": "2026-10-24",
+  "anchor": {
+   "current": 388942706.3799999,
+   "ytd": 1266589369.37,
+   "line": "operate"
+  },
+  "priorAnchor": {
+   "current": 417242685.7700001
+  },
+  "layoutReason": "growth-row-unbound",
+  "slot": {
+   "raw": "-6.78",
+   "row": 40,
+   "x": 32,
+   "end": 37
+  },
+  "expected": {
+   "layout": "table-row",
+   "growth": -6.78,
+   "unit": 1,
+   "prior": null
+  }
+ },
+ {
+  "ticker": "600694.SS",
+  "case": "restated table in 10,000 CNY",
+  "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225646958.PDF",
+  "noticeDate": "2026-10-31",
+  "anchor": {
+   "current": 1403761835.77,
+   "ytd": 4843499662.7,
+   "line": "operate"
+  },
+  "priorAnchor": {
+   "current": 1415429120.85
+  },
+  "layoutReason": "growth-row-unbound",
+  "slot": {
+   "raw": "-0.82",
+   "row": 42,
+   "x": 47,
+   "end": 52
+  },
+  "expected": {
+   "layout": "table-restated",
+   "growth": -0.82,
+   "unit": 10000,
+   "prior": 1415429100
+  }
+ },
+ {
+  "ticker": "600718.SS",
+  "case": "restated table in CNY",
+  "url": "https://static.cninfo.com.cn/finalpage/2026-10-30/1225645157.PDF",
+  "noticeDate": "2026-10-30",
+  "anchor": {
+   "current": 2633060612,
+   "ytd": 7028722623,
+   "line": "operate"
+  },
+  "priorAnchor": {
+   "current": 2802032034
+  },
+  "layoutReason": "growth-row-unbound",
+  "slot": {
+   "raw": "-6.03",
+   "row": 41,
+   "x": 51,
+   "end": 56
+  },
+  "expected": {
+   "layout": "table-restated",
+   "growth": -6.03,
+   "unit": 1,
+   "prior": 2802032034
+  }
+ }
+]

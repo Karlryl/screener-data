@@ -80,6 +80,24 @@ only counted; without a baseline row nothing is withheld on this ground. (Review
 02.10.2026 the broader rule held 8 on-time cells, at least 4 of them correct; 003816.SZ and 601038.SS with a vendor
 value of 0 are real wrong values and go on the false-hold list for G2c and the hand table.)
 
+### Printed check without a July row (K2, switch `printedQ3Check`)
+
+`printedQ3Check: true` in `configs/exchange-quarter-policy.json` opens exactly one block: a China 2025-09-30 fill
+that every guard above lets through and that stops only at `no-baseline` (`otherwiseFillable`). It then fills when
+the CNINFO Q3-2026 report in the shadow store `external-data/exchange-quarters/cn-printed.json` (written only by
+`scripts/fetch-cn-printed.js`, parsed by `scripts/cn-printed-parser.js`) prints a comparable Q3-2025 quarter that
+contains the value being filled: the latest observation, still anchored to today's Eastmoney 9M and H1, must be
+`agree` with Eastmoney's prior 9M − H1 in `scripts/cn-printed-shadow-report.js` (`printedEvidence`: adjusted column
+when restated, otherwise the rounding interval inverted from the printed growth), the filled value itself (the
+chosen line, `TOTAL_OPERATE_INCOME` on a tie) must lie in that band, and the notice day must be before the snapshot
+day. The filled number is the Eastmoney value, never the printed one; derivation `printed-check`, the cell's
+`exchangeFill.printedCheck` names the report (announcement, URL, notice day, band), and the reason adds the CNINFO
+report and its notice day. `printed-only`, `mixed-basis`, unparsed, missing or late reports keep `no-baseline` and
+record `fill.printedCheck.status`. Only `lib/exchange-quarter-check.js` reads the shadow store
+(`tests/cn-printed-shadow-guard.test.js`), and only when the switch is on (`defaultContext().printed`;
+`loadStores` still returns cn and tw only). `false` restores the previous result and snapshot exactly. Measurement
+and gate: `docs/REPORT-K2-cn-printed-fill.md`.
+
 Store age is measured per company: the newest run that read one of the company's own keys again (China: a
 listed period the company has and is not absent for; Taiwan: an entry in the run's `read` list) must be within
 the limit of the snapshot's fetch time. A newer run that did not read the company (partial Taiwan pass) does not
@@ -100,6 +118,7 @@ Both reasons carry `whyText`; `no-own-read` also carries the sorted unique `noDa
 - other pair: "Vorjahresquartal ausgeblendet: Der Wert des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Er zählt nicht zur Beschleunigung des Umsatzwachstums."
 - growth withheld: "Umsatzwachstum ausgeblendet: Vorjahresquartal und Jahreswerte des Datenanbieters weichen von der Börsenmeldung ab oder sind nicht prüfbar (vermutlich berichtigte Vorjahreszahlen)."
 - fill: "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025)."
+- printed-check fill (K2): the fill text plus "Dass der Wert gleich abgegrenzt ist wie das aktuelle Quartal, belegt das im CNINFO-Bericht zum 3. Quartal 2026 (veröffentlicht 28.10.2026) gedruckte Vorjahresquartal."
 
 Board history (active mode only): `pit.revenueQExchange: { filled, withheld }` with the original vendor values.
 

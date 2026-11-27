@@ -19,7 +19,7 @@ const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const dateValid = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
 const emptyStore = () => ({ schemaVersion: 1, market: 'CN-PRINTED', currency: 'CNY', shadow: true,
-  about: 'Nur Schatten. Q3-Berichte von CNINFO;营业收入 gegen OPERATE_INCOME. Keine Quelle fuer Scoring oder Boards.', sources: {}, companies: {} });
+  about: 'Q3-Berichte von CNINFO;营业收入 gegen OPERATE_INCOME. Nur Beleg fuer die printed-check-Fuellung des Vorjahresquartals 2025-09-30 (lib/exchange-quarter-check.js, Schalter printedQ3Check): der gefuellte Wert bleibt der Eastmoney-Wert. Keine eigene Zahlenquelle fuer Scoring oder Boards.', sources: {}, companies: {} });
 
 function loadPrinted(file) {
   if (!fs.existsSync(file)) return emptyStore();
@@ -95,16 +95,22 @@ async function findAnnouncement(client, ticker, year, asOf) {
   return all[0];
 }
 
-function pdfToText(pdf, txt, binary = PDFTOTEXT) {
-  execFileSync(binary, ['-layout', '-f', '1', '-l', '4', pdf, txt], { windowsHide: true, timeout: 60000, stdio: 'pipe' });
+// layout: the stored v1 extraction. table: pdftotext -table keeps each table row on one line;
+// the parser uses it only where the layout text cannot place the growth cell.
+const EXTRACTIONS = { layout: { flag: '-layout', suffix: '.txt', name: 'pdftotext-layout-pages-1-4-v1' },
+  table: { flag: '-table', suffix: '.table.txt', name: 'pdftotext-table-pages-1-4-v1' } };
+
+function pdfToText(pdf, txt, mode = 'layout', binary = PDFTOTEXT) {
+  execFileSync(binary, [EXTRACTIONS[mode].flag, '-f', '1', '-l', '4', pdf, txt], { windowsHide: true, timeout: 60000, stdio: 'pipe' });
   return fs.readFileSync(txt, 'utf8');
 }
 
-async function cachedText(client, meta, cacheDir, convert = pdfToText) {
+async function cachedText(client, meta, cacheDir, convert = pdfToText, mode = 'layout') {
+  if (!EXTRACTIONS[mode]) throw new Error('extraction-mode-invalid');
   if (!/^\d+$/.test(meta.announcementId) || !new RegExp('^https://static\\.cninfo\\.com\\.cn/finalpage/\\d{4}-\\d{2}-\\d{2}/' + meta.announcementId + '\\.pdf$', 'i').test(meta.url)) throw new Error('pdf-metadata-invalid');
   fs.mkdirSync(cacheDir, { recursive: true });
   const pdf = path.join(cacheDir, meta.announcementId + '.pdf');
-  const txt = path.join(cacheDir, meta.announcementId + '.txt');
+  const txt = path.join(cacheDir, meta.announcementId + EXTRACTIONS[mode].suffix);
   let bytes = fs.existsSync(pdf) ? fs.readFileSync(pdf) : null;
   if (!bytes) {
     bytes = await client.request(meta.url);
@@ -115,7 +121,7 @@ async function cachedText(client, meta, cacheDir, convert = pdfToText) {
   const pdfSha256 = hash(bytes), marker = txt + '.success.json';
   // An old .txt alone is not evidence of a completed extraction. Bind successful
   // output to both inputs and the extraction options, including after a crash.
-  const extraction = 'pdftotext-layout-pages-1-4-v1';
+  const extraction = EXTRACTIONS[mode].name;
   if (fs.existsSync(txt) && fs.existsSync(marker)) {
     try {
       const done = readJson(marker), text = fs.readFileSync(txt, 'utf8');
@@ -128,7 +134,7 @@ async function cachedText(client, meta, cacheDir, convert = pdfToText) {
   try {
     // execFileSync throws on a nonzero exit or timeout. Injected extractors may
     // additionally return an explicit process status; never trust returned text.
-    const result = await convert(pdf, temp);
+    const result = await convert(pdf, temp, mode);
     if (result && typeof result === 'object' && result.status !== 0) throw new Error('extractor-exit');
     const text = fs.readFileSync(temp, 'utf8');
     if (!text.trim()) throw new Error('extracted-text-empty');
@@ -216,9 +222,18 @@ async function main(options = {}) {
         parsed = P.parseText(text, anchor, { ticker, year });
       } else {
         meta = await findAnnouncement(client, ticker, year, asOf);
-        const fetched = await cachedText(client, meta, options.cacheDir || path.join(ROOT, 'outputs/cn-printed-cache'), options.convert);
+        const cacheDir = options.cacheDir || path.join(ROOT, 'outputs/cn-printed-cache');
+        const fetched = await cachedText(client, meta, cacheDir, options.convert);
         evidence = { pdfSha256: fetched.pdfSha256, textSha256: fetched.textSha256 };
-        parsed = P.parseText(fetched.text, anchor, { ticker, year });
+        // A failed table extraction only removes the fallback; it is recorded, never silent.
+        let tableText;
+        try {
+          const table = await cachedText(client, meta, cacheDir, options.convert, 'table');
+          tableText = table.text; evidence.tableTextSha256 = table.textSha256;
+        } catch (e) {
+          evidence.tableTextError = /^[a-z][a-z0-9-]+$/.test(e.message) ? e.message : 'table-extraction-failed';
+        }
+        parsed = P.parseText(fetched.text, anchor, { ticker, year, tableText });
       }
     } catch (e) {
       // Never put paths, response bodies, or credentials into a public store/log.
