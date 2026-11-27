@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-26T12:31:13.875Z",
+  "generated_at": "2026-11-27T12:30:11.450Z",
   "branch": "consumer-staples",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 69.1,
-    "generated_at": "2026-11-26T12:08:37.540Z",
-    "honest_coverage_pct": 90.9,
-    "n_addressable": 17194,
-    "n_ok": 15629,
-    "n_total": 22610,
-    "n_failed": 1155,
+    "coverage_pct": 70.3,
+    "generated_at": "2026-11-27T12:10:37.275Z",
+    "honest_coverage_pct": 91.5,
+    "n_addressable": 17340,
+    "n_ok": 15861,
+    "n_total": 22574,
+    "n_failed": 1129,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -40,7 +40,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 644830336,
+      "marketCap": 639990656,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -175,7 +175,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 382511296,
+      "marketCap": 376521216,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -305,7 +305,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 544215488,
+      "marketCap": 546328128,
       "phase": null,
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -417,6 +417,133 @@
       "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "SNDL",
+      "score": 43.8,
+      "scoreCycleLegacy": 43.8,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.098,
+        "companion": -1.4
+      },
+      "name": "SNDL Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 319327584,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 16,
+      "cohortFallback": false,
+      "scoreBase": 43,
+      "scoreShrunk": 43.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 80.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.3,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 41.7,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 28.6,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 33.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 21.4,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": -2.5489417285305294,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": null,
+      "revGrowthBasisLegacy": null,
+      "revGrowthPeriodEndLegacy": null,
+      "revGrowthPriorPeriodEndLegacy": null,
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": null,
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -2.5489417285305294,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.09802577247300426,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "newerPeriod": null
+    },
+    {
+      "rank": 5,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "VITL",
       "score": 39.2,
       "scoreCycleLegacy": 39.2,
@@ -435,7 +562,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 363238624,
+      "marketCap": 359374368,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -541,7 +668,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 5,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MAGN",
@@ -563,7 +690,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 482543008,
+      "marketCap": 492581024,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -670,7 +797,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 6,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "DNUT",
@@ -693,7 +820,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 545657472,
+      "marketCap": 546524992,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -799,7 +926,7 @@
       "newerPeriod": null
     },
     {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HNST",
@@ -820,7 +947,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 482372640,
+      "marketCap": 487608672,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -882,7 +1009,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 4.4,
-        "pctl": 0.833
+        "pctl": 0.857
       },
       "ath": null,
       "qPunkte": 5,
