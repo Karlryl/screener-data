@@ -783,8 +783,9 @@ Deckel sitzt, statt ihn zu verschweigen.
 | `fcfMarginSource` | `'sec-ttm'` \| `'yahoo-fts-ttm'` | Quelle von `fcfMarginPct`; `--check` meldet jede andere Quelle |
 | `fcfMarginPeriodEnd` | ISO | letzter Tag der zwoelf Monate von `fcfMarginPct` (G31) |
 | `fcfMarginPctOld` | number \| null, VERGLEICH bis 16.12.2026 | die ersetzte Yahoo-financialData-Marge desselben Snapshots; nur Anzeige, nie fuer `r40` oder Rang |
-| `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
+| `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht oder mit `ebitdaMarginReason` |
 | `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
+| `ebitdaMarginReason` | string, OPTIONAL (additiv, 22.11.2026, S11 Stufe 4) | Deutscher Grund, warum `ebitdaMarginPct` und `r40Ebitda` null sind: Yahoos EBITDA-Marge liegt mehr als 2 Punkte unter der operativen Marge derselben vier Quartale (gleiche Quartalsenden in `opIncQ` und `revenueQ`, Yahoos Zwoelf-Monats-Umsatz hoechstens 3 % daneben). EBITDA ist operatives Ergebnis plus Abschreibungen und kann nicht darunter liegen (Dorian LPG 67,5 statt mindestens 72,3 %). Fehlt die Marge schon wegen Bruchteil-Verdacht, gibt es keinen Grund. `--check` verlangt Text und beide Zahlen null und hoechstens 5 % der Zeilen (aufgerundet) mit diesem Grund (gemessen 10 von 484 am 21.11.2026). `r40` und Rang aendern sich nicht |
 | `industry` | string \| null | `meta.industry` (im uebrigen Export nicht enthalten) |
 | `r40Group` | `'software'` \| `'other'` | Software/SaaS/Internet nach `industry` |
 | `onBoard` | boolean | steht der Name auch auf einem Vollboard? |
@@ -1633,6 +1634,23 @@ value that would have been shown adds its own German sentence to `aus`, naming t
 `unbekannt` or `verlust`, `dySt` `unbekannt`. `ath` rests on the project's own daily closes and stays while its newest close is at
 most 7 weekdays old; otherwise it is absent with its own sentence naming that close. The validator rejects `pe`, `fpe`, `dy`
 or `d52` beside a stale-price reason in `aus`. No score or rank reads these fields. Guard: `tests/stale-price-filter-and-sibling.test.js`.
+
+**Frozen OTC close (S11 Stufe 4, 22.11.2026):** an OTC line (`meta.exchangeName` names OTC) whose newest 20 daily closes in the price
+store (`prices/history`) are identical and equal the snapshot's quote price has no current market price, although Yahoo stamps the
+quote as current (TOKSF: last OTC trade 05.05.2026, quote time 19.11.2026, market cap 14.7 % too low). Whichever of `mc`, `ps`, `evs`,
+`pe`, `fpe`, `dy` and `d52` the row would show are then absent, with or without a market cap, and `aus` gets one German sentence that
+names exactly the withheld fields and the first day of the frozen run as a lower bound ("mindestens seit") and ends with
+`FROZEN_CLOSE_RETURN` (`lib/frozen-close.js`); a row that shows none of them gets no sentence. Where `pe` was withheld `peSt` reads
+`unbekannt`, where `dy` was withheld `dySt` reads `unbekannt`; a status without a withheld value stays as it was (for example `verlust`
+or `keine`). The validator rejects a named field beside the sentence; `scripts/feed-fill-guard.js` counts the named fields under its
+own `eingefrorenMax` cap. A price store whose `_meta.json` exists but which lacks a shard the writer needs stops the writer (partial
+store). Display-only: snapshots, board market caps and scores are unchanged (on 21.11.2026 none of the 495 rows was on a board).
+
+**China growth against the exchange (S11 Stufe 4, 22.11.2026):** for a China A-share the shown growth `g` is compared with the
+exchange store's revenues of the same two periods (`lib/shown-growth-check.js`, checkability from `lib/exchange-quarter-check.js` `evaluate`, both lines of a general company,
+the operate line of a broker; banks, insurers and hand-table rows unchecked). Outside 2 percentage points and outside 5 % of every
+line, `g` and `r40` (which adds it) are absent and `aus` gets one German sentence naming the two periods (601688.SS: Yahoo's 4.38 %
+for 2025 against 2024, the exchange gives 6.83 %). Display-only; the board value `revGrowthYoYPct` is unchanged.
 
 **Dividend evidence:** positive stored yield proves `zahlt` when its status is
 absent or explicitly `zahlt`; an explicit `unbekannt` is preserved. Missing old

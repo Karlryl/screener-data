@@ -15,7 +15,9 @@
  * gives each emptied value a reason this guard knows (explained() below).
  * Explained (Daylauf 16, 12.11.2026): stale Yahoo quotes remove withheld values from their field's denominator under
  * the erklaertMax cap. Since 22.11.2026, fcf-alt does the same for Rule of 40 with growth and empty FCF under its own
- * fcfAltMax cap, both caps measured against all rows so a mass loss stays red.
+ * fcfAltMax cap, both caps measured against all rows so a mass loss stays red. Since 22.11.2026 (S11 Stufe 4), a value the
+ * writer withholds on a frozen OTC close (lib/frozen-close.js) leaves exactly the fields its reason names under the
+ * eingefrorenMax cap.
  * Red spot (Rotstelle): an intended loss found after the fact gets an entry under "rotstellen" in the floors file
  * (temporary floor, owner, reason, seit, bis at most 14 days later). Until bis the temporary floor applies and the run
  * names the red spot as a warning; from the day after bis the entry itself is an error until it is removed. seit and bis
@@ -27,6 +29,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { STALE_PRICE_RETURN } = require('../lib/market-cap-guard.js');
 const { SEKTOR_AUSSCHLUSS } = require('./write-rule40-export.js');
+const { frozenFields } = require('../lib/frozen-close.js');
 
 const DEFAULT_FLOORS = path.join(__dirname, '..', 'configs', 'feed-fill-floors.json');
 const DEFAULT_MAX_AGE_HOURS = 24;
@@ -48,6 +51,8 @@ const STALE_FIELDS = new Set(['mc', 'ps', 'evs', 'r40']);
 // ponytail: only the exact stale-quote hints and the writer's fcf-alt code count; both have writer tests.
 function explanation(row, field) {
   const aus = Array.isArray(row.aus) ? row.aus.filter(a => typeof a === 'string') : [];
+  // A frozen-close reason names the fields it emptied, so a field the row never had is not counted (unlike ps/evs below).
+  if (aus.some(a => frozenFields(a).includes(field))) return 'frozen';
   if (HIDDEN_LABEL[field]) return aus.some(a => a.startsWith(HIDDEN_LABEL[field] + ' wird nicht gezeigt, ')) ? 'quote' : null;
   const staleQuote = STALE_FIELDS.has(field) && aus.some(a => a.endsWith(STALE_PRICE_RETURN));
   if (field === 'r40') {
@@ -64,14 +69,14 @@ function explained(row, field) { return explanation(row, field) !== null; }
 /**
  * @param {object} feed Parsed filter/universum.json.
  * @param {Object<string, number>} floors Lowest allowed share of filled rows per field, in percent.
- * @param {{now?: number, maxAgeHours?: number, rotstellen?: object, explainedMax?: number, fcfAltMax?: number}} [options]
- *   Clock, age limit, red spots, and separate quote and stale-FCF caps; both default to 0, fail-closed.
- * @returns {{shares: Object<string, number>, explainedShares: Object<string, number>, fcfAltShares: Object<string, number>, problems: string[], notices: string[], floors: Object<string, number>}}
- *   Fill share among showable rows, quote and stale-FCF shares of all rows, findings, notices and applied floors.
+ * @param {{now?: number, maxAgeHours?: number, rotstellen?: object, explainedMax?: number, fcfAltMax?: number, frozenMax?: number}} [options]
+ *   Clock, age limit, red spots, and separate quote, stale-FCF and frozen-close caps; all default to 0, fail-closed.
+ * @returns {{shares: Object<string, number>, explainedShares: Object<string, number>, fcfAltShares: Object<string, number>, frozenShares: Object<string, number>, problems: string[], notices: string[], floors: Object<string, number>}}
+ *   Fill share among showable rows, quote, stale-FCF and frozen-close shares of all rows, findings, notices and applied floors.
  */
-function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_AGE_HOURS, rotstellen = {}, explainedMax = 0, fcfAltMax = 0 } = {}) {
+function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_AGE_HOURS, rotstellen = {}, explainedMax = 0, fcfAltMax = 0, frozenMax = 0 } = {}) {
   const rows = feed?.rows;
-  if (!Array.isArray(rows) || !rows.length) return { shares: {}, explainedShares: {}, fcfAltShares: {}, problems: ['Der Filter-Feed hat keine Zeilen.'], notices: [] };
+  if (!Array.isArray(rows) || !rows.length) return { shares: {}, explainedShares: {}, fcfAltShares: {}, frozenShares: {}, problems: ['Der Filter-Feed hat keine Zeilen.'], notices: [] };
   const problems = [], notices = [];
   const today = new Date(now).toISOString().slice(0, 10);
   const effective = { ...floors }, active = [];
@@ -91,27 +96,30 @@ function checkFill(feed, floors, { now = Date.now(), maxAgeHours = DEFAULT_MAX_A
   }
   const fields = new Set(Object.keys(floors));
   for (const row of rows) for (const key of Object.keys(row)) fields.add(key);
-  const shares = {}, explainedShares = {}, fcfAltShares = {};
+  const shares = {}, explainedShares = {}, fcfAltShares = {}, frozenShares = {};
   for (const field of fields) {
-    let filled = 0, quoteWithheld = 0, fcfAltWithheld = 0;
+    let filled = 0, quoteWithheld = 0, fcfAltWithheld = 0, frozenWithheld = 0;
     for (const row of rows) {
       if (isFilled(row[field])) { filled++; continue; }
       const reason = explanation(row, field);
       if (reason === 'quote') quoteWithheld++;
       else if (reason === 'fcf-alt') fcfAltWithheld++;
+      else if (reason === 'frozen') frozenWithheld++;
     }
-    const withheld = quoteWithheld + fcfAltWithheld;
+    const withheld = quoteWithheld + fcfAltWithheld + frozenWithheld;
     const shown = rows.length - withheld;
     shares[field] = shown ? 100 * filled / shown : 0;
     explainedShares[field] = 100 * quoteWithheld / rows.length;
     fcfAltShares[field] = 100 * fcfAltWithheld / rows.length;
+    frozenShares[field] = 100 * frozenWithheld / rows.length;
     if (!(field in floors)) problems.push(`Das Feld ${field} steht im Filter-Feed, hat aber keine Untergrenze in configs/feed-fill-floors.json.`);
     else if (shown && shares[field] < effective[field]) problems.push(`Das Feld ${field} ist nur auf ${percent(shares[field])} der ${shown} Zeilen gefüllt, auf denen es gezeigt werden kann (Untergrenze ${percent(effective[field])}).`);
     if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen eines zu alten Kurses ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kurse deuten auf eine Störung beim Kursabruf, nicht auf einzelne Zeilen.`);
     if (fcfAltShares[field] > fcfAltMax) problems.push(`Das Feld ${field} ist auf ${percent(fcfAltShares[field])} der ${rows.length} Zeilen ausgeblendet, weil der Free Cashflow veraltet ist; erlaubt sind höchstens ${percent(fcfAltMax)}. So viele veraltete Cashflows deuten auf eine Störung beim Abruf der Kapitalflussrechnung, nicht auf einzelne Zeilen.`);
+    if (frozenShares[field] > frozenMax) problems.push(`Das Feld ${field} ist auf ${percent(frozenShares[field])} der ${rows.length} Zeilen ausgeblendet, weil der Kurs einer OTC-Notierung seit Wochen unverändert ist; erlaubt sind höchstens ${percent(frozenMax)}. So viele unveränderte Kurse deuten auf eine Störung im Kursspeicher, nicht auf einzelne Notierungen.`);
   }
   for (const field of active) if (shares[field] >= floors[field]) notices.push(`Das Feld ${field} steht mit ${percent(shares[field])} wieder über seiner normalen Untergrenze, die Rotstelle kann weg.`);
-  return { shares, explainedShares, fcfAltShares, problems, notices, floors: effective };
+  return { shares, explainedShares, fcfAltShares, frozenShares, problems, notices, floors: effective };
 }
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -132,26 +140,28 @@ function rotstelleFault(field, spot, floors) {
 function main(argv) {
   const value = name => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const feedFile = value('--feed');
-  let feed, floors, rotstellen, erklaertMax, fcfAltMax;
+  let feed, floors, rotstellen, erklaertMax, fcfAltMax, eingefrorenMax;
   try {
     if (!feedFile) throw new Error('--feed <universum.json> is required');
     feed = JSON.parse(fs.readFileSync(feedFile, 'utf8'));
-    ({ floors, rotstellen = {}, erklaertMax, fcfAltMax } = JSON.parse(fs.readFileSync(value('--floors') ?? DEFAULT_FLOORS, 'utf8')));
+    ({ floors, rotstellen = {}, erklaertMax, fcfAltMax, eingefrorenMax } = JSON.parse(fs.readFileSync(value('--floors') ?? DEFAULT_FLOORS, 'utf8')));
     if (!floors || typeof floors !== 'object') throw new Error('floors file without a floors object');
     if (!rotstellen || typeof rotstellen !== 'object' || Array.isArray(rotstellen)) throw new Error('rotstellen must be an object');
     // At most half: a cap of 100 would let a field hidden on every row pass (the floor sentence needs a row that can show it).
     if (!(Number.isFinite(erklaertMax) && erklaertMax >= 0 && erklaertMax <= 50)) throw new Error('erklaertMax must be a percentage from 0 to 50');
     if (!(Number.isFinite(fcfAltMax) && fcfAltMax >= 0 && fcfAltMax <= 50)) throw new Error('fcfAltMax must be a percentage from 0 to 50');
+    if (!(Number.isFinite(eingefrorenMax) && eingefrorenMax >= 0 && eingefrorenMax <= 50)) throw new Error('eingefrorenMax must be a percentage from 0 to 50');
   } catch (error) {
     console.error('::error::Der Füllstand des Filter-Feeds ist heute nicht geprüft, die Eingabe ist nicht lesbar: ' + error.message);
     return 2;
   }
   const maxAgeHours = Number(value('--max-age-hours') ?? DEFAULT_MAX_AGE_HOURS);
-  const { shares, explainedShares = {}, fcfAltShares = {}, problems, notices, floors: applied = floors } = checkFill(feed, floors, { maxAgeHours, rotstellen, explainedMax: erklaertMax, fcfAltMax });
+  const { shares, explainedShares = {}, fcfAltShares = {}, frozenShares = {}, problems, notices, floors: applied = floors } = checkFill(feed, floors, { maxAgeHours, rotstellen, explainedMax: erklaertMax, fcfAltMax, frozenMax: eingefrorenMax });
   for (const notice of notices) console.log('::warning::' + notice);
   for (const [field, share] of Object.entries(shares)) console.log(field.padEnd(6), percent(share).padStart(9), ' floor', percent(applied[field] ?? NaN).padStart(9),
     explainedShares[field] ? ` explained ${percent(explainedShares[field])} of all rows` : '',
-    fcfAltShares[field] ? ` fcf-alt ${percent(fcfAltShares[field])} of all rows` : '', applied[field] !== floors[field] ? '(Rotstelle)' : '');
+    fcfAltShares[field] ? ` fcf-alt ${percent(fcfAltShares[field])} of all rows` : '',
+    frozenShares[field] ? ` frozen ${percent(frozenShares[field])} of all rows` : '', applied[field] !== floors[field] ? '(Rotstelle)' : '');
   for (const problem of problems) console.log('::error::' + problem);
   if (!problems.length) console.log('Every filter feed field is at or above its floor.');
   return problems.length ? 1 : 0;

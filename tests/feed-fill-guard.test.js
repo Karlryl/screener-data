@@ -15,12 +15,12 @@ const { JOB_REIHENFOLGE } = require('../scripts/pipeline-status.js');
 
 const root = path.resolve(__dirname, '..');
 const JOB = 'feed-fill-waechter';
-const { floors, erklaertMax, fcfAltMax } = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8'));
+const { floors, erklaertMax, fcfAltMax, eingefrorenMax } = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8'));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'feed-fill-guard-'));
 let floorsFiles = 0;
 const floorsFile = (rotstellen, extra = {}) => {
   const file = path.join(tmp, `floors-${floorsFiles++}.json`);
-  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen, erklaertMax, fcfAltMax, ...extra }));
+  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen, erklaertMax, fcfAltMax, eingefrorenMax, ...extra }));
   return ['--floors', file];
 };
 
@@ -220,6 +220,47 @@ for (const bad of [{ fcfAltMax: undefined }, { fcfAltMax: -1 }, { fcfAltMax: 51 
   assert.match(result.stderr, /fcfAltMax must be a percentage from 0 to 50/);
 }
 
+// S11 Stufe 4 (22.11.2026): a value the REAL writer withholds on a frozen OTC close leaves exactly the fields its reason names
+// under the eingefrorenMax cap. TOKSF-like row: OTC line, quote 9.106 frozen since 29.09.2026 (39 store days).
+const FC = require('../lib/frozen-close.js');
+const otc = priced(FRESH, 'OTCF');
+otc.meta.exchangeName = 'OTC Markets OTCPK';
+const [frozenRow] = W.buildUniverse({ snapshots: [otc], excluded: new Map([['OTCF', ['non-us']]]),
+  frozenCloses: new Map([['OTCF', { since: '2026-09-29', days: 39 }]]), generatedAt: FRESH }).rows;
+const frozenNamed = ['mc', 'ps', 'evs', 'pe', 'fpe', 'dy', 'd52'];
+for (const field of frozenNamed) {
+  assert.equal(frozenRow[field], undefined, 'the frozen row withholds ' + field);
+  assert.equal(explained(frozenRow, field), true, field + ': ' + frozenRow.aus.join(' | '));
+}
+for (const field of ['g', 'roe', 'gm', 'fcf', 'po', 'r40', 'ath']) assert.equal(explained(frozenRow, field), false, 'frozen cannot explain ' + field);
+// A row that never had dy: the reason does not name it, so an empty dy stays a gap.
+const noYield = priced(FRESH, 'OTCN'); noYield.meta.exchangeName = 'OTC Markets OTCPK'; delete noYield.metrics.dividendYield;
+const [noYieldRow] = W.buildUniverse({ snapshots: [noYield], excluded: new Map([['OTCN', ['non-us']]]),
+  frozenCloses: new Map([['OTCN', { since: '2026-09-29', days: 39 }]]), generatedAt: FRESH }).rows;
+assert.equal(explained(noYieldRow, 'dy'), false, 'a field the reason does not name is not explained');
+assert.equal(explained(noYieldRow, 'mc'), true);
+assert.deepEqual(FC.frozenFields(frozenRow.aus.find(a => a.endsWith(FC.FROZEN_CLOSE_RETURN))), frozenNamed);
+const frozenAus = frozenRow.aus;
+const frozenFeed = n => feedWith((row, i) => { if (i < n) { for (const k of frozenNamed) delete row[k]; row.peSt = 'unbekannt'; row.dySt = 'unbekannt'; row.aus = frozenAus; } });
+assert.ok(eingefrorenMax >= 3, 'the cases below hide 3 % of the rows; a lower cap needs new cases');
+const frozenRun = guard(frozenFeed(30));
+assert.equal(frozenRun.status, 0, frozenRun.stdout);
+assert.match(frozenRun.stdout, /^mc .*100,0 %.*frozen 3,0 % of all rows/m, 'frozen rows leave the denominator');
+const frozenMeasure = checkFill(frozenFeed(30), floors, { explainedMax: erklaertMax, fcfAltMax, frozenMax: eingefrorenMax, maxAgeHours: Infinity });
+assert.equal(frozenMeasure.frozenShares.mc, 3); assert.equal(frozenMeasure.explainedShares.mc, 0, 'frozen is not the quote cap');
+const atFrozenCap = Math.floor(eingefrorenMax * 10);
+assert.equal(guard(frozenFeed(atFrozenCap)).status, 0, 'exactly at the frozen cap');
+const overFrozenCap = guard(frozenFeed(atFrozenCap + 1));
+assert.equal(overFrozenCap.status, 1, overFrozenCap.stdout);
+assert.match(overFrozenCap.stdout, /::error::Das Feld mc ist auf .* ausgeblendet, weil der Kurs einer OTC-Notierung seit Wochen unverändert ist; erlaubt sind höchstens/);
+assert.ok(checkFill(frozenFeed(1), floors, { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity }).problems.some(p => p.includes('seit Wochen unverändert ist; erlaubt sind höchstens 0,0 %')),
+  'without frozenMax even one frozen row is over the fail-closed cap');
+for (const bad of [{ eingefrorenMax: undefined }, { eingefrorenMax: -1 }, { eingefrorenMax: 51 }, { eingefrorenMax: '5' }]) {
+  const result = guard(feedWith(), ...floorsFile({}, bad));
+  assert.equal(result.status, 2, JSON.stringify(bad));
+  assert.match(result.stderr, /eingefrorenMax must be a percentage from 0 to 50/);
+}
+
 // Break once on the guard source, compiled in memory (nothing written; the live file is hashed before and after).
 const GUARD_FILE = path.join(root, 'scripts', 'feed-fill-guard.js');
 const sha = () => crypto.createHash('sha256').update(fs.readFileSync(GUARD_FILE)).digest('hex');
@@ -240,6 +281,11 @@ assert.ok(guard(staleFeed(500)).stdout.includes('erlaubt sind höchstens'), 'hal
 assert.deepEqual(uncapped.checkFill(staleFeed(500), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass loss turns green');
 const uncappedFcfAlt = broken('    if (fcfAltShares[field] > fcfAltMax) problems.push(`Das Feld ${field} ist auf ${percent(fcfAltShares[field])} der ${rows.length} Zeilen ausgeblendet, weil der Free Cashflow veraltet ist; erlaubt sind höchstens ${percent(fcfAltMax)}. So viele veraltete Cashflows deuten auf eine Störung beim Abruf der Kapitalflussrechnung, nicht auf einzelne Zeilen.`);', '');
 assert.deepEqual(uncappedFcfAlt.checkFill(fcfAltFeed(atFcfAltCap + 1), floors, { explainedMax: erklaertMax, fcfAltMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass stale-FCF loss turns green without its cap');
+const frozenBlind = broken("  if (aus.some(a => frozenFields(a).includes(field))) return 'frozen';", '');
+assert.ok(frozenBlind.checkFill(frozenFeed(100), floors, { explainedMax: erklaertMax, fcfAltMax, frozenMax: eingefrorenMax, maxAgeHours: Infinity }).problems
+  .some(p => p.includes('Das Feld mc ist nur auf 90,0 %')), 'broken: without the frozen explanation the same rows are a reasonless loss');
+const uncappedFrozen = broken('    if (frozenShares[field] > frozenMax) problems.push(`Das Feld ${field} ist auf ${percent(frozenShares[field])} der ${rows.length} Zeilen ausgeblendet, weil der Kurs einer OTC-Notierung seit Wochen unverändert ist; erlaubt sind höchstens ${percent(frozenMax)}. So viele unveränderte Kurse deuten auf eine Störung im Kursspeicher, nicht auf einzelne Notierungen.`);', '');
+assert.deepEqual(uncappedFrozen.checkFill(frozenFeed(500), floors, { explainedMax: erklaertMax, fcfAltMax, frozenMax: eingefrorenMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass freeze turns green without its cap');
 assert.equal(sha(), before, 'the live guard file is unchanged');
 
 // Every field the writer can emit has a floor, so a new field is noticed in its pull request and not on its first day.
