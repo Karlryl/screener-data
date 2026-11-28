@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 477,
+    "count": 475,
     "partial": false
   },
   "stocks": [
@@ -481,14 +481,6 @@
       "yahoo_symbol": "YB",
       "name": "Yuanbao Inc. - American Depositary Shares",
       "marketCapUsd": 645122816,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "IRWD",
-      "yahoo_symbol": "IRWD",
-      "name": "Ironwood Pharmaceuticals, Inc. - Class A Common Stock",
-      "marketCapUsd": 643638464,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1729,14 +1721,6 @@
       "yahoo_symbol": "OWLS",
       "name": "OBOOK Holdings Inc. - Class A Common Shares",
       "marketCapUsd": 481417056,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "CLMB",
-      "yahoo_symbol": "CLMB",
-      "name": "Climb Global Solutions, Inc. - Common Stock",
-      "marketCapUsd": 480179712,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3829,22 +3813,17 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-11-21T14:32:31.132Z",
+  "lastReconcile": "2026-11-28T15:21:09.602Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "SWBI",
+      "ticker": "IRWD",
       "grund": "band-austritt-oben",
-      "mcap": 823116480
+      "mcap": 879074496
     },
     {
-      "ticker": "CTKB",
+      "ticker": "CLMB",
       "grund": "band-austritt-oben",
-      "mcap": 800397888
-    },
-    {
-      "ticker": "GLAD",
-      "grund": "nicht-operativ",
-      "mcap": 384759968
+      "mcap": 820950400
     }
   ]
 }
