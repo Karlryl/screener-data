@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-11-12",
-  "about": "Revenue of both halves as printed in the HKEX interim filing of Hong Kong board companies (six months to 30.06.2026 and the comparative six months), each read twice independently from the filing itself (link, page, verbatim line). Read by lib/hk-interim.js: the Eastmoney interim pair is used only when both of its halves equal these values within 0.1 %. Lane sd-halbjahr, Daylauf 16.",
+  "revision": "2026-11-23",
+  "about": "Revenue of both halves as printed in the HKEX interim filing of Hong Kong board companies (six months to 30.06.2026 and the comparative six months), each read twice independently from the filing itself (link, page, verbatim line). Read by lib/hk-interim.js: the Eastmoney interim pair is used only when both of its halves equal these values within 0.1 %. Lane sd-halbjahr, Daylauf 16. 23.11.2026 (Diener 4e, S1): 129 more companies from the HKEX interim results announcement (reader A) and, where filed, the interim report (reader B); each quote is the revenue line of the income statement on the physical PDF page named, copied from its PyMuPDF text layer (note numbers as in the text layer); documentTitle is the HKEXnews title.",
   "records": [
     {
       "ticker": "0020.HK",
@@ -34,6 +34,762 @@
           "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
           "current": 2910946,
           "prior": 2358198,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0081.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 14144571000,
+      "prior": 14543468000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0915/2026091500382.pdf",
+          "page": 30,
+          "quote": "Revenue 4 14,144,571 14,543,468",
+          "published": "2026-09-15",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 14144571,
+          "prior": 14543468,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0915/2026091500382.pdf",
+          "page": 30,
+          "quote": "Revenue 4 14,144,571 14,543,468",
+          "published": "2026-09-15",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 14144571,
+          "prior": 14543468,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0123.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 36648532000,
+      "prior": 47573703000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800455.pdf",
+          "page": 4,
+          "quote": "Revenue 4 36,648,532 47,573,703",
+          "published": "2026-08-28",
+          "documentTitle": "Announcement of 2026 Interim Results",
+          "current": 36648532,
+          "prior": 47573703,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000544.pdf",
+          "page": 22,
+          "quote": "REVENUE 5 36,648,532 47,573,703",
+          "published": "2026-09-30",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 36648532,
+          "prior": 47573703,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0135.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 100042000000,
+      "prior": 97543000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082502305.pdf",
+          "page": 2,
+          "quote": "Revenue 3 100,042 97,543",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF RESULTS",
+          "current": 100042,
+          "prior": 97543,
+          "multiplier": 1000000,
+          "unit": "RMB'million"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300484.pdf",
+          "page": 25,
+          "quote": "Revenue 收入 4 100,042 97,543",
+          "published": "2026-09-23",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 100042,
+          "prior": 97543,
+          "multiplier": 1000000,
+          "unit": "RMB million"
+        }
+      ]
+    },
+    {
+      "ticker": "0136.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1183084000,
+      "prior": 2206249000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802418.pdf",
+          "page": 16,
+          "quote": "Revenue 5 1,183,084 2,206,249",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1183084,
+          "prior": 2206249,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400726.pdf",
+          "page": 32,
+          "quote": "Revenue 6 1,183,084 2,206,249",
+          "published": "2026-09-24",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 1183084,
+          "prior": 2206249,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0189.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8059974000,
+      "prior": 7463394000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082001423.pdf",
+          "page": 2,
+          "quote": "Revenue 3 8,059,974 7,463,394",
+          "published": "2026-08-20",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR 2026",
+          "current": 8059974,
+          "prior": 7463394,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091701059.pdf",
+          "page": 31,
+          "quote": "收益 Revenue 3 8,059,974 7,463,394",
+          "published": "2026-09-17",
+          "documentTitle": "2026 Interim Report",
+          "current": 8059974,
+          "prior": 7463394,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0220.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 17320967000,
+      "prior": 17086589000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0805/2026080500450.pdf",
+          "page": 18,
+          "quote": "Revenue 5 17,320,967 17,086,589",
+          "published": "2026-08-05",
+          "documentTitle": "ANNOUNCEMENT OF 2026 INTERIM RESULTS",
+          "current": 17320967,
+          "prior": 17086589,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081700402.pdf",
+          "page": 33,
+          "quote": "收益 Revenue 6 17,320,967 17,086,589",
+          "published": "2026-08-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 17320967,
+          "prior": 17086589,
+          "multiplier": 1000,
+          "unit": "All amounts in thousands of Renminbi unless otherwise stated"
+        }
+      ]
+    },
+    {
+      "ticker": "0268.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3625422000,
+      "prior": 3192499000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0811/2026081100555.pdf",
+          "page": 8,
+          "quote": "Revenue from contracts with customers 13 3,625,422 3,192,499",
+          "published": "2026-08-11",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 3625422,
+          "prior": 3192499,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0903/2026090300862.pdf",
+          "page": 47,
+          "quote": "Revenue from contracts with customers 與客戶之間的合同產生的收入 13 3,625,422 3,192,499",
+          "published": "2026-09-03",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 3625422,
+          "prior": 3192499,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0285.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 82234197000,
+      "prior": 80605678000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082801217.pdf",
+          "page": 31,
+          "quote": "REVENUE 收入 4 82,234,197 80,605,678",
+          "published": "2026-08-28",
+          "documentTitle": "2026 INTERIM RESULTS ANNOUNCEMENT",
+          "current": 82234197,
+          "prior": 80605678,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082801253.pdf",
+          "page": 31,
+          "quote": "REVENUE 收入 4 82,234,197 80,605,678",
+          "published": "2026-08-28",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 82234197,
+          "prior": 80605678,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0291.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 24240000000,
+      "prior": 23942000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0819/2026081900245.pdf",
+          "page": 8,
+          "quote": "Turnover 24,240 23,942",
+          "published": "2026-08-19",
+          "documentTitle": "INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 24240,
+          "prior": 23942,
+          "multiplier": 1000000,
+          "unit": "RMB million"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0908/2026090800432.pdf",
+          "page": 21,
+          "quote": "營業額 Turnover 24,240 23,942",
+          "published": "2026-09-08",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 24240,
+          "prior": 23942,
+          "multiplier": 1000000,
+          "unit": "RMB million"
+        }
+      ]
+    },
+    {
+      "ticker": "0297.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 16280966000,
+      "prior": 14714813000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500229.pdf",
+          "page": 23,
+          "quote": "Revenue 3 16,280,966 14,714,813",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT - FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 16280966,
+          "prior": 14714813,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800361.pdf",
+          "page": 42,
+          "quote": "Revenue 3 16,280,966 14,714,813",
+          "published": "2026-09-18",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 16280966,
+          "prior": 14714813,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0322.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 40544565000,
+      "prior": 40092163000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0811/2026081100317.pdf",
+          "page": 2,
+          "quote": "Revenue 2 40,544,565 40,092,163",
+          "published": "2026-08-11",
+          "documentTitle": "INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 40544565,
+          "prior": 40092163,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500422.pdf",
+          "page": 3,
+          "quote": "Revenue 2 40,544,565 40,092,163",
+          "published": "2026-08-25",
+          "documentTitle": "2026 Interim Report",
+          "current": 40544565,
+          "prior": 40092163,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0325.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1775695000,
+      "prior": 1338011000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0812/2026081201207.pdf",
+          "page": 2,
+          "quote": "Revenue 3 1,775,695 1,338,011",
+          "published": "2026-08-12",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1775695,
+          "prior": 1338011,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600891.pdf",
+          "page": 40,
+          "quote": "Revenue 收入 5 1,775,695 1,338,011",
+          "published": "2026-09-16",
+          "documentTitle": "2026 Interim Report",
+          "current": 1775695,
+          "prior": 1338011,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0336.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1878123000,
+      "prior": 1621157000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601893.pdf",
+          "page": 2,
+          "quote": "Revenue 3 1,878,123 1,621,157",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1878123,
+          "prior": 1621157,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0915/2026091500350.pdf",
+          "page": 71,
+          "quote": "Revenue 營業額 6 1,878,123 1,621,157",
+          "published": "2026-09-15",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 1878123,
+          "prior": 1621157,
+          "multiplier": 1000,
+          "unit": "RMB thousands"
+        }
+      ]
+    },
+    {
+      "ticker": "0354.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8947968000,
+      "prior": 8506642000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082001837.pdf",
+          "page": 17,
+          "quote": "Revenue 4 8,947,968 8,506,642",
+          "published": "2026-08-20",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 8947968,
+          "prior": 8506642,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700017.pdf",
+          "page": 69,
+          "quote": "Revenue 4 8,947,968 8,506,642",
+          "published": "2026-08-27",
+          "documentTitle": "Interim Report 2026",
+          "current": 8947968,
+          "prior": 8506642,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0371.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9871301000,
+      "prior": 10458861000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600193.pdf",
+          "page": 2,
+          "quote": "REVENUE 3 9,871,301 10,458,861",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 9871301,
+          "prior": 10458861,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401411.pdf",
+          "page": 32,
+          "quote": "Revenue 5 9,871,301 10,458,861",
+          "published": "2026-09-24",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 9871301,
+          "prior": 10458861,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0392.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 45004558000,
+      "prior": 44528870000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700230.pdf",
+          "page": 5,
+          "quote": "REVENUE 45,004,558 44,528,870",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 45004558,
+          "prior": 44528870,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800434.pdf",
+          "page": 34,
+          "quote": "Revenue 4 45,004,558 44,528,870",
+          "published": "2026-09-28",
+          "documentTitle": "2026 Interim Report",
+          "current": 45004558,
+          "prior": 44528870,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0425.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 13408353000,
+      "prior": 12286969000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082501837.pdf",
+          "page": 2,
+          "quote": "Revenue 3 13,408,353 12,286,969",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 13408353,
+          "prior": 12286969,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800081.pdf",
+          "page": 69,
+          "quote": "Revenue 3 13,408,353 12,286,969",
+          "published": "2026-09-28",
+          "documentTitle": "2026 Interim Report",
+          "current": 13408353,
+          "prior": 12286969,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0460.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1161218000,
+      "prior": 1146203000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600207.pdf",
+          "page": 31,
+          "quote": "Revenue 3 1,161,218 1,146,203",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1161218,
+          "prior": 1146203,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600468.pdf",
+          "page": 71,
+          "quote": "收益 Revenue 4 1,161,218 1,146,203",
+          "published": "2026-09-16",
+          "documentTitle": "Interim Report 2026",
+          "current": 1161218,
+          "prior": 1146203,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0546.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 13794689000,
+      "prior": 13959533000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802874.pdf",
+          "page": 2,
+          "quote": "Revenue 收入 4 13,794,689 13,959,533",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 13794689,
+          "prior": 13959533,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092201033.pdf",
+          "page": 29,
+          "quote": "Revenue 收入 5 13,794,689 13,959,533",
+          "published": "2026-09-22",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 13794689,
+          "prior": 13959533,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0579.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 10172352000,
+      "prior": 10899657000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082803544.pdf",
+          "page": 2,
+          "quote": "Revenue 3A 10,172,352 10,899,657",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 10172352,
+          "prior": 10899657,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401070.pdf",
+          "page": 28,
+          "quote": "Revenue 3A 10,172,352 10,899,657",
+          "published": "2026-09-24",
+          "documentTitle": "2026 Interim Report",
+          "current": 10172352,
+          "prior": 10899657,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0586.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3792678000,
+      "prior": 3086325000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082701935.pdf",
+          "page": 2,
+          "quote": "Revenue 3 3,792,678 3,086,325",
+          "published": "2026-08-27",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 3792678,
+          "prior": 3086325,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092301345.pdf",
+          "page": 42,
+          "quote": "Revenue 4 3,792,678 3,086,325",
+          "published": "2026-09-23",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 3792678,
+          "prior": 3086325,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -76,6 +832,42 @@
       ]
     },
     {
+      "ticker": "0656.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 86963356000,
+      "prior": 87283090000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700941.pdf",
+          "page": 34,
+          "quote": "TOTAL REVENUE 3 86,963,356 87,283,090",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT (UNAUDITED) FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 86963356,
+          "prior": 87283090,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200480.pdf",
+          "page": 35,
+          "quote": "TOTAL REVENUE 3 86,963,356 87,283,090",
+          "published": "2026-09-22",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 86963356,
+          "prior": 87283090,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "0666.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -106,6 +898,42 @@
           "documentTitle": "2026 Interim Report",
           "current": 14915617,
           "prior": 9491110,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0688.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 97599111000,
+      "prior": 83219084000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600217.pdf",
+          "page": 2,
+          "quote": "Revenue 3 97,599,111 83,219,084",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 97599111,
+          "prior": 83219084,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0911/2026091100416.pdf",
+          "page": 26,
+          "quote": "Revenue 4 97,599,111 83,219,084",
+          "published": "2026-09-11",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 97599111,
+          "prior": 83219084,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -184,6 +1012,258 @@
       ]
     },
     {
+      "ticker": "0737.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 401993000,
+      "prior": 371093000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0814/2026081401597.pdf",
+          "page": 31,
+          "quote": "Revenue 4 401,993 371,093",
+          "published": "2026-08-14",
+          "documentTitle": "INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 401993,
+          "prior": 371093,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700977.pdf",
+          "page": 39,
+          "quote": "Revenue 4 401,993 371,093",
+          "published": "2026-09-17",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 401993,
+          "prior": 371093,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0772.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3531388000,
+      "prior": 3190584000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0811/2026081100261.pdf",
+          "page": 17,
+          "quote": "Revenues 5 3,531,388 3,190,584",
+          "published": "2026-08-11",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 3531388,
+          "prior": 3190584,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600256.pdf",
+          "page": 43,
+          "quote": "Revenues 7 3,531,388 3,190,584",
+          "published": "2026-09-16",
+          "documentTitle": "Interim Report 2026",
+          "current": 3531388,
+          "prior": 3190584,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0780.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9992819000,
+      "prior": 9046863000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082400456.pdf",
+          "page": 20,
+          "quote": "Revenue 2 4,987,027 4,669,431 9,992,819 9,046,863",
+          "published": "2026-08-24",
+          "documentTitle": "ANNOUNCEMENT OF THE RESULTS\nFOR THE THREE AND SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 9992819,
+          "prior": 9046863,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0911/2026091100567.pdf",
+          "page": 93,
+          "quote": "Revenue 收入 6 4,987,027 4,669,431 9,992,819 9,046,863",
+          "published": "2026-09-11",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 9992819,
+          "prior": 9046863,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0805.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 472982000,
+      "prior": 411723000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083101169.pdf",
+          "page": 9,
+          "quote": "Revenue 4 472,982 411,723",
+          "published": "2026-08-31",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 472982,
+          "prior": 411723,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100630.pdf",
+          "page": 38,
+          "quote": "Revenue 收入 4 472,982 411,723",
+          "published": "2026-09-21",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 472982,
+          "prior": 411723,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0817.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 21418171000,
+      "prior": 25112612000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500344.pdf",
+          "page": 62,
+          "quote": "收入 REVENUE 5 21,418,171 25,112,612",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS\nENDED 30 JUNE 2026",
+          "current": 21418171,
+          "prior": 25112612,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0910/2026091001475.pdf",
+          "page": 63,
+          "quote": "收入 REVENUE 5 21,418,171 25,112,612",
+          "published": "2026-09-10",
+          "documentTitle": "2026 Interim Report",
+          "current": 21418171,
+          "prior": 25112612,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0867.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 4500733000,
+      "prior": 4001980000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081701623.pdf",
+          "page": 4,
+          "quote": "Turnover 3 4,500,733 4,001,980",
+          "published": "2026-08-17",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 4500733,
+          "prior": 4001980,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0901/2026090102311.pdf",
+          "page": 33,
+          "quote": "Turnover 3 4,500,733 4,001,980",
+          "published": "2026-09-01",
+          "documentTitle": "Interim Report 2026",
+          "current": 4500733,
+          "prior": 4001980,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0868.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9520817000,
+      "prior": 9821324000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0731/2026073101563.pdf",
+          "page": 2,
+          "quote": "Revenue 4 9,520,817 9,821,324",
+          "published": "2026-07-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 9520817,
+          "prior": 9821324,
+          "multiplier": 1000,
+          "unit": "Chinese Renminbi thousands"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000758.pdf",
+          "page": 18,
+          "quote": "Revenue 4 9,520,817 9,821,324",
+          "published": "2026-09-30",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 9520817,
+          "prior": 9821324,
+          "multiplier": 1000,
+          "unit": "RMB thousands"
+        }
+      ]
+    },
+    {
       "ticker": "0901.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -214,6 +1294,294 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 2095437,
           "prior": 1536830,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0960.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 39795243000,
+      "prior": 58750323000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800287.pdf",
+          "page": 2,
+          "quote": "Revenue 3 39,795,243 58,750,323",
+          "published": "2026-08-28",
+          "documentTitle": "UNAUDITED INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 39795243,
+          "prior": 58750323,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0925/2026092500001.pdf",
+          "page": 42,
+          "quote": "收入 Revenue 3 39,795,243 58,750,323",
+          "published": "2026-09-25",
+          "documentTitle": "Interim Report 2026",
+          "current": 39795243,
+          "prior": 58750323,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0968.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8430106000,
+      "prior": 10931769000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0731/2026073100852.pdf",
+          "page": 2,
+          "quote": "Revenue 3 8,430,106 10,931,769",
+          "published": "2026-07-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 8430106,
+          "prior": 10931769,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800333.pdf",
+          "page": 25,
+          "quote": "Revenue 3 8,430,106 10,931,769",
+          "published": "2026-09-18",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 8430106,
+          "prior": 10931769,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "0999.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2902600000,
+      "prior": 2713666000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0814/2026081401469.pdf",
+          "page": 2,
+          "quote": "Revenue 3 2,902,600 2,713,666",
+          "published": "2026-08-14",
+          "documentTitle": "RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 2902600,
+          "prior": 2713666,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600298.pdf",
+          "page": 35,
+          "quote": "Revenue 3 2,902,600 2,713,666",
+          "published": "2026-09-16",
+          "documentTitle": "2026 Interim Report",
+          "current": 2902600,
+          "prior": 2713666,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1024.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 69251000000,
+      "prior": 67654000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0819/2026081900314.pdf",
+          "page": 24,
+          "quote": "Revenues 3 35,535 35,046 69,251 67,654",
+          "published": "2026-08-19",
+          "documentTitle": "RESULTS ANNOUNCEMENT\nFOR THE THREE AND SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 69251,
+          "prior": 67654,
+          "multiplier": 1000000,
+          "unit": "RMB millions"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0903/2026090300642.pdf",
+          "page": 58,
+          "quote": "Revenues 7 35,535 35,046 69,251 67,654",
+          "published": "2026-09-03",
+          "documentTitle": "2026 Interim Report",
+          "current": 69251,
+          "prior": 67654,
+          "multiplier": 1000000,
+          "unit": "RMB'Million"
+        }
+      ]
+    },
+    {
+      "ticker": "1030.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 17686416000,
+      "prior": 22173548000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601475.pdf",
+          "page": 4,
+          "quote": "Revenue 9 17,686,416 22,173,548",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 17686416,
+          "prior": 22173548,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0907/2026090700428.pdf",
+          "page": 48,
+          "quote": "營業額 Revenue 19 17,686,416 22,173,548",
+          "published": "2026-09-07",
+          "documentTitle": "2026 Interim Report",
+          "current": 17686416,
+          "prior": 22173548,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1044.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 11091415000,
+      "prior": 11808232000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0909/2026090900115.pdf",
+          "page": 8,
+          "quote": "Revenue 收入 4 11,091,415 11,808,232",
+          "published": "2026-09-09",
+          "documentTitle": "Interim Report 2026",
+          "current": 11091415,
+          "prior": 11808232,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0909/2026090900115.pdf",
+          "page": 8,
+          "quote": "Revenue 收入 4 11,091,415 11,808,232",
+          "published": "2026-09-09",
+          "documentTitle": "Interim Report 2026",
+          "current": 11091415,
+          "prior": 11808232,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1066.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6848991000,
+      "prior": 6644048000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500466.pdf",
+          "page": 2,
+          "quote": "Revenue 3 6,848,991 6,644,048",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 6848991,
+          "prior": 6644048,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800265.pdf",
+          "page": 4,
+          "quote": "Revenue 收入 3 6,848,991 6,644,048",
+          "published": "2026-09-28",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 6848991,
+          "prior": 6644048,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1109.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 67869309000,
+      "prior": 94921257000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083100127.pdf",
+          "page": 3,
+          "quote": "Revenue 3 67,869,309 94,921,257",
+          "published": "2026-08-31",
+          "documentTitle": "ANNOUNCEMENT OF 2026 INTERIM RESULTS",
+          "current": 67869309,
+          "prior": 94921257,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400694.pdf",
+          "page": 58,
+          "quote": "營業額 Revenue 4 67,869,309 94,921,257",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 67869309,
+          "prior": 94921257,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -292,6 +1660,78 @@
       ]
     },
     {
+      "ticker": "1117.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6592803000,
+      "prior": 6072518000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082502335.pdf",
+          "page": 4,
+          "quote": "Revenue 4 6,592,803 6,072,518",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 6592803,
+          "prior": 6072518,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800764.pdf",
+          "page": 52,
+          "quote": "Revenue 收入 4 6,592,803 6,072,518",
+          "published": "2026-09-28",
+          "documentTitle": "Interim Report 2026",
+          "current": 6592803,
+          "prior": 6072518,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1177.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 19444363000,
+      "prior": 17574778000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0819/2026081900298.pdf",
+          "page": 30,
+          "quote": "REVENUE 3 19,444,363 17,574,778",
+          "published": "2026-08-19",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 19444363,
+          "prior": 17574778,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400762.pdf",
+          "page": 34,
+          "quote": "REVENUE 3 19,444,363 17,574,778",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 19444363,
+          "prior": 17574778,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1191.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -328,6 +1768,42 @@
       ]
     },
     {
+      "ticker": "1209.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9216785000,
+      "prior": 8523537000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083100073.pdf",
+          "page": 2,
+          "quote": "Revenue 4 9,216,785 8,523,537",
+          "published": "2026-08-31",
+          "documentTitle": "ANNOUNCEMENT OF 2026 INTERIM RESULTS",
+          "current": 9216785,
+          "prior": 8523537,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400003.pdf",
+          "page": 77,
+          "quote": "收益 Revenue 4 9,216,785 8,523,537",
+          "published": "2026-09-24",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 9216785,
+          "prior": 8523537,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1236.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -358,6 +1834,42 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended June 30, 2026",
           "current": 522538,
           "prior": 386441,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1277.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2520567000,
+      "prior": 2509517000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082401995.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 2,520,567 2,509,517",
+          "published": "2026-08-24",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2520567,
+          "prior": 2509517,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083100630.pdf",
+          "page": 19,
+          "quote": "Revenue 4 2,520,567 2,509,517",
+          "published": "2026-08-31",
+          "documentTitle": "Interim Report 2026",
+          "current": 2520567,
+          "prior": 2509517,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -472,6 +1984,114 @@
       ]
     },
     {
+      "ticker": "1364.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 7470015000,
+      "prior": 5662904000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601151.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 7,470,015 5,662,904",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 7470015,
+          "prior": 5662904,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100618.pdf",
+          "page": 55,
+          "quote": "REVENUE 收入 4 7,470,015 5,662,904",
+          "published": "2026-09-21",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 7470015,
+          "prior": 5662904,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1368.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6794917000,
+      "prior": 6837642000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500235.pdf",
+          "page": 49,
+          "quote": "REVENUE 5 6,794,917 6,837,642",
+          "published": "2026-08-25",
+          "documentTitle": "2026 INTERIM RESULTS ANNOUNCEMENT",
+          "current": 6794917,
+          "prior": 6837642,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100702.pdf",
+          "page": 49,
+          "quote": "REVENUE 5 6,794,917 6,837,642",
+          "published": "2026-09-21",
+          "documentTitle": "Interim Report 2026",
+          "current": 6794917,
+          "prior": 6837642,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1378.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 87505895000,
+      "prior": 81039092000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082101077.pdf",
+          "page": 2,
+          "quote": "Revenue 4 87,505,895 81,039,092",
+          "published": "2026-08-21",
+          "documentTitle": "UNAUDITED RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 87505895,
+          "prior": 81039092,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800640.pdf",
+          "page": 32,
+          "quote": "Revenue 4 87,505,895 81,039,092",
+          "published": "2026-09-28",
+          "documentTitle": "Interim Report 2026",
+          "current": 87505895,
+          "prior": 81039092,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1392.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -508,6 +2128,42 @@
       ]
     },
     {
+      "ticker": "1396.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2558560000,
+      "prior": 228252000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082803476.pdf",
+          "page": 3,
+          "quote": "Revenue 4 2,558,560 228,252",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2558560,
+          "prior": 228252,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092101605.pdf",
+          "page": 39,
+          "quote": "Revenue 收入 4 2,558,560 228,252",
+          "published": "2026-09-21",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 2558560,
+          "prior": 228252,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1440.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -538,6 +2194,42 @@
           "documentTitle": "Announcement of Unaudited Interim Results for the Six Months Ended 30 June 2026",
           "current": 162793,
           "prior": 288606,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1501.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 596055000,
+      "prior": 461075000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082401527.pdf",
+          "page": 3,
+          "quote": "Revenue 3 596,055 461,075",
+          "published": "2026-08-24",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX-MONTH PERIOD ENDED 30 JUNE 2026",
+          "current": 596055,
+          "prior": 461075,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0914/2026091400326.pdf",
+          "page": 37,
+          "quote": "Revenue 3 596,055 461,075",
+          "published": "2026-09-14",
+          "documentTitle": "Interim Report 2026",
+          "current": 596055,
+          "prior": 461075,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -616,6 +2308,42 @@
       ]
     },
     {
+      "ticker": "1579.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3346661000,
+      "prior": 2927391000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500418.pdf",
+          "page": 4,
+          "quote": "Revenue 4 3,346,661 2,927,391",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 3346661,
+          "prior": 2927391,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200195.pdf",
+          "page": 46,
+          "quote": "Revenue 收入 6 3,346,661 2,927,391",
+          "published": "2026-09-22",
+          "documentTitle": "2026 Interim Report",
+          "current": 3346661,
+          "prior": 2927391,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1585.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -646,6 +2374,42 @@
           "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
           "current": 18236095,
           "prior": 19185861,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1626.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 340353000,
+      "prior": 260459000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802548.pdf",
+          "page": 2,
+          "quote": "Revenue 3 340,353 260,459",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 340353,
+          "prior": 260459,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0911/2026091101489.pdf",
+          "page": 19,
+          "quote": "Revenue 5 340,353 260,459",
+          "published": "2026-09-11",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 340353,
+          "prior": 260459,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -724,6 +2488,150 @@
       ]
     },
     {
+      "ticker": "1801.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8617801000,
+      "prior": 5953094000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500983.pdf",
+          "page": 46,
+          "quote": "Revenue from contracts with customers 4 8,617,801 5,953,094",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 8617801,
+          "prior": 5953094,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092900476.pdf",
+          "page": 66,
+          "quote": "Revenue from contracts with customers 4 8,617,801 5,953,094",
+          "published": "2026-09-29",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 8617801,
+          "prior": 5953094,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1810.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 208063227000,
+      "prior": 227249428000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0818/2026081801014.pdf",
+          "page": 30,
+          "quote": "Revenue 2 108,921,609 115,956,091 208,063,227 227,249,428",
+          "published": "2026-08-18",
+          "documentTitle": "RESULTS ANNOUNCEMENT FOR THE THREE AND SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 208063227,
+          "prior": 227249428,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300296.pdf",
+          "page": 59,
+          "quote": "Revenue 6 108,921,609 115,956,091 208,063,227 227,249,428",
+          "published": "2026-09-23",
+          "documentTitle": "2026 Interim Report",
+          "current": 208063227,
+          "prior": 227249428,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1833.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2483833000,
+      "prior": 2502193000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0818/2026081800784.pdf",
+          "page": 35,
+          "quote": "Revenue 5 2,483,833 2,502,193",
+          "published": "2026-08-18",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR\nTHE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2483833,
+          "prior": 2502193,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700260.pdf",
+          "page": 37,
+          "quote": "Revenue 5 2,483,833 2,502,193",
+          "published": "2026-08-27",
+          "documentTitle": "2026 Interim Report",
+          "current": 2483833,
+          "prior": 2502193,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1866.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 15739674000,
+      "prior": 12665749000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082804276.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 15,739,674 12,665,749",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 15739674,
+          "prior": 12665749,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400850.pdf",
+          "page": 44,
+          "quote": "REVENUE 收入 4 15,739,674 12,665,749",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 15739674,
+          "prior": 12665749,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "1879.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -754,6 +2662,150 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 79779,
           "prior": 20793,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1882.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9102016000,
+      "prior": 9018279000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082401419.pdf",
+          "page": 3,
+          "quote": "Revenue 4 9,102,016 9,018,279",
+          "published": "2026-08-24",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 9102016,
+          "prior": 9018279,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700502.pdf",
+          "page": 16,
+          "quote": "Revenue 4 9,102,016 9,018,279",
+          "published": "2026-09-17",
+          "documentTitle": "Interim Report 2026",
+          "current": 9102016,
+          "prior": 9018279,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1907.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 21855864000,
+      "prior": 20783377000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802804.pdf",
+          "page": 2,
+          "quote": "Revenue 5 21,855,864 20,783,377",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 21855864,
+          "prior": 20783377,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800888.pdf",
+          "page": 33,
+          "quote": "Revenue 5 21,855,864 20,783,377",
+          "published": "2026-09-28",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 21855864,
+          "prior": 20783377,
+          "multiplier": 1000,
+          "unit": "RMB' 000"
+        }
+      ]
+    },
+    {
+      "ticker": "1908.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 17797495000,
+      "prior": 34164664000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700232.pdf",
+          "page": 2,
+          "quote": "Revenue 4 17,797,495 34,164,664",
+          "published": "2026-08-27",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 17797495,
+          "prior": 34164664,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200999.pdf",
+          "page": 6,
+          "quote": "收益 Revenue 4 17,797,495 34,164,664",
+          "published": "2026-09-22",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 17797495,
+          "prior": 34164664,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "1918.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 16349262000,
+      "prior": 19987601000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802794.pdf",
+          "page": 2,
+          "quote": "Revenue 3 16,349,262 19,987,601",
+          "published": "2026-08-28",
+          "documentTitle": "1. INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026\n2. IMPLEMENTATION OF ACTION PLAN TO RESOLVE AUDITOR&#x27;S DISCLAIMER OF OPINION",
+          "current": 16349262,
+          "prior": 19987601,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300720.pdf",
+          "page": 41,
+          "quote": "Revenue 6 16,349,262 19,987,601",
+          "published": "2026-09-23",
+          "documentTitle": "Interim Report 2026",
+          "current": 16349262,
+          "prior": 19987601,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -868,6 +2920,150 @@
       ]
     },
     {
+      "ticker": "2018.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 14506449000,
+      "prior": 13318486000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082000181.pdf",
+          "page": 15,
+          "quote": "Revenue 3 14,506,449 13,318,486",
+          "published": "2026-08-20",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 14506449,
+          "prior": 13318486,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400355.pdf",
+          "page": 44,
+          "quote": "Revenue 3 14,506,449 13,318,486",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 14506449,
+          "prior": 13318486,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2020.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 43507000000,
+      "prior": 38544000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600213.pdf",
+          "page": 44,
+          "quote": "Revenue 3(a) 43,507 38,544",
+          "published": "2026-08-26",
+          "documentTitle": "2026 INTERIM RESULTS ANNOUNCEMENT",
+          "current": 43507,
+          "prior": 38544,
+          "multiplier": 1000000,
+          "unit": "RMB'million"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0907/2026090700322.pdf",
+          "page": 43,
+          "quote": "Revenue 3(a) 43,507 38,544",
+          "published": "2026-09-07",
+          "documentTitle": "Interim Report 2026",
+          "current": 43507,
+          "prior": 38544,
+          "multiplier": 1000000,
+          "unit": "RMB'million"
+        }
+      ]
+    },
+    {
+      "ticker": "2025.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 520536000,
+      "prior": 550178000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082803466.pdf",
+          "page": 2,
+          "quote": "Revenue 4 520,536 550,178",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 520536,
+          "prior": 550178,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200089.pdf",
+          "page": 28,
+          "quote": "Revenue 4 520,536 550,178",
+          "published": "2026-09-22",
+          "documentTitle": "Interim Report 2026",
+          "current": 520536,
+          "prior": 550178,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2096.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 4580142000,
+      "prior": 3584912000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082001845.pdf",
+          "page": 43,
+          "quote": "Revenue 4 4,580,142 3,584,912",
+          "published": "2026-08-20",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 4580142,
+          "prior": 3584912,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400375.pdf",
+          "page": 52,
+          "quote": "Revenue 4 4,580,142 3,584,912",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 4580142,
+          "prior": 3584912,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2097.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -904,6 +3100,42 @@
       ]
     },
     {
+      "ticker": "2128.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 11911989000,
+      "prior": 12475000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082801621.pdf",
+          "page": 2,
+          "quote": "REVENUE 3 11,911,989 12,475,000",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 11911989,
+          "prior": 12475000,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800672.pdf",
+          "page": 33,
+          "quote": "REVENUE 收入 4 11,911,989 12,475,000",
+          "published": "2026-09-28",
+          "documentTitle": "Interim Report 2026",
+          "current": 11911989,
+          "prior": 12475000,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2145.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -934,6 +3166,42 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 3756467,
           "prior": 4108001,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2155.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2572917000,
+      "prior": 2687283000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700288.pdf",
+          "page": 2,
+          "quote": "Revenue 3 2,572,917 2,687,283",
+          "published": "2026-08-27",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2572917,
+          "prior": 2687283,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092900446.pdf",
+          "page": 47,
+          "quote": "Revenue 3 2,572,917 2,687,283",
+          "published": "2026-09-29",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 2572917,
+          "prior": 2687283,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -1048,6 +3316,42 @@
       ]
     },
     {
+      "ticker": "2233.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 4526885000,
+      "prior": 5418323000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082401879.pdf",
+          "page": 3,
+          "quote": "Revenue 2 4,526,885 5,418,323",
+          "published": "2026-08-24",
+          "documentTitle": "2026 Interim Results Announcement",
+          "current": 4526885,
+          "prior": 5418323,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700696.pdf",
+          "page": 29,
+          "quote": "Revenue 3 4,526,885 5,418,323",
+          "published": "2026-09-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 4526885,
+          "prior": 5418323,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2245.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1120,6 +3424,42 @@
       ]
     },
     {
+      "ticker": "2268.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3701378000,
+      "prior": 2700869000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082401213.pdf",
+          "page": 43,
+          "quote": "Revenue 4 3,701,378 2,700,869",
+          "published": "2026-08-24",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 3701378,
+          "prior": 2700869,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800861.pdf",
+          "page": 64,
+          "quote": "Revenue 4 3,701,378 2,700,869",
+          "published": "2026-09-18",
+          "documentTitle": "Interim Report 2026",
+          "current": 3701378,
+          "prior": 2700869,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2269.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1156,6 +3496,366 @@
       ]
     },
     {
+      "ticker": "2272.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 333881000,
+      "prior": 378779000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082102171.pdf",
+          "page": 2,
+          "quote": "Revenue 3 333,881 378,779",
+          "published": "2026-08-21",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 333881,
+          "prior": 378779,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0925/2026092500477.pdf",
+          "page": 27,
+          "quote": "Revenue 3 333,881 378,779",
+          "published": "2026-09-25",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 333881,
+          "prior": 378779,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2276.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1167117000,
+      "prior": 1084235000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081701251.pdf",
+          "page": 2,
+          "quote": "Revenue 3 1,167,117 1,084,235",
+          "published": "2026-08-17",
+          "documentTitle": "UNAUDITED INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1167117,
+          "prior": 1084235,
+          "multiplier": 1000,
+          "unit": "RMB`000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0927/2026092700009.pdf",
+          "page": 39,
+          "quote": "Revenue 4 1,167,117 1,084,235",
+          "published": "2026-09-27",
+          "documentTitle": "Interim Report 2026",
+          "current": 1167117,
+          "prior": 1084235,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2299.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 12712159000,
+      "prior": 9484707000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081700810.pdf",
+          "page": 2,
+          "quote": "Revenue 2 12,712,159 9,484,707",
+          "published": "2026-08-17",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 12712159,
+          "prior": 9484707,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700554.pdf",
+          "page": 35,
+          "quote": "Revenue 3 12,712,159 9,484,707",
+          "published": "2026-09-17",
+          "documentTitle": "Interim Report 2026",
+          "current": 12712159,
+          "prior": 9484707,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2313.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 14179177000,
+      "prior": 14966384000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500356.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 14,179,177 14,966,384",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF THE INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 14179177,
+          "prior": 14966384,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800506.pdf",
+          "page": 17,
+          "quote": "REVENUE 4 14,179,177 14,966,384",
+          "published": "2026-09-28",
+          "documentTitle": "Interim Report 2026",
+          "current": 14179177,
+          "prior": 14966384,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2319.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 44794932000,
+      "prior": 41567160000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601829.pdf",
+          "page": 2,
+          "quote": "Revenue 4 44,794,932 41,567,160",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF THE INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 44794932,
+          "prior": 41567160,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0925/2026092500455.pdf",
+          "page": 60,
+          "quote": "Revenue 收入 4 44,794,932 41,567,160",
+          "published": "2026-09-25",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 44794932,
+          "prior": 41567160,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2331.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 15235250000,
+      "prior": 14816763000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082001445.pdf",
+          "page": 2,
+          "quote": "Revenue 4 15,235,250 14,816,763",
+          "published": "2026-08-20",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 15235250,
+          "prior": 14816763,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0909/2026090900475.pdf",
+          "page": 39,
+          "quote": "REVENUE 4 15,235,250 14,816,763",
+          "published": "2026-09-09",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 15235250,
+          "prior": 14816763,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2367.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2917692000,
+      "prior": 3112662000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0818/2026081801176.pdf",
+          "page": 2,
+          "quote": "Revenue 3 2,917,692 3,112,662",
+          "published": "2026-08-18",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2917692,
+          "prior": 3112662,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401138.pdf",
+          "page": 31,
+          "quote": "Revenue 3 2,917,692 3,112,662",
+          "published": "2026-09-24",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 2917692,
+          "prior": 3112662,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2382.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 21905704000,
+      "prior": 19651919000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601115.pdf",
+          "page": 2,
+          "quote": "Revenue 3 21,905,704 19,651,919",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 21905704,
+          "prior": 19651919,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100313.pdf",
+          "page": 51,
+          "quote": "Revenue 收入 3 21,905,704 19,651,919",
+          "published": "2026-09-21",
+          "documentTitle": "Interim Report 2026",
+          "current": 21905704,
+          "prior": 19651919,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2386.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 35624371000,
+      "prior": 31618910000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0816/2026081600007.pdf",
+          "page": 76,
+          "quote": "Revenue 6 35,624,371 31,618,910",
+          "published": "2026-08-16",
+          "documentTitle": "Interim Results Announcement\nfor the six months ended 30 June 2026",
+          "current": 35624371,
+          "prior": 31618910,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0816/2026081600013.pdf",
+          "page": 77,
+          "quote": "Revenue 6 35,624,371 31,618,910",
+          "published": "2026-08-16",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 35624371,
+          "prior": 31618910,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2400.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3312235000,
+      "prior": 3081986000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800265.pdf",
+          "page": 13,
+          "quote": "Revenues 4 3,312,235 3,081,986",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 3312235,
+          "prior": 3081986,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092900352.pdf",
+          "page": 50,
+          "quote": "Revenues 6 3,312,235 3,081,986",
+          "published": "2026-09-29",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 3312235,
+          "prior": 3081986,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2432.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1186,6 +3886,114 @@
           "documentTitle": "Interim Report 2026",
           "current": 316323,
           "prior": 153087,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2436.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1083298000,
+      "prior": 1116671000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082701283.pdf",
+          "page": 20,
+          "quote": "REVENUE 4 1,083,298 1,116,671",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1083298,
+          "prior": 1116671,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092901345.pdf",
+          "page": 31,
+          "quote": "REVENUE 4 1,083,298 1,116,671",
+          "published": "2026-09-29",
+          "documentTitle": "Interim Report 2026",
+          "current": 1083298,
+          "prior": 1116671,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2450.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 52806000,
+      "prior": 127301000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082701725.pdf",
+          "page": 2,
+          "quote": "Revenue 4 52,806 127,301",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 52806,
+          "prior": 127301,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401062.pdf",
+          "page": 17,
+          "quote": "Revenue 4 52,806 127,301",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 52806,
+          "prior": 127301,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2460.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 5455158000,
+      "prior": 6205594000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601377.pdf",
+          "page": 2,
+          "quote": "Revenue 3 5,455,158 6,205,594",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 5455158,
+          "prior": 6205594,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400868.pdf",
+          "page": 36,
+          "quote": "收入 Revenue 3 5,455,158 6,205,594",
+          "published": "2026-09-24",
+          "documentTitle": "2026 Interim Report",
+          "current": 5455158,
+          "prior": 6205594,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -1408,6 +4216,114 @@
       ]
     },
     {
+      "ticker": "2580.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 17503668000,
+      "prior": 20085079000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802276.pdf",
+          "page": 2,
+          "quote": "REVENUE 5 17,503,668 20,085,079",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 17503668,
+          "prior": 20085079,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400736.pdf",
+          "page": 35,
+          "quote": "REVENUE 5 17,503,668 20,085,079",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 17503668,
+          "prior": 20085079,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2585.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 10175294000,
+      "prior": 10450919000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500382.pdf",
+          "page": 28,
+          "quote": "Revenue 4 10,175,294 10,450,919",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 10175294,
+          "prior": 10450919,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0907/2026090700967.pdf",
+          "page": 28,
+          "quote": "Revenue 4 10,175,294 10,450,919",
+          "published": "2026-09-07",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 10175294,
+          "prior": 10450919,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2586.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1154500000,
+      "prior": 1078425000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0812/2026081200800.pdf",
+          "page": 3,
+          "quote": "Revenue 3 1,154,500 1,078,425",
+          "published": "2026-08-12",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1154500,
+          "prior": 1078425,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0904/2026090401213.pdf",
+          "page": 70,
+          "quote": "Revenue 收益 3 1,154,500 1,078,425",
+          "published": "2026-09-04",
+          "documentTitle": "2026 Interim Report",
+          "current": 1154500,
+          "prior": 1078425,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2589.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1476,6 +4392,150 @@
           "prior": 1024722,
           "multiplier": 1000,
           "unit": "RMB in thousands"
+        }
+      ]
+    },
+    {
+      "ticker": "2595.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 42473000,
+      "prior": 88744000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082100175.pdf",
+          "page": 22,
+          "quote": "REVENUE 4 42,473 88,744",
+          "published": "2026-08-21",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 42473,
+          "prior": 88744,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600272.pdf",
+          "page": 42,
+          "quote": "Revenue 4 42,473 88,744",
+          "published": "2026-09-16",
+          "documentTitle": "2026 Interim Report",
+          "current": 42473,
+          "prior": 88744,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2602.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 19112370000,
+      "prior": 18137457000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0813/2026081301304.pdf",
+          "page": 3,
+          "quote": "REVENUE 4 19,112,370 18,137,457",
+          "published": "2026-08-13",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 19112370,
+          "prior": 18137457,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0910/2026091000492.pdf",
+          "page": 65,
+          "quote": "REVENUE 收入 4 19,112,370 18,137,457",
+          "published": "2026-09-10",
+          "documentTitle": "2026 Interim Report",
+          "current": 19112370,
+          "prior": 18137457,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2616.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 205099000,
+      "prior": 49451000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082701363.pdf",
+          "page": 20,
+          "quote": "Revenue 3 205,099 49,451",
+          "published": "2026-08-27",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 205099,
+          "prior": 49451,
+          "multiplier": 1000,
+          "unit": "RMB' 000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092801889.pdf",
+          "page": 70,
+          "quote": "Revenue 3 205,099 49,451",
+          "published": "2026-09-28",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 205099,
+          "prior": 49451,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2618.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 124683247000,
+      "prior": 98531786000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0813/2026081300555.pdf",
+          "page": 29,
+          "quote": "Revenue 124,683,247 98,531,786",
+          "published": "2026-08-13",
+          "documentTitle": "ANNOUNCEMENT OF THE RESULTS FOR THE THREE AND SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 124683247,
+          "prior": 98531786,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0904/2026090400610.pdf",
+          "page": 39,
+          "quote": "Revenue 5 124,683,247 98,531,786",
+          "published": "2026-09-04",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 124683247,
+          "prior": 98531786,
+          "multiplier": 1000,
+          "unit": "RMB'000"
         }
       ]
     },
@@ -1588,6 +4648,42 @@
       ]
     },
     {
+      "ticker": "2669.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 7484778000,
+      "prior": 7160773000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082000569.pdf",
+          "page": 25,
+          "quote": "Revenue 6 7,484,778 7,160,773",
+          "published": "2026-08-20",
+          "documentTitle": "Announcement of Unaudited Interim Results for the Six Months Ended 30 June 2026",
+          "current": 7484778,
+          "prior": 7160773,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0904/2026090400241.pdf",
+          "page": 29,
+          "quote": "Revenue 5 7,484,778 7,160,773",
+          "published": "2026-09-04",
+          "documentTitle": "Interim Report 2026",
+          "current": 7484778,
+          "prior": 7160773,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2672.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1660,6 +4756,78 @@
       ]
     },
     {
+      "ticker": "2688.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 57021000000,
+      "prior": 55673000000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800403.pdf",
+          "page": 10,
+          "quote": "Revenue 4 57,021 55,673",
+          "published": "2026-08-28",
+          "documentTitle": "Interim Results Announcement For The Six Months Ended 30 June 2026",
+          "current": 57021,
+          "prior": 55673,
+          "multiplier": 1000000,
+          "unit": "RMB million"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700629.pdf",
+          "page": 34,
+          "quote": "Revenue 3 57,021 55,673",
+          "published": "2026-09-17",
+          "documentTitle": "Interim Report 2026",
+          "current": 57021,
+          "prior": 55673,
+          "multiplier": 1000000,
+          "unit": "RMB million"
+        }
+      ]
+    },
+    {
+      "ticker": "2696.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3588228000,
+      "prior": 2819540000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082101149.pdf",
+          "page": 58,
+          "quote": "REVENUE 3 3,588,228 2,819,540",
+          "published": "2026-08-21",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026\nAND\nCHANGE OF PRINCIPAL PLACE OF BUSINESS IN HONG KONG",
+          "current": 3588228,
+          "prior": 2819540,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400807.pdf",
+          "page": 48,
+          "quote": "REVENUE 4 3,588,228 2,819,540",
+          "published": "2026-09-24",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 3588228,
+          "prior": 2819540,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "2706.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1690,6 +4858,222 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 295563,
           "prior": 173469,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2723.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 398247000,
+      "prior": 277344000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601071.pdf",
+          "page": 20,
+          "quote": "Revenue 3 398,247 277,344",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 398247,
+          "prior": 277344,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0925/2026092500415.pdf",
+          "page": 34,
+          "quote": "Revenue 3 398,247 277,344",
+          "published": "2026-09-25",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 398247,
+          "prior": 277344,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2726.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 577632000,
+      "prior": 300781000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082803446.pdf",
+          "page": 18,
+          "quote": "REVENUE 5 577,632 300,781",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR\nTHE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 577632,
+          "prior": 300781,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092901741.pdf",
+          "page": 54,
+          "quote": "REVENUE 收入 5 577,632 300,781",
+          "published": "2026-09-29",
+          "documentTitle": "2026 Interim Report",
+          "current": 577632,
+          "prior": 300781,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2788.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 11533010000,
+      "prior": 8709162000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081701797.pdf",
+          "page": 2,
+          "quote": "Revenue 3A 11,533,010 8,709,162",
+          "published": "2026-08-17",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR\nTHE SIX MONTHS ENDED JUNE 30, 2026\nAND\nCHANGE IN USE OF UNUTILISED NET PROCEEDS\nOF THE GLOBAL OFFERING",
+          "current": 11533010,
+          "prior": 8709162,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0903/2026090301350.pdf",
+          "page": 33,
+          "quote": "Revenue 3A 11,533,010 8,709,162",
+          "published": "2026-09-03",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 11533010,
+          "prior": 8709162,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2797.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 167857000,
+      "prior": 160824000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082804226.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 167,857 160,824",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 167857,
+          "prior": 160824,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091701483.pdf",
+          "page": 23,
+          "quote": "REVENUE 收入 4 167,857 160,824",
+          "published": "2026-09-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 167857,
+          "prior": 160824,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2869.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9870856000,
+      "prior": 9288711000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082100324.pdf",
+          "page": 3,
+          "quote": "Revenue 3 9,870,856 9,288,711",
+          "published": "2026-08-21",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 9870856,
+          "prior": 9288711,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700943.pdf",
+          "page": 63,
+          "quote": "Revenue 收入 3 9,870,856 9,288,711",
+          "published": "2026-09-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 9870856,
+          "prior": 9288711,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "2877.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1181083000,
+      "prior": 1652698000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700145.pdf",
+          "page": 17,
+          "quote": "Revenue 3 1,181,083 1,652,698",
+          "published": "2026-08-27",
+          "documentTitle": "2026 INTERIM RESULTS ANNOUNCEMENT",
+          "current": 1181083,
+          "prior": 1652698,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800203.pdf",
+          "page": 26,
+          "quote": "Revenue 3 1,181,083 1,652,698",
+          "published": "2026-09-28",
+          "documentTitle": "2026 Interim Report",
+          "current": 1181083,
+          "prior": 1652698,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -1840,6 +5224,42 @@
       ]
     },
     {
+      "ticker": "3311.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 43884006000,
+      "prior": 56636681000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500388.pdf",
+          "page": 2,
+          "quote": "Revenue 3 43,884,006 56,636,681",
+          "published": "2026-08-25",
+          "documentTitle": "Announcement of Unaudited Interim Results for the Six Months Ended 30 June 2026 and Interim Dividend",
+          "current": 43884006,
+          "prior": 56636681,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0914/2026091400318.pdf",
+          "page": 20,
+          "quote": "Revenue 6 43,884,006 56,636,681",
+          "published": "2026-09-14",
+          "documentTitle": "Interim Report 2026",
+          "current": 43884006,
+          "prior": 56636681,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "3317.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1876,6 +5296,150 @@
       ]
     },
     {
+      "ticker": "3320.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 134457581000,
+      "prior": 131866817000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0824/2026082400468.pdf",
+          "page": 1,
+          "quote": "Revenue 4 134,457,581 131,866,817",
+          "published": "2026-08-24",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 134457581,
+          "prior": 131866817,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400065.pdf",
+          "page": 71,
+          "quote": "收益 Revenue 4 134,457,581 131,866,817",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 134457581,
+          "prior": 131866817,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3330.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 7988239000,
+      "prior": 7792736000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082602055.pdf",
+          "page": 2,
+          "quote": "Revenue 4 7,988,239 7,792,736",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 7988239,
+          "prior": 7792736,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700618.pdf",
+          "page": 34,
+          "quote": "Revenue 4 7,988,239 7,792,736",
+          "published": "2026-09-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 7988239,
+          "prior": 7792736,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3339.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6657943000,
+      "prior": 5596064000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600847.pdf",
+          "page": 1,
+          "quote": "REVENUE 3, 4 6,657,943 5,596,064",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 6657943,
+          "prior": 5596064,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093002403.pdf",
+          "page": 7,
+          "quote": "REVENUE 3, 4 6,657,943 5,596,064",
+          "published": "2026-09-30",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 6657943,
+          "prior": 5596064,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3393.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 5389389000,
+      "prior": 4390409000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082700157.pdf",
+          "page": 2,
+          "quote": "Revenue 3 5,389,389 4,390,409",
+          "published": "2026-08-27",
+          "documentTitle": "ANNOUNCEMENT OF THE INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 5389389,
+          "prior": 4390409,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800305.pdf",
+          "page": 38,
+          "quote": "Revenue 4 5,389,389 4,390,409",
+          "published": "2026-09-18",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 5389389,
+          "prior": 4390409,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "3677.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -1906,6 +5470,42 @@
           "documentTitle": "2026 INTERIM REPORT",
           "current": 5438405,
           "prior": 3172028,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3690.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 195681950000,
+      "prior": 177696362000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800435.pdf",
+          "page": 25,
+          "quote": "Revenues 3 195,681,950 177,696,362",
+          "published": "2026-08-28",
+          "documentTitle": "ANNOUNCEMENT OF THE RESULTS\nFOR THE THREE AND SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 195681950,
+          "prior": 177696362,
+          "multiplier": 1000,
+          "unit": "RMB in thousands"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092900007.pdf",
+          "page": 57,
+          "quote": "Revenues 5,6 195,681,950 177,696,362",
+          "published": "2026-09-29",
+          "documentTitle": "2026 Interim Report",
+          "current": 195681950,
+          "prior": 177696362,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2020,6 +5620,186 @@
       ]
     },
     {
+      "ticker": "3808.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 70841157000,
+      "prior": 50878062000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601257.pdf",
+          "page": 1,
+          "quote": "Revenue 收入 5 70,841,157 50,878,062",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 70841157,
+          "prior": 50878062,
+          "multiplier": 1000,
+          "unit": "RMB thousands"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092800744.pdf",
+          "page": 94,
+          "quote": "Revenue 收入 4 70,841,157 50,878,062",
+          "published": "2026-09-28",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 70841157,
+          "prior": 50878062,
+          "multiplier": 1000,
+          "unit": "RMB thousands"
+        }
+      ]
+    },
+    {
+      "ticker": "3868.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1051693000,
+      "prior": 1210234000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0731/2026073100622.pdf",
+          "page": 2,
+          "quote": "Revenue 3 1,051,693 1,210,234",
+          "published": "2026-07-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 1051693,
+          "prior": 1210234,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800735.pdf",
+          "page": 21,
+          "quote": "Revenue 3 1,051,693 1,210,234",
+          "published": "2026-09-18",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 1051693,
+          "prior": 1210234,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3899.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 12867313000,
+      "prior": 12614294000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082501221.pdf",
+          "page": 2,
+          "quote": "Revenue 3 12,867,313 12,614,294",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 12867313,
+          "prior": 12614294,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0914/2026091400316.pdf",
+          "page": 6,
+          "quote": "Revenue 4 12,867,313 12,614,294",
+          "published": "2026-09-14",
+          "documentTitle": "Interim Report 2026",
+          "current": 12867313,
+          "prior": 12614294,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3900.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 39481421000,
+      "prior": 53368264000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082501609.pdf",
+          "page": 2,
+          "quote": "REVENUE 3 39,481,421 53,368,264",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 39481421,
+          "prior": 53368264,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401229.pdf",
+          "page": 58,
+          "quote": "收入 REVENUE 4 39,481,421 53,368,264",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 39481421,
+          "prior": 53368264,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3933.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6165949000,
+      "prior": 7518683000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083103075.pdf",
+          "page": 2,
+          "quote": "Revenue 3 6,165,949 7,518,683",
+          "published": "2026-08-31",
+          "documentTitle": "Interim Results Announcement For The Six Months Ended 30 June 2026",
+          "current": 6165949,
+          "prior": 7518683,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092401919.pdf",
+          "page": 6,
+          "quote": "Revenue 3 6,165,949 7,518,683",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 6165949,
+          "prior": 7518683,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "3939.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2050,6 +5830,78 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 1863332,
           "prior": 1240284,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "3983.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 5619200000,
+      "prior": 5850248000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0819/2026081901465.pdf",
+          "page": 2,
+          "quote": "Revenue 4 5,619,200 5,850,248",
+          "published": "2026-08-19",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 5619200,
+          "prior": 5850248,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0929/2026092900398.pdf",
+          "page": 16,
+          "quote": "Revenue 4 5,619,200 5,850,248",
+          "published": "2026-09-29",
+          "documentTitle": "2026 Interim Report",
+          "current": 5619200,
+          "prior": 5850248,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6049.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8829177000,
+      "prior": 8391965000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500219.pdf",
+          "page": 3,
+          "quote": "Revenue 5 8,829,177 8,391,965",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 8829177,
+          "prior": 8391965,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600310.pdf",
+          "page": 24,
+          "quote": "Revenue 5 8,829,177 8,391,965",
+          "published": "2026-09-16",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 8829177,
+          "prior": 8391965,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2092,6 +5944,42 @@
       ]
     },
     {
+      "ticker": "6098.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 24500463000,
+      "prior": 23185484000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600231.pdf",
+          "page": 3,
+          "quote": "Revenue 3 24,500,463 23,185,484",
+          "published": "2026-08-26",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 24500463,
+          "prior": 23185484,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0916/2026091600506.pdf",
+          "page": 46,
+          "quote": "Revenue 3 24,500,463 23,185,484",
+          "published": "2026-09-16",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 24500463,
+          "prior": 23185484,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "6181.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2122,6 +6010,42 @@
           "documentTitle": "Unaudited Interim Results Announcement for the Six Months Ended June 30, 2026",
           "current": 19808373,
           "prior": 12354239,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6186.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 9362363000,
+      "prior": 9150525000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601817.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 9,362,363 9,150,525",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 9362363,
+          "prior": 9150525,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092801101.pdf",
+          "page": 32,
+          "quote": "REVENUE 4 9,362,363 9,150,525",
+          "published": "2026-09-28",
+          "documentTitle": "2026 Interim Report",
+          "current": 9362363,
+          "prior": 9150525,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2164,6 +6088,42 @@
       ]
     },
     {
+      "ticker": "6616.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2558343000,
+      "prior": 912038000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082803546.pdf",
+          "page": 2,
+          "quote": "Revenue 4 2,558,343 912,038",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 2558343,
+          "prior": 912038,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700999.pdf",
+          "page": 35,
+          "quote": "Revenue 4 2,558,343 912,038",
+          "published": "2026-09-17",
+          "documentTitle": "2026 Interim Report",
+          "current": 2558343,
+          "prior": 912038,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "6618.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2200,6 +6160,78 @@
       ]
     },
     {
+      "ticker": "6636.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 165038000,
+      "prior": 58691000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082600979.pdf",
+          "page": 17,
+          "quote": "REVENUE 4 165,038 58,691",
+          "published": "2026-08-26",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 165038,
+          "prior": 58691,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092301055.pdf",
+          "page": 18,
+          "quote": "REVENUE 4 165,038 58,691",
+          "published": "2026-09-23",
+          "documentTitle": "Interim Report 2026",
+          "current": 165038,
+          "prior": 58691,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6651.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 123672000,
+      "prior": 53820000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0810/2026081000218.pdf",
+          "page": 11,
+          "quote": "Revenue 3 123,672 53,820",
+          "published": "2026-08-10",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 123672,
+          "prior": 53820,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100462.pdf",
+          "page": 22,
+          "quote": "Revenue 收入 3 123,672 53,820",
+          "published": "2026-09-21",
+          "documentTitle": "2026 Interim Report",
+          "current": 123672,
+          "prior": 53820,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "6656.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2230,6 +6262,78 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 9873625,
           "prior": 2733786,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6658.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1060653000,
+      "prior": 958714000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082001407.pdf",
+          "page": 2,
+          "quote": "REVENUE 4 1,060,653 958,714",
+          "published": "2026-08-20",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1060653,
+          "prior": 958714,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800892.pdf",
+          "page": 40,
+          "quote": "REVENUE 收入 5 1,060,653 958,714",
+          "published": "2026-09-18",
+          "documentTitle": "Interim Report 2026",
+          "current": 1060653,
+          "prior": 958714,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6666.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 6942650000,
+      "prior": 6646590000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083100969.pdf",
+          "page": 2,
+          "quote": "Revenue 5 6,942,650 6,646,590",
+          "published": "2026-08-31",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS FOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 6942650,
+          "prior": 6646590,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200193.pdf",
+          "page": 36,
+          "quote": "Revenue 6 6,942,650 6,646,590",
+          "published": "2026-09-22",
+          "documentTitle": "2026 Interim Report",
+          "current": 6942650,
+          "prior": 6646590,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2308,6 +6412,150 @@
       ]
     },
     {
+      "ticker": "6810.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1762010000,
+      "prior": 1400944000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083102395.pdf",
+          "page": 16,
+          "quote": "Revenue 3 1,762,010 1,400,944",
+          "published": "2026-08-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1762010,
+          "prior": 1400944,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400229.pdf",
+          "page": 33,
+          "quote": "Revenue 3 1,762,010 1,400,944",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 1762010,
+          "prior": 1400944,
+          "multiplier": 1000,
+          "unit": "RMB000"
+        }
+      ]
+    },
+    {
+      "ticker": "6855.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 302214000,
+      "prior": 233699000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082000029.pdf",
+          "page": 23,
+          "quote": "REVENUE 5 302,214 233,699",
+          "published": "2026-08-20",
+          "documentTitle": "ANNOUNCEMENT OF UNAUDITED INTERIM RESULTS\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 302214,
+          "prior": 233699,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700079.pdf",
+          "page": 80,
+          "quote": "REVENUE 5 302,214 233,699",
+          "published": "2026-09-17",
+          "documentTitle": "INTERIM REPORT 2026",
+          "current": 302214,
+          "prior": 233699,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6862.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 22336906000,
+      "prior": 20703294000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082501119.pdf",
+          "page": 16,
+          "quote": "Revenue 3 22,336,906 20,703,294",
+          "published": "2026-08-25",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS FOR THE SIX MONTHS\nENDED JUNE 30, 2026\nAND\nINTERIM DIVIDEND AND CLOSURE OF REGISTER OF MEMBERS",
+          "current": 22336906,
+          "prior": 20703294,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200356.pdf",
+          "page": 50,
+          "quote": "Revenue 收入 3 22,336,906 20,703,294",
+          "published": "2026-09-22",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 22336906,
+          "prior": 20703294,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6880.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1601895000,
+      "prior": 910548000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083100730.pdf",
+          "page": 21,
+          "quote": "Revenue 3 1,601,895 910,548",
+          "published": "2026-08-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1601895,
+          "prior": 910548,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000636.pdf",
+          "page": 43,
+          "quote": "Revenue 3 1,601,895 910,548",
+          "published": "2026-09-30",
+          "documentTitle": "2026 Interim Report",
+          "current": 1601895,
+          "prior": 910548,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "6887.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2338,6 +6586,150 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 1075308,
           "prior": 1937667,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6938.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 419737000,
+      "prior": 103813000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082701285.pdf",
+          "page": 26,
+          "quote": "REVENUE 4 419,737 103,813",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 419737,
+          "prior": 103813,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0921/2026092100452.pdf",
+          "page": 71,
+          "quote": "REVENUE 4 419,737 103,813",
+          "published": "2026-09-21",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 419737,
+          "prior": 103813,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6979.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2546069000,
+      "prior": 2497106000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0819/2026081901357.pdf",
+          "page": 29,
+          "quote": "Revenue 4 2,546,069 2,497,106",
+          "published": "2026-08-19",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 2546069,
+          "prior": 2497106,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300366.pdf",
+          "page": 70,
+          "quote": "Revenue 收入 3 2,546,069 2,497,106",
+          "published": "2026-09-23",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 2546069,
+          "prior": 2497106,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "6990.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 978340000,
+      "prior": 950445000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0817/2026081701363.pdf",
+          "page": 20,
+          "quote": "Revenue 3 978,340 950,445",
+          "published": "2026-08-17",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 978340,
+          "prior": 950445,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091701713.pdf",
+          "page": 83,
+          "quote": "Revenue 3 978,340 950,445",
+          "published": "2026-09-17",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 978340,
+          "prior": 950445,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "7618.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 13062804000,
+      "prior": 10250388000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0813/2026081300563.pdf",
+          "page": 13,
+          "quote": "Revenue 13,062,804 10,250,388",
+          "published": "2026-08-13",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 13062804,
+          "prior": 10250388,
+          "multiplier": 1000,
+          "unit": "RMB in thousands"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0904/2026090400526.pdf",
+          "page": 29,
+          "quote": "Revenue 5 13,062,804 10,250,388",
+          "published": "2026-09-04",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 13062804,
+          "prior": 10250388,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2410,6 +6802,42 @@
           "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
           "current": 548775,
           "prior": 663260,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "9606.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 219330000,
+      "prior": 1228934000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082801589.pdf",
+          "page": 7,
+          "quote": "Revenue 4 219,330 1,228,934",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 219330,
+          "prior": 1228934,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0928/2026092801699.pdf",
+          "page": 70,
+          "quote": "Revenue 5 219,330 1,228,934",
+          "published": "2026-09-28",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 219330,
+          "prior": 1228934,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2560,6 +6988,114 @@
       ]
     },
     {
+      "ticker": "9660.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 2054984000,
+      "prior": 1546067000,
+      "priorRestated": true,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0831/2026083101009.pdf",
+          "page": 19,
+          "quote": "Revenue from contracts with customers 4 2,054,984 1,546,067",
+          "published": "2026-08-31",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 2054984,
+          "prior": 1546067,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000842.pdf",
+          "page": 41,
+          "quote": "Revenue from contracts with customers 6 2,054,984 1,546,067",
+          "published": "2026-09-30",
+          "documentTitle": "Interim Report 2026",
+          "current": 2054984,
+          "prior": 1546067,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "9690.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 8777823000,
+      "prior": 7876938000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0821/2026082100792.pdf",
+          "page": 26,
+          "quote": "Revenue 4 8,777,823 7,876,938",
+          "published": "2026-08-21",
+          "documentTitle": "ANNOUNCEMENT OF INTERIM RESULTS\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 8777823,
+          "prior": 7876938,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400654.pdf",
+          "page": 46,
+          "quote": "Revenue 5 8,777,823 7,876,938",
+          "published": "2026-09-24",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 8777823,
+          "prior": 7876938,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "9699.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 11739533000,
+      "prior": 10235950000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082800415.pdf",
+          "page": 2,
+          "quote": "Revenue 3 11,739,533 10,235,950",
+          "published": "2026-08-28",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 11739533,
+          "prior": 10235950,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092201027.pdf",
+          "page": 41,
+          "quote": "Revenue 5 11,739,533 10,235,950",
+          "published": "2026-09-22",
+          "documentTitle": "2026 Interim Report",
+          "current": 11739533,
+          "prior": 10235950,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "9856.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2590,6 +7126,42 @@
           "documentTitle": "GLOBAL OFFERING (prospectus dated 14 September 2026), Appendix I Accountants' Report, Consolidated Statements of Profit or Loss",
           "current": 5392648,
           "prior": 4215825,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "9858.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 10626704000,
+      "prior": 10284217000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0825/2026082500788.pdf",
+          "page": 3,
+          "quote": "Revenue 4 10,626,704 10,284,217",
+          "published": "2026-08-25",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 10626704,
+          "prior": 10284217,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0918/2026091800459.pdf",
+          "page": 43,
+          "quote": "Revenue 4 10,626,704 10,284,217",
+          "published": "2026-09-18",
+          "documentTitle": "Interim Report 2026",
+          "current": 10626704,
+          "prior": 10284217,
           "multiplier": 1000,
           "unit": "RMB'000"
         }
@@ -2668,6 +7240,42 @@
       ]
     },
     {
+      "ticker": "9899.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 3958706000,
+      "prior": 3827117000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0820/2026082000349.pdf",
+          "page": 12,
+          "quote": "Revenue 2 3,958,706 3,827,117",
+          "published": "2026-08-20",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED 30 JUNE 2026",
+          "current": 3958706,
+          "prior": 3827117,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0924/2026092400333.pdf",
+          "page": 34,
+          "quote": "Revenue 5 3,958,706 3,827,117",
+          "published": "2026-09-24",
+          "documentTitle": "Interim Report 2026",
+          "current": 3958706,
+          "prior": 3827117,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
       "ticker": "9903.HK",
       "end": "2026-06-30",
       "priorEnd": "2025-06-30",
@@ -2698,6 +7306,42 @@
           "documentTitle": "Interim Results Announcement for the Six Months Ended 30 June 2026",
           "current": 945679,
           "prior": 324263,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        }
+      ]
+    },
+    {
+      "ticker": "9926.HK",
+      "end": "2026-06-30",
+      "priorEnd": "2025-06-30",
+      "currency": "CNY",
+      "current": 1805681000,
+      "prior": 1411539000,
+      "priorRestated": false,
+      "verifiedAt": "2026-11-23",
+      "readings": [
+        {
+          "reader": "A",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0827/2026082702003.pdf",
+          "page": 32,
+          "quote": "REVENUE 3 1,805,681 1,411,539",
+          "published": "2026-08-27",
+          "documentTitle": "INTERIM RESULTS ANNOUNCEMENT\nFOR THE SIX MONTHS ENDED JUNE 30, 2026",
+          "current": 1805681,
+          "prior": 1411539,
+          "multiplier": 1000,
+          "unit": "RMB'000"
+        },
+        {
+          "reader": "B",
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093001178.pdf",
+          "page": 71,
+          "quote": "REVENUE 3 1,805,681 1,411,539",
+          "published": "2026-09-30",
+          "documentTitle": "2026 INTERIM REPORT",
+          "current": 1805681,
+          "prior": 1411539,
           "multiplier": 1000,
           "unit": "RMB'000"
         }

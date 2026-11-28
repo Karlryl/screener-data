@@ -254,3 +254,36 @@ test('filed table validation: two independent readings that agree, with link, pa
   for (const b of bad) assert.throws(() => H.validateFiled(table(b)), /Invalid HK filed interim/);
   assert.throws(() => H.validateFiled({ schemaVersion: 1, records: [good, good] }), /Invalid HK filed interim/);
 });
+
+// Diener 4e (23.11.2026, S1): the verbatim line of every reading is the revenue line and prints both of its figures
+// (comma separators ignored). A space before a figure is often a note number ("Revenue 4 402,315"), so only commas count.
+const carries = (quote, n) => Number.isInteger(n) && new RegExp('(^|[^0-9.])' + n + '(?![0-9]|\\.[0-9])').test(quote.replace(/(\d),(?=\d{3}(?!\d))/g, '$1'));
+const REVENUE_LINE = /^([^\x00-\x7F]+ )?(total )?(revenues?|turnover|operating revenue)\b/i;
+// The 12.11. readings of these seven quote the figures without the label the PDF prints beside them (text layer lost it,
+// or the total stands under a "Revenue" heading); the figures were checked against the HKEX pages on 23.11.2026 and are right.
+const LABEL_EXEMPT = new Set(['0694.HK', '0700.HK', '1357.HK', '1879.HK', '1956.HK', '2015.HK', '9880.HK']);
+function quoteProblems(records) {
+  const out = [];
+  for (const r of records) for (const x of r.readings) {
+    const id = r.ticker + ' ' + x.reader;
+    // ponytail: no order rule, some filers print 2025 before 2026 (2015.HK); a swapped pair fails condition 6 against Eastmoney
+    if (!carries(x.quote, x.current) || !carries(x.quote, x.prior)) out.push(id + ': figures not in quote');
+    if (x.quote.includes('%')) out.push(id + ': growth column in quote (highlights, not the statement)');
+    if (!LABEL_EXEMPT.has(r.ticker) && (!REVENUE_LINE.test(x.quote) || /expense|cost|profit|income/i.test(x.quote.split(/\d/)[0]))) out.push(id + ': not a revenue line');
+  }
+  return out;
+}
+
+test('committed filed table: each reading quotes the revenue line with both of its figures', () => {
+  const { records } = require('../configs/hk-interim-filed.json');
+  assert.deepEqual(quoteProblems(records), []); // present: every committed line carries its label and numbers
+  assert.ok(records.length >= 207, 'records were dropped from the filed table'); // 78 (12.11.) + 129 (23.11.)
+  // absent: a figure the line does not print, or a line with another label, is caught (made red on copies, not on the table)
+  const r = structuredClone(records.find((x) => x.ticker === '0020.HK')), q = r.readings[0].quote; // "Revenue 2,910,946 2,358,198"
+  r.readings[1].current += 1;
+  assert.deepEqual(quoteProblems([r]), ['0020.HK B: figures not in quote']);
+  r.readings[1].current -= 1; r.readings[0].quote = 'Selling and marketing expenses ' + q.replace(/^\D+/, '');
+  assert.deepEqual(quoteProblems([r]), ['0020.HK A: not a revenue line']);
+  r.readings[0].quote = q + ' 23.4%';
+  assert.deepEqual(quoteProblems([r]), ['0020.HK A: growth column in quote (highlights, not the statement)']);
+});
