@@ -85,8 +85,12 @@ test('prepareSnapshot calls the step: in an active copy the known wrong rows are
 
 test('pull: the step never runs at pull time, so no persisted snapshot carries a marker (even with mode active)', () => {
   const src = fs.readFileSync(path.join(ROOT, 'pull-yahoo.js'), 'utf8');
-  assert.equal(src.split('yahooQ4.prepareSnapshot(').length - 1, 1, 'one pull call site');
+  // Class R (23.11.2026): a second, read-only call site compares the shown growth period before and after a reload; it
+  // also passes atPull: true and its result feeds only revGrowthLeg, never a persisted snapshot.
+  assert.equal(src.split('yahooQ4.prepareSnapshot(').length - 1, 2, 'two pull call sites');
   assert.ok(src.includes('  const q4Checked = yahooQ4.prepareSnapshot(snap, { atPull: true });'));
+  assert.ok(src.includes("revGrowthLeg(yahooQ4.prepareSnapshot(s, { atPull: true })).periodEnd"), 'read-only guard call site');
+  assert.equal(src.split('yahooQ4.prepareSnapshot(').slice(1).filter(x => !x.startsWith('snap, { atPull: true })') && !x.startsWith('s, { atPull: true })')).length, 0, 'every call site atPull');
   for (const t of T) assert.ok(!marked(quiet(() => q4Active.prepareSnapshot(clone(F.snapshots[t]), { atPull: true }))), t);
   const pull = moduleCopy('pull-yahoo.js', s => s, { './lib/yahoo-q4-known-cases.js': q4Active });
   for (const t of ['000564.SZ', '000002.SZ', '6446.TW', '600150.SS']) {

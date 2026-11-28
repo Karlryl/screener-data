@@ -14,7 +14,8 @@ if (process.env.C10_COVERAGE_COPY) {
 const { fixture: makeFixture, snapshot, NOW } = require('./stale-quarter-reload.test.js');
 const { baseline, rows } = require('./reload-keep-history.test.js');
 const override = process.env.C10_PULL_COPY ? fs.readFileSync(process.env.C10_PULL_COPY, 'utf8') : null;
-const fixture = opts => makeFixture({ ...opts, ...(override ? { pullSource: override } : {}) });
+let makeFixtureOverride = null;
+const fixture = opts => makeFixture({ ...opts, ...(makeFixtureOverride ? { pullSource: makeFixtureOverride } : override ? { pullSource: override } : {}) });
 const cp = path.join(root, 'fundamentals-cache/OLD.json');
 const vals = a => a.map(x => x?.value ?? x);
 const clone = x => JSON.parse(JSON.stringify(x));
@@ -56,10 +57,43 @@ cases['window-slide'] = async () => {
   ];
   const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows });
   const before = f.files.get(cp).toString(), m = await f.run();
-  assert.equal(m.results[0].status, 'ok'); assert.equal(m.n_stale_quarter_reload_failed, 0);
-  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), [110, 100, 90]);
-  assert.notEqual(f.files.get(cp).toString(), before, 'legitimate cache window slide must write');
+  // Class R (23.11.2026): this slide drops 2025-03-31, the year-ago quarter of the shown growth (Q1 2026), so the shown
+  // growth would move back; the reload is retained ('shown growth period regressed'). Keeping such a quarter is branch A.
+  assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+  assert.equal(m.results[0].fundamentalsRetainedReason, 'shown growth period regressed');
+  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), vals(s.timeseries.revenueQ));
+  assert.equal(f.files.get(cp).toString(), before, 'a retained reload leaves the cache');
 };
+// Class R (23.11.2026, 006800.KS): the newest quarter arrives without revenue; the shown growth must not move back.
+cases['shown-growth-regression'] = async () => {
+  const s = await baseline(), dates = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
+  for (const field of ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ']) {
+    s.timeseries[field] = dates.map((_, i) => ({ value: 100 - i }));
+    if (field !== 'netIncomeQ') s.timeseries[field + 'Ends'] = dates.slice();
+    s.meta.statementPeriods[field] = dates.map(end => ({ ...s.meta.statementPeriods[field][0], end }));
+  }
+  const quarterlyRows = [{ date: '2026-06-30', grossProfit: 41, operatingIncome: 21, netIncome: 11 },
+    ...dates.map((date, i) => ({ date, totalRevenue: 100 - i, grossProfit: 40, operatingIncome: 20, netIncome: 10 }))];
+  const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows, quotePrice: 123, quoteMarketCap: 2e12 });
+  const m = await f.run();
+  const leg = x => require('../lib/rev-growth-basis.js').revGrowthLeg(require('../lib/yahoo-q4-known-cases.js').prepareSnapshot(x, { atPull: true }));
+  const shown = leg(f.stored('OLD'));
+  assert.ok(!(shown.periodEnd < leg(s).periodEnd), 'shown period not older: ' + shown.periodEnd + ' vs ' + leg(s).periodEnd);
+  if (!makeFixtureOverride && !override) { assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.results[0].fundamentalsRetainedReason, 'shown growth period regressed'); }
+};
+cases['shown-growth-guard-break-once'] = async () => {
+  // In memory only: without the guard line the same reload moves the shown growth back to fiscal 2025.
+  const src = fs.readFileSync(path.join(root, 'pull-yahoo.js'), 'utf8'), lines = src.split(String.fromCharCode(10)).map(l => l.replace(/\r$/, ''));
+  const line = '        if (priorShown && nextShown && nextShown < priorShown) {';
+  assert.equal(lines.filter(l => l === line).length, 1, 'anchor');
+  const mutated = lines.map(l => l === line ? '        if (false) {' : l).join(String.fromCharCode(10));
+  await cases['shown-growth-regression']();
+  await assert.rejects(() => runWith(mutated, cases['shown-growth-regression']), /shown period not older/);
+};
+async function runWith(pullSource, fn) {
+  const real = makeFixtureOverride; makeFixtureOverride = pullSource;
+  try { await fn(); } finally { makeFixtureOverride = real; }
+}
 cases['manual-shared-loss'] = async () => {
   const s = await baseline(), a = rows();
   a.financials[2].totalRevenue = 777; delete a.financials[2].operatingIncome;
@@ -222,11 +256,14 @@ cases['archive-no-noise'] = async () => {
   history.preserveReloadHistory(next, old);
   assert.equal(next.meta.reloadHistoryArchive, undefined);
 };
-cases['fx-rate-is-intentional'] = async () => {
+// Class R (23.11.2026): a new rate alone no longer blocks a refill (tests/reload-fx-refill.test.js); siblings that do not
+// match in the original currency at the new rate still do (here the USD values stayed equal while the rate doubled).
+cases['fx-rate-change-without-native-match'] = async () => {
   const old = await baseline(), next = clone(old);
   next.annual.annualSGA[1] = null; next.meta.fxRateApplied = 2;
   history.preserveReloadHistory(next, old);
   assert.equal(next.annual.annualSGA[1], null);
+  // The series check sees annualSGA itself off in the original currency, so the new-rate path is not open.
   assert(next.meta.reloadHistoryGaps.some(g => g.field === 'annualSGA' && g.reason === 'statement-basis-unverified'));
 };
 cases['warn-only-unsafe'] = async () => {

@@ -1,0 +1,79 @@
+{
+ "about": "LOG.MC (Logista) annual revenue block and meta of the daily-run snapshot of 21.11.2026 (artifact snapshots, run 44891236922), unchanged. yahoo20261123: annual totalRevenue Yahoo returned on 23.11.2026 (million EUR, rounded), FY2025 empty, on another revenue line than the stored one; EUR to USD rate applied that day 1.097454.",
+ "snapshot": {
+  "meta": {
+   "ticker": "LOG.MC",
+   "reportingCurrency": "USD",
+   "reportingCurrencyOriginal": "EUR",
+   "fxRateApplied": 1.1143303,
+   "opIncSource": null,
+   "fundamentalsTimeseriesFetchedAt": "2026-11-07T09:25:26.972Z",
+   "fetchedAt": "2026-11-07T09:25:13.449Z",
+   "statementPeriods": {
+    "annualRev": [
+     {
+      "end": "2026-09-30",
+      "duration": "12M",
+      "currency": "EUR",
+      "unit": "currency",
+      "basis": "yahoo-statement",
+      "fetchedAt": "2026-11-07T09:25:13.449Z"
+     },
+     {
+      "end": "2025-09-30",
+      "duration": "12M",
+      "currency": "EUR",
+      "unit": "currency",
+      "basis": "yahoo-statement",
+      "fetchedAt": "2026-11-07T09:25:13.449Z"
+     },
+     {
+      "end": "2024-09-30",
+      "duration": "12M",
+      "currency": "EUR",
+      "unit": "currency",
+      "basis": "yahoo-statement",
+      "fetchedAt": "2026-11-07T09:25:13.449Z"
+     },
+     {
+      "end": "2023-09-30",
+      "duration": "12M",
+      "currency": "EUR",
+      "unit": "currency",
+      "basis": "yahoo-statement",
+      "fetchedAt": "2026-11-07T09:25:13.449Z"
+     }
+    ]
+   }
+  },
+  "annual": {
+   "annualRev": [
+    {
+     "value": 2050367752
+    },
+    {
+     "value": 2015823512.7
+    },
+    {
+     "value": 1957878337.1
+    },
+    {
+     "value": 1876673745.1481
+    }
+   ],
+   "annualRevEnds": [
+    "2026-09-30",
+    "2025-09-30",
+    "2024-09-30",
+    "2023-09-30"
+   ]
+  }
+ },
+ "yahoo20261123": {
+  "2026-09-30": 13837,
+  "2025-09-30": null,
+  "2024-09-30": 12986,
+  "2023-09-30": 12428
+ },
+ "fx20261123": 1.097454
+}
